@@ -563,3 +563,521 @@ MATPLOTLIB_REFERENCE = {
         }
     ]
 }
+
+
+# ---------------------------------------------------------------------------
+# Educational feature functions
+# ---------------------------------------------------------------------------
+
+def get_pixel_region(filename, x, y, size=10):
+    """
+    Return pixel values for a square region around (x, y).
+
+    Parameters
+    ----------
+    filename : str
+        Image filename inside IMAGES_DIR.
+    x, y : int
+        Centre column (x) and row (y) of the region.
+    size : int
+        Half-side length of the square region (actual side = 2*size + 1).
+
+    Returns
+    -------
+    dict with pixel_grid (2D list of ints), width, height, and region_info.
+    """
+    img = load_image(filename)
+    if img is None:
+        return None
+
+    h, w = img.shape
+    x = max(0, min(x, w - 1))
+    y = max(0, min(y, h - 1))
+
+    y_start = max(0, y - size)
+    y_end = min(h, y + size + 1)
+    x_start = max(0, x - size)
+    x_end = min(w, x + size + 1)
+
+    region = img[y_start:y_end, x_start:x_end]
+    pixel_grid = region.astype(int).tolist()
+
+    return {
+        "pixel_grid": pixel_grid,
+        "width": w,
+        "height": h,
+        "region_info": {
+            "center_x": x,
+            "center_y": y,
+            "x_start": x_start,
+            "x_end": x_end - 1,
+            "y_start": y_start,
+            "y_end": y_end - 1,
+            "region_width": x_end - x_start,
+            "region_height": y_end - y_start,
+            "center_value": int(img[y, x]),
+        },
+    }
+
+
+def get_step_by_step_pipeline(filename1, filename2):
+    """
+    Return a comprehensive dict showing every step of the spatial
+    difference process with explanations and representative code.
+
+    Parameters
+    ----------
+    filename1, filename2 : str
+        Image filenames inside IMAGES_DIR.
+
+    Returns
+    -------
+    dict with a ``steps`` list.  Each step contains *what_happened*,
+    *code*, and *data*.
+    """
+    path1 = IMAGES_DIR / filename1
+    path2 = IMAGES_DIR / filename2
+    if not path1.exists() or not path2.exists():
+        return None
+
+    steps = []
+
+    # ------------------------------------------------------------------
+    # Step 1 – Raw file info
+    # ------------------------------------------------------------------
+    step1_data = {
+        "image1": {
+            "path": str(path1),
+            "size_bytes": path1.stat().st_size,
+            "size_kb": round(path1.stat().st_size / 1024, 2),
+            "format": path1.suffix,
+        },
+        "image2": {
+            "path": str(path2),
+            "size_bytes": path2.stat().st_size,
+            "size_kb": round(path2.stat().st_size / 1024, 2),
+            "format": path2.suffix,
+        },
+    }
+    steps.append({
+        "step": 1,
+        "title": "Raw File Information",
+        "what_happened": (
+            "We start by inspecting the raw files on disk. The file size, "
+            "path, and format tell us what we are working with before any "
+            "pixel data is loaded into memory."
+        ),
+        "code": (
+            "from pathlib import Path\n"
+            "path1 = Path(filename1)\n"
+            "path2 = Path(filename2)\n"
+            "print(path1.stat().st_size)  # size in bytes\n"
+            "print(path1.suffix)          # file extension"
+        ),
+        "data": step1_data,
+    })
+
+    # ------------------------------------------------------------------
+    # Step 2 – After imread
+    # ------------------------------------------------------------------
+    img1 = cv2.imread(str(path1), cv2.IMREAD_GRAYSCALE)
+    img2 = cv2.imread(str(path2), cv2.IMREAD_GRAYSCALE)
+    if img1 is None or img2 is None:
+        return None
+
+    def _sample_5x5(img):
+        """Extract a 5x5 sample from the centre of an image."""
+        cy, cx = img.shape[0] // 2, img.shape[1] // 2
+        return img[cy - 2:cy + 3, cx - 2:cx + 3].astype(int).tolist()
+
+    step2_data = {
+        "image1": {
+            "shape": list(img1.shape),
+            "dtype": str(img1.dtype),
+            "min": int(img1.min()),
+            "max": int(img1.max()),
+            "sample_5x5_center": _sample_5x5(img1),
+        },
+        "image2": {
+            "shape": list(img2.shape),
+            "dtype": str(img2.dtype),
+            "min": int(img2.min()),
+            "max": int(img2.max()),
+            "sample_5x5_center": _sample_5x5(img2),
+        },
+    }
+    steps.append({
+        "step": 2,
+        "title": "After cv2.imread()",
+        "what_happened": (
+            "cv2.imread with IMREAD_GRAYSCALE loads the file into a 2-D "
+            "NumPy array of dtype uint8 (values 0-255). We inspect the "
+            "shape, data type, and a 5x5 sample from the centre so we "
+            "can verify the data looks reasonable."
+        ),
+        "code": (
+            "import cv2\n"
+            "img1 = cv2.imread(path1, cv2.IMREAD_GRAYSCALE)\n"
+            "img2 = cv2.imread(path2, cv2.IMREAD_GRAYSCALE)\n"
+            "print(img1.shape, img1.dtype, img1.min(), img1.max())"
+        ),
+        "data": step2_data,
+    })
+
+    # ------------------------------------------------------------------
+    # Step 3 – Resize check
+    # ------------------------------------------------------------------
+    resized = False
+    original_shape2 = list(img2.shape)
+    if img1.shape != img2.shape:
+        img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]),
+                          interpolation=cv2.INTER_AREA)
+        resized = True
+
+    step3_data = {
+        "resized": resized,
+        "image1_shape": list(img1.shape),
+        "image2_original_shape": original_shape2,
+        "image2_final_shape": list(img2.shape),
+    }
+    steps.append({
+        "step": 3,
+        "title": "Resize Check",
+        "what_happened": (
+            "Image subtraction requires both arrays to have the same "
+            "dimensions. If they differ, we resize image 2 to match image 1 "
+            "using INTER_AREA interpolation (good for downsampling)."
+            + (" Images had different sizes and were resized." if resized
+               else " Images already matched -- no resize needed.")
+        ),
+        "code": (
+            "if img1.shape != img2.shape:\n"
+            "    img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]),\n"
+            "                      interpolation=cv2.INTER_AREA)"
+        ),
+        "data": step3_data,
+    })
+
+    # ------------------------------------------------------------------
+    # Step 4 – The subtraction
+    # ------------------------------------------------------------------
+    diff = cv2.absdiff(img1, img2)
+
+    def _sample_region(img, label=""):
+        cy, cx = img.shape[0] // 2, img.shape[1] // 2
+        return img[cy - 2:cy + 3, cx - 2:cx + 3].astype(int).tolist()
+
+    step4_data = {
+        "sample_img1_5x5": _sample_region(img1),
+        "sample_img2_5x5": _sample_region(img2),
+        "sample_diff_5x5": _sample_region(diff),
+        "explanation": (
+            "Each value in the difference grid equals |img1 - img2| at "
+            "that pixel. For example, if img1 pixel is 120 and img2 is 95, "
+            "the difference is |120 - 95| = 25."
+        ),
+    }
+    steps.append({
+        "step": 4,
+        "title": "Absolute Subtraction",
+        "what_happened": (
+            "cv2.absdiff computes the per-pixel absolute difference. Unlike "
+            "simple subtraction (which wraps around for uint8), absdiff "
+            "always produces the true magnitude |a - b|. The sample grids "
+            "let you verify the arithmetic by hand."
+        ),
+        "code": (
+            "import cv2\n"
+            "diff = cv2.absdiff(img1, img2)\n"
+            "# Equivalent to: np.abs(img1.astype(int) - img2.astype(int)).astype(np.uint8)"
+        ),
+        "data": step4_data,
+    })
+
+    # ------------------------------------------------------------------
+    # Step 5 – Statistics
+    # ------------------------------------------------------------------
+    stats = {
+        "mean_difference": round(float(np.mean(diff)), 4),
+        "max_difference": int(np.max(diff)),
+        "min_difference": int(np.min(diff)),
+        "std_difference": round(float(np.std(diff)), 4),
+        "nonzero_pixels": int(np.count_nonzero(diff)),
+        "total_pixels": int(diff.size),
+        "nonzero_percentage": round(
+            float(np.count_nonzero(diff)) / diff.size * 100, 2
+        ),
+    }
+    steps.append({
+        "step": 5,
+        "title": "Compute Statistics",
+        "what_happened": (
+            "Summary statistics quantify how different the two images are. "
+            "Mean difference tells overall brightness shift, std tells "
+            "variability, and nonzero percentage tells what fraction of "
+            "the image actually changed."
+        ),
+        "code": (
+            "import numpy as np\n"
+            "mean_diff = np.mean(diff)\n"
+            "max_diff  = np.max(diff)\n"
+            "std_diff  = np.std(diff)\n"
+            "nonzero   = np.count_nonzero(diff)"
+        ),
+        "data": stats,
+    })
+
+    # ------------------------------------------------------------------
+    # Step 6 – Normalization / enhancement
+    # ------------------------------------------------------------------
+    if diff.max() > 0:
+        diff_enhanced = cv2.normalize(diff, None, 0, 255, cv2.NORM_MINMAX)
+    else:
+        diff_enhanced = diff.copy()
+
+    step6_data = {
+        "original_range": [int(diff.min()), int(diff.max())],
+        "enhanced_range": [int(diff_enhanced.min()), int(diff_enhanced.max())],
+        "diff_image": image_to_base64_png(diff),
+        "enhanced_image": image_to_base64_png(diff_enhanced),
+    }
+    steps.append({
+        "step": 6,
+        "title": "Normalization / Enhancement",
+        "what_happened": (
+            "The raw difference image often uses only a small part of the "
+            "0-255 range, making it look very dark. cv2.normalize stretches "
+            "the values to span the full range, making subtle differences "
+            "visible. Original range [{0}, {1}] is mapped to [0, 255].".format(
+                int(diff.min()), int(diff.max())
+            )
+        ),
+        "code": (
+            "diff_enhanced = cv2.normalize(diff, None, 0, 255, cv2.NORM_MINMAX)\n"
+            "# Maps [min, max] -> [0, 255] linearly"
+        ),
+        "data": step6_data,
+    })
+
+    return {"steps": steps}
+
+
+def generate_surface_plot(filename, region_x=0, region_y=0, region_size=64):
+    """
+    Generate a 3-D surface plot of pixel intensities for a region.
+
+    Parameters
+    ----------
+    filename : str
+        Image filename inside IMAGES_DIR.
+    region_x, region_y : int
+        Top-left corner of the region (column, row).
+    region_size : int
+        Side length of the square region (capped at 128 for performance).
+
+    Returns
+    -------
+    Base64-encoded PNG string, or None on failure.
+    """
+    from mpl_toolkits.mplot3d import Axes3D  # noqa: F401 -- registers '3d' projection
+
+    img = load_image(filename)
+    if img is None:
+        return None
+
+    h, w = img.shape
+    region_size = min(region_size, 128)  # cap for performance
+
+    # Clamp region to image bounds
+    x_start = max(0, min(region_x, w - 1))
+    y_start = max(0, min(region_y, h - 1))
+    x_end = min(w, x_start + region_size)
+    y_end = min(h, y_start + region_size)
+
+    region = img[y_start:y_end, x_start:x_end].astype(np.float64)
+
+    # Build coordinate grids
+    X = np.arange(x_start, x_end)
+    Y = np.arange(y_start, y_end)
+    X, Y = np.meshgrid(X, Y)
+
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_subplot(111, projection='3d')
+
+    ax.plot_surface(X, Y, region, cmap='viridis', edgecolor='none',
+                    alpha=0.9, rstride=1, cstride=1)
+
+    ax.set_xlabel('X (column)')
+    ax.set_ylabel('Y (row)')
+    ax.set_zlabel('Intensity')
+    ax.set_title(
+        f'3-D Surface Plot  —  Region ({x_start},{y_start}) to '
+        f'({x_end-1},{y_end-1})',
+        fontsize=11, fontweight='bold',
+    )
+    ax.view_init(elev=35, azim=225)
+
+    buf = io.BytesIO()
+    fig.savefig(buf, format='png', dpi=120, bbox_inches='tight',
+                facecolor='white', edgecolor='none')
+    plt.close(fig)
+    buf.seek(0)
+    return base64.b64encode(buf.read()).decode('utf-8')
+
+
+def compute_pixel_arithmetic(val1, val2):
+    """
+    Demonstrate all arithmetic operations on two uint8 pixel values.
+
+    Parameters
+    ----------
+    val1, val2 : int
+        Pixel values in [0, 255].
+
+    Returns
+    -------
+    dict with operation results and educational explanations.
+    """
+    v1 = np.uint8(max(0, min(255, int(val1))))
+    v2 = np.uint8(max(0, min(255, int(val2))))
+
+    # --- Addition ---
+    # Intentional overflow to demonstrate uint8 wrapping behaviour
+    with np.errstate(over='ignore'):
+        add_overflow = int(np.uint8(v1) + np.uint8(v2))   # wraps at 256
+    add_correct = int(min(int(v1) + int(v2), 255))         # saturated
+
+    # --- Simple subtraction ---
+    # We compute the wrap explicitly via modular arithmetic
+    raw_sub = int(v1) - int(v2)
+    sub_underflow = raw_sub % 256  # uint8 wrap behaviour
+
+    # --- Absolute difference ---
+    absdiff_val = int(abs(int(v1) - int(v2)))
+
+    # --- Multiplication (scaled by 1/255 to keep in range) ---
+    mul_raw = int(v1) * int(v2)
+    mul_scaled = int(round(mul_raw / 255.0))
+
+    # --- Division ---
+    if int(v2) == 0:
+        div_result = 255  # convention: saturate to max on divide-by-zero
+        div_note = "Division by zero -- result saturated to 255."
+    else:
+        div_result = int(round(int(v1) / int(v2)))
+        div_result = min(div_result, 255)
+        div_note = f"{int(v1)} / {int(v2)} = {int(v1)/int(v2):.4f}, rounded to {div_result}."
+
+    return {
+        "val1": int(v1),
+        "val2": int(v2),
+        "operations": {
+            "addition": {
+                "with_overflow": add_overflow,
+                "saturated": add_correct,
+                "explanation": (
+                    f"uint8 addition: {int(v1)} + {int(v2)} = {int(v1)+int(v2)}. "
+                    f"With overflow wrap (mod 256) the result is {add_overflow}. "
+                    f"Saturated (clamped to 255) the result is {add_correct}. "
+                    "OpenCV's cv2.add() uses saturation arithmetic."
+                ),
+            },
+            "subtraction": {
+                "with_underflow": sub_underflow,
+                "explanation": (
+                    f"uint8 subtraction: {int(v1)} - {int(v2)} = {raw_sub}. "
+                    f"With underflow wrap (mod 256) the result is {sub_underflow}. "
+                    "Negative results wrap around: e.g. -1 becomes 255. "
+                    "This is why simple subtraction is dangerous for images."
+                ),
+            },
+            "absdiff": {
+                "result": absdiff_val,
+                "explanation": (
+                    f"|{int(v1)} - {int(v2)}| = {absdiff_val}. "
+                    "cv2.absdiff() always returns the true magnitude of the "
+                    "difference, avoiding uint8 underflow. This is the correct "
+                    "way to compute pixel-wise differences."
+                ),
+            },
+            "multiplication": {
+                "raw": mul_raw,
+                "scaled": mul_scaled,
+                "explanation": (
+                    f"{int(v1)} * {int(v2)} = {mul_raw}. Raw product can be up to "
+                    f"255*255 = 65025, far exceeding uint8 range. "
+                    f"Scaled (raw / 255) gives {mul_scaled}, keeping the "
+                    "result in [0, 255]. This scaling models 'blending' or 'masking'."
+                ),
+            },
+            "division": {
+                "result": div_result,
+                "explanation": div_note + (
+                    " Division is used in shading correction: corrected = image / shading_pattern. "
+                    "Always guard against divide-by-zero."
+                ),
+            },
+        },
+    }
+
+
+def generate_bit_depth_comparison(filename):
+    """
+    Show the same image quantised to 8, 4, 2, and 1 bit depths,
+    each accompanied by its histogram.
+
+    Parameters
+    ----------
+    filename : str
+        Image filename inside IMAGES_DIR.
+
+    Returns
+    -------
+    dict mapping bit-depth labels to base64 PNG strings (image + histogram).
+    Returns None on failure.
+    """
+    img = load_image(filename)
+    if img is None:
+        return None
+
+    results = {}
+    bit_depths = [8, 4, 2, 1]
+
+    for bits in bit_depths:
+        levels = 2 ** bits  # number of quantisation levels
+        if bits == 8:
+            quantised = img.copy()
+        else:
+            # Quantise: divide into `levels` bins, then scale back to 0-255
+            step = 256 // levels
+            quantised = (img // step) * step
+            # Map to full 0-255 for display
+            quantised = cv2.normalize(quantised, None, 0, 255,
+                                      cv2.NORM_MINMAX).astype(np.uint8)
+
+        # Build a figure with the image and its histogram side by side
+        fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+
+        axes[0].imshow(quantised, cmap='gray', vmin=0, vmax=255)
+        axes[0].set_title(f'{bits}-bit  ({levels} levels)', fontsize=11,
+                          fontweight='bold')
+        axes[0].axis('off')
+
+        hist = cv2.calcHist([quantised], [0], None, [256], [0, 256])
+        axes[1].bar(range(256), hist.flatten(), color='#3498db', width=1.0,
+                    edgecolor='none')
+        axes[1].set_xlim([0, 256])
+        axes[1].set_xlabel('Pixel Intensity')
+        axes[1].set_ylabel('Frequency')
+        axes[1].set_title(f'Histogram  ({bits}-bit)', fontsize=11)
+        axes[1].grid(True, alpha=0.3)
+
+        plt.tight_layout()
+        buf = io.BytesIO()
+        fig.savefig(buf, format='png', dpi=120, bbox_inches='tight',
+                    facecolor='white', edgecolor='none')
+        plt.close(fig)
+        buf.seek(0)
+        results[f"{bits}_bit"] = base64.b64encode(buf.read()).decode('utf-8')
+
+    return results

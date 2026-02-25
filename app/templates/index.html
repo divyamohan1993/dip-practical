@@ -4,10 +4,19 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Image Processing Lab | CSU2543 | Shoolini University</title>
-    <meta name="description" content="Digital Image Processing Practical Lab - CSU2543. Spatial difference analysis, matplotlib visualization, and interactive image processing. Shoolini University, BTech CSE Cybersecurity.">
+    <meta name="description" content="Digital Image Processing Practical Lab - CSU2543. Comprehensive educational resource covering spatial differencing, pixel arithmetic, image fundamentals, and interactive visualizations. Shoolini University, BTech CSE Cybersecurity.">
+    <meta name="author" content="Divya Mohan">
+
+    <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- MathJax for formula rendering -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <!-- Application CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <style>
         :root {
@@ -29,7 +38,7 @@
         <div class="header-content">
             <div class="course-code">CSU2543</div>
             <h1>Digital Image Processing</h1>
-            <p style="color: var(--leather-light); font-size: 0.95rem; margin-bottom: 0.3rem;">Practical Laboratory</p>
+            <p class="header-subtitle">Practical Laboratory</p>
             <div class="header-meta">
                 <span class="meta-item"><strong>Faculty:</strong> Ishani Sharma</span>
                 <span class="meta-item"><strong>Student:</strong> Divya Mohan</span>
@@ -42,7 +51,8 @@
     <!-- Navigation -->
     <nav class="nav-bar">
         <ul>
-            <li><a href="#practical-1" class="active">Practical 1</a></li>
+            <li><a href="#foundations" class="active">Foundations</a></li>
+            <li><a href="#practical-1">Practical 1</a></li>
             <li><a href="#image-explorer">Image Explorer</a></li>
             <li><a href="#matplotlib-ref">Matplotlib Reference</a></li>
             <li><a href="#theory">Theory Notes</a></li>
@@ -53,7 +63,555 @@
     <!-- Main Content -->
     <main class="main-content">
 
-        <!-- ============ PRACTICAL 1 ============ -->
+        <!-- ================================================================ -->
+        <!-- SECTION 1: FOUNDATIONS - What is a Digital Image?                 -->
+        <!-- ================================================================ -->
+        <section id="foundations">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">0</span>
+                    <h2>Foundations &mdash; What is a Digital Image?</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <p>
+                            Before we write a single line of code or run any experiment, we need to deeply
+                            understand what a digital image actually <em>is</em>. This section builds your
+                            intuition from the ground up. Whether you are in class 9 encountering this for the
+                            first time, or a PhD researcher needing a precise refresher, this material will serve
+                            you well. Every concept here maps directly to what you will do in the practicals that
+                            follow.
+                        </p>
+                    </div>
+
+                    <!-- ============================================ -->
+                    <!-- 1a. Image as a Matrix                        -->
+                    <!-- ============================================ -->
+                    <article class="theory-block" id="image-as-matrix">
+                        <h3>1a. An Image is a Matrix of Numbers</h3>
+
+                        <p>
+                            In the physical world, an image is a continuous distribution of light intensity across a
+                            surface. Your eyes perceive this through roughly 130 million photoreceptor cells on the
+                            retina. But a computer has no retina. Instead, it represents an image as a
+                            <strong>two-dimensional function</strong> \( f(x, y) \), where \( x \) and \( y \) are
+                            <em>spatial coordinates</em> (the position of a point in the image) and the <em>value</em>
+                            of \( f \) at any point \( (x, y) \) is called the <strong>pixel intensity</strong> (how
+                            bright or dark that point is).
+                        </p>
+
+                        <p>
+                            When both the spatial coordinates and the intensity values are <strong>finite, discrete
+                            quantities</strong>, we call this a <strong>digital image</strong>. In practice, a digital
+                            image is stored in the computer as a <strong>2D array</strong> (a matrix) of numbers. Each
+                            element of this matrix is a <strong>pixel</strong> (short for &ldquo;picture element&rdquo;).
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            f(x, y) \quad \text{where} \quad 0 \le x \le M-1, \quad 0 \le y \le N-1
+                            \]
+                        </div>
+
+                        <p>
+                            Here, \( M \) is the number of rows (height) and \( N \) is the number of columns (width).
+                            The image therefore contains \( M \times N \) pixels in total. The coordinate system starts
+                            at the <strong>top-left corner</strong> with \( (0, 0) \) and increases downward (for rows)
+                            and to the right (for columns). This is different from standard mathematical convention
+                            where the y-axis points upward &mdash; a common source of confusion for beginners.
+                        </p>
+
+                        <p>
+                            In matrix notation, the image looks like this:
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            f(x,y) = \begin{bmatrix}
+                            f(0,0) & f(0,1) & \cdots & f(0,N-1) \\
+                            f(1,0) & f(1,1) & \cdots & f(1,N-1) \\
+                            \vdots & \vdots & \ddots & \vdots \\
+                            f(M-1,0) & f(M-1,1) & \cdots & f(M-1,N-1)
+                            \end{bmatrix}
+                            \]
+                        </div>
+
+                        <p>
+                            In Python with OpenCV and NumPy, when you load an image using
+                            <code>img = cv2.imread('photo.tif', cv2.IMREAD_GRAYSCALE)</code>, the variable
+                            <code>img</code> is a NumPy <code>ndarray</code> with shape <code>(M, N)</code> and data
+                            type <code>uint8</code> (unsigned 8-bit integer, values 0 to 255). You access individual
+                            pixels using standard array indexing: <code>img[row, col]</code> or equivalently
+                            <code>img[x, y]</code>.
+                        </p>
+
+                        <p>
+                            <strong>Why does this matter?</strong> Every single operation in digital image processing
+                            &mdash; from simple brightness adjustment to complex edge detection to deep learning &mdash;
+                            ultimately reduces to mathematical operations on this matrix of numbers. If you understand
+                            the matrix, you understand the image.
+                        </p>
+
+                        <h4>Interactive Pixel Grid</h4>
+                        <p>
+                            The grid below shows a 16&times;16 patch of actual pixel values from an image in our
+                            dataset. Each cell is colored by its intensity (darker cells have lower values, lighter
+                            cells have higher values). <strong>Hover</strong> over any cell to see its coordinates
+                            and value. <strong>Click</strong> on any cell to see its binary representation &mdash;
+                            remember, every pixel value is ultimately stored as a sequence of bits in memory.
+                        </p>
+
+                        <!-- JS renders the interactive pixel grid here -->
+                        <div id="pixel-grid-container" class="pixel-grid-wrapper"></div>
+
+                        <p>
+                            Notice how the intensity values vary smoothly across the grid. In natural images,
+                            neighboring pixels tend to have similar values &mdash; this property is called
+                            <strong>spatial correlation</strong> and is the foundation of image compression
+                            (JPEG, PNG) and many processing algorithms.
+                        </p>
+                    </article>
+
+                    <!-- ============================================ -->
+                    <!-- 1b. Grayscale Levels                         -->
+                    <!-- ============================================ -->
+                    <article class="theory-block" id="grayscale-levels">
+                        <h3>1b. Grayscale Levels and Bit Depth</h3>
+
+                        <p>
+                            A <strong>grayscale image</strong> uses a single number per pixel to represent brightness.
+                            The convention in most systems is:
+                        </p>
+
+                        <ul>
+                            <li><strong>0 = pure black</strong> (no light, complete darkness)</li>
+                            <li><strong>255 = pure white</strong> (maximum brightness)</li>
+                            <li>Everything in between represents shades of gray (e.g., 128 is a medium gray)</li>
+                        </ul>
+
+                        <p>
+                            Why 0 to 255? Because the most common storage format uses <strong>8 bits per pixel</strong>.
+                            With 8 bits, you can represent \( 2^8 = 256 \) distinct values (0 through 255). The number
+                            of distinct gray levels \( L \) is determined by the number of bits \( k \) allocated to
+                            each pixel:
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            L = 2^k \quad \text{gray levels, where } k \text{ is the bits per pixel}
+                            \]
+                        </div>
+
+                        <p>
+                            The gradient bar below visualizes all 256 levels from 0 (black) on the left to 255 (white)
+                            on the right. This is the complete &ldquo;vocabulary&rdquo; that an 8-bit grayscale image
+                            uses to represent visual information:
+                        </p>
+
+                        <!-- JS fills this with a smooth gradient bar showing 0-255 -->
+                        <div id="grayscale-bar" class="grayscale-bar-container"></div>
+
+                        <h4>Storage Requirements</h4>
+                        <p>
+                            The total number of bits required to store a digital image is:
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            b = M \times N \times k \quad \text{bits}
+                            \]
+                        </div>
+
+                        <p>
+                            <strong>Worked example:</strong> A 1024 &times; 1024 image with 8 bits per pixel requires:
+                        </p>
+                        <div class="math-formula">
+                            \[
+                            b = 1024 \times 1024 \times 8 = 8{,}388{,}608 \text{ bits} = 1{,}048{,}576 \text{ bytes} = 1 \text{ MB}
+                            \]
+                        </div>
+
+                        <p>
+                            This is the <em>uncompressed</em> size. Formats like JPEG dramatically reduce file size
+                            through lossy compression (discarding information the human eye is less sensitive to),
+                            while PNG uses lossless compression (no information is lost). The TIFF format used in our
+                            dataset can store images either compressed or uncompressed, and supports various bit depths
+                            and color models.
+                        </p>
+
+                        <p>
+                            <strong>Real-world scale:</strong> A 12-megapixel smartphone photo (4000 &times; 3000
+                            pixels, 3 color channels, 8 bits each) needs 4000 &times; 3000 &times; 3 &times; 8 =
+                            288,000,000 bits = 36 MB uncompressed. This is why compression is not optional &mdash;
+                            it is essential.
+                        </p>
+                    </article>
+
+                    <!-- ============================================ -->
+                    <!-- 1c. Bits Per Pixel Comparison                -->
+                    <!-- ============================================ -->
+                    <article class="theory-block" id="bit-depth-section">
+                        <h3>1c. Bits Per Pixel &mdash; Visual Comparison</h3>
+
+                        <p>
+                            Reducing the number of bits per pixel reduces the number of available gray levels. This
+                            process is called <strong>quantization</strong>, and its visual effect is profound:
+                        </p>
+
+                        <ul>
+                            <li>
+                                <strong>8-bit (256 levels):</strong> The standard. Smooth gradients, no visible
+                                banding. The human eye can distinguish roughly 200 intensity levels under ideal
+                                conditions, so 256 is more than sufficient for most applications.
+                            </li>
+                            <li>
+                                <strong>4-bit (16 levels):</strong> Noticeable &ldquo;false contouring&rdquo; appears.
+                                Smooth gradients become staircase-like bands. This was common in early computer
+                                graphics (EGA displays in the 1980s used 16 colors).
+                            </li>
+                            <li>
+                                <strong>2-bit (4 levels):</strong> Only four shades: black, dark gray, light gray,
+                                white. Most detail is lost. The image becomes almost poster-like.
+                            </li>
+                            <li>
+                                <strong>1-bit (2 levels):</strong> Binary image &mdash; every pixel is either pure
+                                black (0) or pure white (1). Used in document scanning (text documents, barcodes,
+                                QR codes) and as the output of thresholding operations.
+                            </li>
+                        </ul>
+
+                        <p>
+                            The mathematical operation to reduce an 8-bit image to \( k \)-bit is:
+                        </p>
+                        <div class="math-formula">
+                            \[
+                            f_k(x,y) = \left\lfloor \frac{f(x,y)}{2^{8-k}} \right\rfloor \times \frac{255}{2^k - 1}
+                            \]
+                        </div>
+                        <p>
+                            This first divides (integer division) to reduce levels, then scales back to the 0-255
+                            display range. Click the button below to see this applied to an actual image from our
+                            dataset:
+                        </p>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="btn-bit-depth">
+                                Generate Bit-Depth Comparison
+                            </button>
+                        </div>
+
+                        <!-- JS renders bit-depth comparison images here -->
+                        <div id="bit-depth-result" class="bit-depth-result-container"></div>
+                    </article>
+
+                    <!-- ============================================ -->
+                    <!-- 1d. Pixel Arithmetic                         -->
+                    <!-- ============================================ -->
+                    <article class="theory-block" id="pixel-arithmetic-section">
+                        <h3>1d. Pixel Arithmetic &mdash; Why Overflow Matters</h3>
+
+                        <p>
+                            Pixel arithmetic is the foundation of all image processing operations. When we add,
+                            subtract, multiply, or divide pixel values, we must be acutely aware of the
+                            <strong>data type constraints</strong>. In an 8-bit unsigned integer (<code>uint8</code>)
+                            representation, pixel values can only exist in the range [0, 255]. What happens when an
+                            arithmetic operation produces a result outside this range?
+                        </p>
+
+                        <h4>Overflow and Underflow</h4>
+                        <p>
+                            Consider two pixel values: \( a = 200 \) and \( b = 100 \).
+                        </p>
+                        <ul>
+                            <li>
+                                <strong>Addition:</strong> \( a + b = 300 \). But 300 &gt; 255! In <code>uint8</code>
+                                arithmetic, this <strong>overflows</strong> and wraps around:
+                                \( 300 \bmod 256 = 44 \). So instead of a bright pixel (300), you get a dark pixel
+                                (44). This is catastrophically wrong for image processing.
+                            </li>
+                            <li>
+                                <strong>Subtraction:</strong> \( b - a = -100 \). But <code>uint8</code> cannot store
+                                negative numbers! This <strong>underflows</strong> and wraps:
+                                \( (-100 + 256) = 156 \). So instead of &ldquo;no difference&rdquo; (which should be
+                                close to 0), you get a medium-bright pixel (156). Again, completely wrong.
+                            </li>
+                        </ul>
+
+                        <h4>The Solution: Saturating Arithmetic and cv2.absdiff()</h4>
+                        <p>
+                            OpenCV provides functions that handle overflow correctly:
+                        </p>
+                        <ul>
+                            <li>
+                                <code>cv2.add(a, b)</code> uses <strong>saturating arithmetic</strong>: results above
+                                255 are clamped to 255, results below 0 are clamped to 0. No wrapping.
+                            </li>
+                            <li>
+                                <code>cv2.absdiff(a, b)</code> computes \( |a - b| \) correctly by performing the
+                                subtraction in a wider type (e.g., int16) before taking the absolute value. The result
+                                is always non-negative and never overflows.
+                            </li>
+                        </ul>
+
+                        <div class="math-formula">
+                            \[
+                            \text{cv2.add}(a, b) = \min(a + b,\; 255) \qquad
+                            \text{cv2.absdiff}(a, b) = |a - b|
+                            \]
+                        </div>
+
+                        <p>
+                            <strong>Rule of thumb:</strong> Never use the Python <code>+</code> or <code>-</code>
+                            operators directly on <code>uint8</code> NumPy arrays for image processing. Always use
+                            <code>cv2.add()</code>, <code>cv2.subtract()</code>, or <code>cv2.absdiff()</code>.
+                        </p>
+
+                        <h4>Interactive Calculator</h4>
+                        <p>
+                            Enter two pixel values below (0&ndash;255) and click &ldquo;Calculate&rdquo; to see the
+                            result of every arithmetic operation, including what happens with overflow, underflow, and
+                            the correct OpenCV-style computation:
+                        </p>
+
+                        <div id="arithmetic-calculator" class="arithmetic-calculator">
+                            <div class="arith-inputs">
+                                <div class="arith-input-group">
+                                    <label for="arith-val1">Pixel Value A</label>
+                                    <input type="number" id="arith-val1" min="0" max="255" value="200"
+                                           placeholder="0-255">
+                                </div>
+                                <div class="arith-input-group">
+                                    <label for="arith-val2">Pixel Value B</label>
+                                    <input type="number" id="arith-val2" min="0" max="255" value="100"
+                                           placeholder="0-255">
+                                </div>
+                                <div class="arith-input-group">
+                                    <button class="btn btn-primary" id="btn-pixel-arithmetic">Calculate</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- JS renders arithmetic results here -->
+                        <div id="pixel-arithmetic-result" class="pixel-arithmetic-result-container"></div>
+                    </article>
+
+                    <!-- ============================================ -->
+                    <!-- Knowledge Check: Foundations                  -->
+                    <!-- ============================================ -->
+                    <div class="quiz-container" id="quiz-foundations">
+                        <h3>Knowledge Check &mdash; Foundations</h3>
+                        <div class="quiz-questions">
+                            <div class="quiz-question" data-correct="2">
+                                <p class="quiz-question-text">
+                                    <strong>Q1.</strong> In a digital image, the coordinate (0, 0) refers to which
+                                    corner of the image?
+                                </p>
+                                <button class="quiz-option" data-index="0">Bottom-left</button>
+                                <button class="quiz-option" data-index="1">Bottom-right</button>
+                                <button class="quiz-option" data-index="2">Top-left</button>
+                                <button class="quiz-option" data-index="3">Center</button>
+                                <div class="quiz-explanation hidden">
+                                    In computer vision and image processing, the origin (0, 0) is at the
+                                    <strong>top-left</strong> corner. The x-axis (rows) increases downward and the
+                                    y-axis (columns) increases to the right. This is different from standard
+                                    mathematical plotting where the origin is at the bottom-left.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="1">
+                                <p class="quiz-question-text">
+                                    <strong>Q2.</strong> How many distinct gray levels can a 4-bit image represent?
+                                </p>
+                                <button class="quiz-option" data-index="0">4</button>
+                                <button class="quiz-option" data-index="1">16</button>
+                                <button class="quiz-option" data-index="2">64</button>
+                                <button class="quiz-option" data-index="3">256</button>
+                                <div class="quiz-explanation hidden">
+                                    The number of gray levels is \( L = 2^k \) where \( k \) is the bits per pixel.
+                                    For 4-bit: \( 2^4 = 16 \) levels. For reference: 1-bit = 2 levels, 8-bit = 256
+                                    levels, 16-bit = 65,536 levels.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="3">
+                                <p class="quiz-question-text">
+                                    <strong>Q3.</strong> What is the result of <code>numpy.uint8(200) + numpy.uint8(100)</code>
+                                    in Python?
+                                </p>
+                                <button class="quiz-option" data-index="0">300</button>
+                                <button class="quiz-option" data-index="1">255</button>
+                                <button class="quiz-option" data-index="2">0</button>
+                                <button class="quiz-option" data-index="3">44</button>
+                                <div class="quiz-explanation hidden">
+                                    NumPy <code>uint8</code> arithmetic wraps on overflow:
+                                    \( (200 + 100) \bmod 256 = 300 \bmod 256 = 44 \). This is why you should use
+                                    <code>cv2.add()</code> for image addition, which uses saturating arithmetic
+                                    and would return 255 instead.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="0">
+                                <p class="quiz-question-text">
+                                    <strong>Q4.</strong> A 512 &times; 512 image at 8 bits per pixel requires how much
+                                    storage (uncompressed)?
+                                </p>
+                                <button class="quiz-option" data-index="0">256 KB</button>
+                                <button class="quiz-option" data-index="1">512 KB</button>
+                                <button class="quiz-option" data-index="2">1 MB</button>
+                                <button class="quiz-option" data-index="3">2 MB</button>
+                                <div class="quiz-explanation hidden">
+                                    Storage = \( M \times N \times k \) bits = \( 512 \times 512 \times 8 \) =
+                                    2,097,152 bits = 262,144 bytes = <strong>256 KB</strong>. Remember: 8 bits = 1
+                                    byte, 1024 bytes = 1 KB, 1024 KB = 1 MB.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quiz-score hidden" id="quiz-foundations-score"></div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================ -->
+        <!-- SECTION 2: PROCESSING PIPELINE                                   -->
+        <!-- ================================================================ -->
+        <section id="processing-pipeline">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">P</span>
+                    <h2>The Image Processing Pipeline</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <h3>From File to Display: How an Image is Processed</h3>
+
+                        <p>
+                            Every image processing task follows a predictable sequence of steps. Understanding this
+                            pipeline is critical because errors at any stage propagate forward and corrupt all
+                            subsequent results. Let us trace the complete journey of an image from a file on disk to a
+                            processed result on your screen.
+                        </p>
+
+                        <h4>Stage 1: Image Acquisition (File on Disk)</h4>
+                        <p>
+                            Images in our dataset are stored in <strong>TIFF format</strong> (Tagged Image File Format).
+                            TIFF is the gold standard for scientific and medical imaging because it supports lossless
+                            storage, arbitrary bit depths (1-bit to 64-bit), multiple color spaces (grayscale, RGB,
+                            CMYK), and embedded metadata. Unlike JPEG, TIFF does not introduce compression artifacts.
+                            The files from Gonzalez &amp; Woods Chapter 2 are grayscale TIFF images with 8 bits per
+                            pixel.
+                        </p>
+
+                        <h4>Stage 2: Reading into Memory &mdash; cv2.imread()</h4>
+                        <p>
+                            When you call <code>cv2.imread('Fig0222a.tif', cv2.IMREAD_GRAYSCALE)</code>, OpenCV
+                            performs several operations internally:
+                        </p>
+                        <ol>
+                            <li>Reads the TIFF file header to determine dimensions, bit depth, and encoding.</li>
+                            <li>Decodes the pixel data (decompressing if necessary).</li>
+                            <li>Allocates a contiguous block of memory as a NumPy <code>ndarray</code>.</li>
+                            <li>Fills the array with pixel values, row by row (row-major order, C-contiguous).</li>
+                        </ol>
+                        <p>
+                            The return value is a NumPy array. You can verify this:
+                        </p>
+                        <pre><code>import cv2
+import numpy as np
+
+img = cv2.imread('Fig0222a.tif', cv2.IMREAD_GRAYSCALE)
+print(type(img))        # &lt;class 'numpy.ndarray'&gt;
+print(img.dtype)        # uint8
+print(img.shape)        # (M, N) e.g. (1024, 1024)
+print(img.nbytes)       # M * N bytes, e.g. 1048576</code></pre>
+
+                        <p>
+                            <strong>Common pitfall:</strong> <code>cv2.imread()</code> returns <code>None</code> (not
+                            an error!) if the file path is wrong or the file is corrupted. Always check:
+                            <code>if img is None: raise FileNotFoundError("Image not found")</code>.
+                        </p>
+
+                        <h4>Stage 3: Processing (NumPy Operations)</h4>
+                        <p>
+                            Once the image is a NumPy array, all of Python's numerical computing power is available.
+                            Operations like subtraction, thresholding, filtering, and transformation are all matrix
+                            operations. NumPy executes these in optimized C code, making them extremely fast even on
+                            large images.
+                        </p>
+
+                        <h4>Stage 4: Display / Output</h4>
+                        <p>
+                            The processed array is converted back into a displayable format. In our web application,
+                            this means encoding the NumPy array as a PNG image (via <code>cv2.imencode('.png', img)</code>),
+                            then base64-encoding the bytes for embedding in HTML. In a local Python script, you would
+                            use <code>cv2.imshow('Window', img)</code> or <code>matplotlib.pyplot.imshow(img)</code>.
+                        </p>
+                    </div>
+
+                    <!-- JS renders an animated pipeline visualization here -->
+                    <div id="pipeline-container" class="pipeline-visualization">
+                        <div class="pipeline-steps">
+                            <div class="pipeline-step">
+                                <div class="pipeline-step-icon">1</div>
+                                <div class="pipeline-step-label">File on Disk</div>
+                                <div class="pipeline-step-detail">.tif / .png / .jpg</div>
+                            </div>
+                            <div class="pipeline-arrow">&rarr;</div>
+                            <div class="pipeline-step">
+                                <div class="pipeline-step-icon">2</div>
+                                <div class="pipeline-step-label">cv2.imread()</div>
+                                <div class="pipeline-step-detail">Decode &amp; load</div>
+                            </div>
+                            <div class="pipeline-arrow">&rarr;</div>
+                            <div class="pipeline-step">
+                                <div class="pipeline-step-icon">3</div>
+                                <div class="pipeline-step-label">NumPy Array</div>
+                                <div class="pipeline-step-detail">ndarray, uint8, (M,N)</div>
+                            </div>
+                            <div class="pipeline-arrow">&rarr;</div>
+                            <div class="pipeline-step">
+                                <div class="pipeline-step-icon">4</div>
+                                <div class="pipeline-step-label">Processing</div>
+                                <div class="pipeline-step-detail">Add, subtract, filter</div>
+                            </div>
+                            <div class="pipeline-arrow">&rarr;</div>
+                            <div class="pipeline-step">
+                                <div class="pipeline-step-icon">5</div>
+                                <div class="pipeline-step-label">Display / Save</div>
+                                <div class="pipeline-step-detail">imshow / imencode</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="theory-block">
+                        <h4>Step-by-Step Walkthrough</h4>
+                        <p>
+                            Click the button below to run a complete step-by-step analysis on an image pair from the
+                            dataset. The server will execute each stage of the pipeline and return intermediate results
+                            &mdash; including the raw pixel values at each stage &mdash; so you can see exactly what
+                            happens inside the computer at every step.
+                        </p>
+
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="btn-step-by-step">
+                                Run Step-by-Step Pipeline Analysis
+                            </button>
+                        </div>
+
+                        <!-- JS renders step-by-step results here -->
+                        <div id="step-by-step-result" class="step-by-step-container"></div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================ -->
+        <!-- SECTION 3: PRACTICAL 1 - Spatial Image Differencing              -->
+        <!-- ================================================================ -->
         <section id="practical-1">
             <div class="panel">
                 <div class="panel-header">
@@ -62,22 +620,80 @@
                 </div>
                 <div class="panel-body">
 
-                    <!-- Theory Introduction -->
+                    <!-- Enhanced Theory Introduction -->
                     <div class="theory-block">
                         <h4>What is Spatial Image Differencing?</h4>
                         <p>
-                            Image subtraction (or spatial differencing) is a fundamental arithmetic operation in digital image processing.
-                            Given two images <code>f(x,y)</code> and <code>g(x,y)</code>, their absolute difference is:
+                            Image subtraction (or spatial differencing) is one of the most fundamental and widely
+                            used arithmetic operations in digital image processing. The idea is beautifully simple:
+                            take two images of the same scene, subtract one from the other, and whatever remains
+                            is the <em>difference</em> &mdash; the change between the two images.
                         </p>
-                        <span class="math-formula">d(x,y) = |f(x,y) &minus; g(x,y)|</span>
+
                         <p>
-                            This technique is central to <strong>change detection</strong>, <strong>digital subtraction angiography</strong>,
-                            <strong>background subtraction</strong>, and <strong>shading correction</strong>. The resulting difference image
-                            highlights regions where the two images differ in intensity, with brighter pixels indicating larger differences.
+                            Formally, given two images \( f(x,y) \) and \( g(x,y) \) of the same dimensions, their
+                            <strong>absolute difference image</strong> is defined as:
                         </p>
+
+                        <div class="math-formula">
+                            \[
+                            d(x,y) = |f(x,y) - g(x,y)| \quad \text{for all } (x,y) \text{ in the image domain}
+                            \]
+                        </div>
+
                         <p>
-                            In OpenCV, this is implemented using <code>cv2.absdiff(img1, img2)</code>, which computes the per-element
-                            absolute difference, handling unsigned integer underflow correctly (unlike simple subtraction which would wrap around).
+                            The absolute value is critical. Without it, negative differences would cause
+                            <code>uint8</code> underflow (as discussed in the Foundations section). The function
+                            <code>cv2.absdiff(img1, img2)</code> implements this correctly.
+                        </p>
+
+                        <p>
+                            <strong>Why is this useful?</strong> The resulting difference image \( d(x,y) \) has a
+                            remarkable property: pixels where the two images are identical have value 0 (pure black),
+                            and pixels where they differ have values proportional to the magnitude of the difference
+                            (brighter = larger difference). This makes change detection intuitive and visual.
+                        </p>
+
+                        <h4>Key Applications</h4>
+                        <ul>
+                            <li>
+                                <strong>Digital Subtraction Angiography (DSA):</strong> A pre-contrast X-ray is
+                                subtracted from a post-contrast X-ray. The bone structure (identical in both) cancels
+                                out, leaving only the contrast-filled blood vessels visible. This revolutionized
+                                vascular imaging in medicine.
+                            </li>
+                            <li>
+                                <strong>Change Detection:</strong> Satellite images of the same region taken at
+                                different times are differenced to detect deforestation, urban growth, flood damage,
+                                or military installations.
+                            </li>
+                            <li>
+                                <strong>Background Subtraction:</strong> In video surveillance, a static background
+                                frame is subtracted from each new frame. Moving objects appear as bright regions in
+                                the difference image.
+                            </li>
+                            <li>
+                                <strong>Shading Correction:</strong> Dividing (or subtracting) an image by the
+                                estimated illumination pattern removes uneven lighting artifacts from microscopy or
+                                scanned documents.
+                            </li>
+                        </ul>
+
+                        <h4>Statistics of the Difference Image</h4>
+                        <p>
+                            To quantify <em>how different</em> two images are, we compute statistics on the difference
+                            image:
+                        </p>
+                        <div class="math-formula">
+                            \[
+                            \bar{d} = \frac{1}{MN} \sum_{x=0}^{M-1} \sum_{y=0}^{N-1} d(x,y) \qquad
+                            \sigma_d = \sqrt{\frac{1}{MN} \sum_{x=0}^{M-1} \sum_{y=0}^{N-1} (d(x,y) - \bar{d})^2}
+                            \]
+                        </div>
+                        <p>
+                            Where \( \bar{d} \) is the mean difference (overall similarity) and \( \sigma_d \) is the
+                            standard deviation (variability of differences). A low mean with low standard deviation
+                            means the images are nearly identical. A high mean indicates widespread changes.
                         </p>
                     </div>
 
@@ -89,9 +705,9 @@
 
                     <!-- Tab: Recommended Pairs -->
                     <div id="tab-recommended" class="tab-content active">
-                        <p style="color: var(--ink-light); font-size: 0.9rem; margin-bottom: 1rem;">
-                            These image pairs from Chapter 2 of Gonzalez &amp; Woods produce the most meaningful spatial differences,
-                            each illustrating a key application of image subtraction:
+                        <p class="tab-description">
+                            These image pairs from Chapter 2 of Gonzalez &amp; Woods produce the most meaningful
+                            spatial differences, each illustrating a key application of image subtraction:
                         </p>
                         <div class="pair-cards" id="pair-cards-container">
                             <!-- Populated by JS -->
@@ -100,7 +716,7 @@
 
                     <!-- Tab: Custom Selection -->
                     <div id="tab-custom" class="tab-content">
-                        <p style="color: var(--ink-light); font-size: 0.9rem; margin-bottom: 1rem;">
+                        <p class="tab-description">
                             Select any two images from the dataset to compute their spatial difference.
                             Images with different dimensions will be automatically resized.
                         </p>
@@ -153,12 +769,20 @@
                             </div>
                             <div class="result-image-card">
                                 <img id="result-diff" alt="Absolute Difference">
-                                <div class="image-caption">Absolute Difference |f - g|</div>
+                                <div class="image-caption">Absolute Difference |f &minus; g|</div>
                             </div>
                             <div class="result-image-card">
                                 <img id="result-diff-enhanced" alt="Enhanced Difference">
                                 <div class="image-caption">Enhanced Difference (Normalized)</div>
                             </div>
+                        </div>
+
+                        <!-- Pixel Inspector -->
+                        <div id="pixel-inspector-container" class="pixel-inspector-section">
+                            <p class="pixel-inspector-hint">
+                                Click on any result image above to inspect individual pixel values in that region.
+                                A popup will show the pixel neighborhood around your click point.
+                            </p>
                         </div>
 
                         <!-- Statistics -->
@@ -189,12 +813,20 @@
                             </div>
                         </div>
 
-                        <!-- Full Comparison Plot -->
+                        <!-- Surface Plot and Full Comparison -->
                         <div class="btn-group">
+                            <button class="btn btn-secondary" id="btn-surface-plot">
+                                Generate 3D Surface Plot
+                            </button>
                             <button class="btn btn-green" id="btn-full-plot">
                                 Generate Full Comparison Plot (Matplotlib)
                             </button>
                         </div>
+
+                        <!-- Surface Plot Container -->
+                        <div id="surface-plot-result" class="surface-plot-container"></div>
+
+                        <!-- Full Comparison Plot -->
                         <div id="full-plot-container" class="comparison-plot hidden">
                             <img id="full-plot-img" alt="Full Comparison Plot">
                         </div>
@@ -208,42 +840,107 @@
                         </div>
                     </div>
 
+                    <!-- Knowledge Check: Practical 1 -->
+                    <div class="quiz-container" id="quiz-practical1">
+                        <h3>Knowledge Check &mdash; Spatial Differencing</h3>
+                        <div class="quiz-questions">
+                            <div class="quiz-question" data-correct="2">
+                                <p class="quiz-question-text">
+                                    <strong>Q1.</strong> Why do we use <code>cv2.absdiff()</code> instead of
+                                    simple subtraction (<code>img1 - img2</code>) for image differencing?
+                                </p>
+                                <button class="quiz-option" data-index="0">It is faster computationally</button>
+                                <button class="quiz-option" data-index="1">It produces color images from grayscale inputs</button>
+                                <button class="quiz-option" data-index="2">It avoids uint8 underflow by computing |a - b| correctly</button>
+                                <button class="quiz-option" data-index="3">It automatically resizes images to the same dimensions</button>
+                                <div class="quiz-explanation hidden">
+                                    <code>cv2.absdiff()</code> computes the absolute difference \( |a - b| \)
+                                    correctly for unsigned integers. Direct NumPy subtraction on <code>uint8</code>
+                                    arrays would wrap negative values (e.g., \( 50 - 100 = 206 \) in uint8 due to
+                                    underflow), producing completely incorrect results.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="1">
+                                <p class="quiz-question-text">
+                                    <strong>Q2.</strong> In a difference image, a pixel value of 0 (pure black) means:
+                                </p>
+                                <button class="quiz-option" data-index="0">Maximum change occurred at that location</button>
+                                <button class="quiz-option" data-index="1">No change &mdash; both images have identical intensity at that pixel</button>
+                                <button class="quiz-option" data-index="2">The pixel was outside the image boundary</button>
+                                <button class="quiz-option" data-index="3">An error occurred during computation</button>
+                                <div class="quiz-explanation hidden">
+                                    Since \( d(x,y) = |f(x,y) - g(x,y)| \), a difference of 0 means
+                                    \( f(x,y) = g(x,y) \) &mdash; the two images have exactly the same intensity
+                                    at that pixel location. The brighter a pixel in the difference image, the larger
+                                    the intensity change between the two input images.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="3">
+                                <p class="quiz-question-text">
+                                    <strong>Q3.</strong> Digital Subtraction Angiography works because:
+                                </p>
+                                <button class="quiz-option" data-index="0">Blood vessels absorb X-rays differently than bone</button>
+                                <button class="quiz-option" data-index="1">The contrast agent makes all tissues equally visible</button>
+                                <button class="quiz-option" data-index="2">Subtracting two images always reveals hidden structures</button>
+                                <button class="quiz-option" data-index="3">Subtracting pre-contrast from post-contrast cancels static structures, leaving only contrast-filled vessels</button>
+                                <div class="quiz-explanation hidden">
+                                    DSA takes an X-ray before contrast injection (showing bone + soft tissue) and
+                                    another after injection (showing bone + soft tissue + contrast-filled vessels).
+                                    Subtracting the pre-image from the post-image cancels everything that is
+                                    identical (bone, soft tissue), leaving only the contrast agent in blood vessels
+                                    visible. This is one of the most impactful applications of image subtraction
+                                    in medical imaging.
+                                </div>
+                            </div>
+                        </div>
+                        <div class="quiz-score hidden" id="quiz-practical1-score"></div>
+                    </div>
+
                 </div>
             </div>
         </section>
 
-        <!-- ============ IMAGE EXPLORER ============ -->
+        <!-- ================================================================ -->
+        <!-- SECTION 4: IMAGE EXPLORER                                        -->
+        <!-- ================================================================ -->
         <section id="image-explorer">
             <div class="panel">
                 <div class="panel-header">
-                    <span class="panel-number">&#x1F5BC;</span>
+                    <span class="panel-number">E</span>
                     <h2>Image Dataset Explorer &mdash; DIP3E Chapter 2</h2>
                 </div>
                 <div class="panel-body">
                     <div class="theory-block">
                         <h4>About the Dataset</h4>
                         <p>
-                            These images are from the official <em>Digital Image Processing, 3rd Edition</em> companion website
-                            by Gonzalez &amp; Woods. Chapter 2 covers <strong>Digital Image Fundamentals</strong> and these images
-                            illustrate key concepts: varying spatial resolution, intensity resolution, sensor shading,
-                            medical imaging (angiography, CT, dental X-ray), and contrast levels.
+                            These images are from the official <em>Digital Image Processing, 3rd Edition</em>
+                            companion website by Gonzalez &amp; Woods. Chapter 2 covers
+                            <strong>Digital Image Fundamentals</strong> and these images illustrate key concepts:
+                            varying spatial resolution, intensity resolution, sensor shading, medical imaging
+                            (angiography, CT, dental X-ray), and contrast levels. Each image is stored in
+                            TIFF format, which preserves full quality without compression artifacts.
                         </p>
                     </div>
                     <div class="image-gallery" id="image-gallery">
                         <div class="loading-spinner">Loading images from dataset...</div>
                     </div>
-                    <p class="mt-1" style="font-size: 0.8rem; color: var(--ink-light);">
-                        Click any image to view its histogram. All images are stored as TIFF format and served as PNG.
+                    <p class="mt-1 gallery-footnote">
+                        Click any image to view its histogram. All images are stored as TIFF format and served
+                        as PNG.
                     </p>
                 </div>
             </div>
         </section>
 
-        <!-- ============ MATPLOTLIB REFERENCE ============ -->
+        <!-- ================================================================ -->
+        <!-- SECTION 5: MATPLOTLIB REFERENCE                                  -->
+        <!-- ================================================================ -->
         <section id="matplotlib-ref">
             <div class="panel">
                 <div class="panel-header">
-                    <span class="panel-number">&#x1F4CA;</span>
+                    <span class="panel-number">M</span>
                     <h2>Matplotlib Plotting Commands Reference</h2>
                 </div>
                 <div class="panel-body">
@@ -251,11 +948,18 @@
                     <div class="theory-block">
                         <h4>About Matplotlib</h4>
                         <p>
-                            Matplotlib is Python's foundational 2D plotting library, created by John D. Hunter in 2003.
-                            It produces publication-quality figures in a variety of formats and interactive environments.
-                            The <code>pyplot</code> module provides a MATLAB-like interface for quick plotting.
-                            In DIP, matplotlib is essential for displaying images (<code>imshow</code>), plotting histograms,
-                            and creating multi-panel comparison figures (<code>subplot</code>).
+                            Matplotlib is Python's foundational 2D plotting library, created by John D. Hunter in
+                            2003. It produces publication-quality figures in a variety of formats and interactive
+                            environments. The <code>pyplot</code> module provides a MATLAB-like interface for quick
+                            plotting. In DIP, matplotlib is essential for displaying images
+                            (<code>imshow</code>), plotting histograms, creating surface plots, and building
+                            multi-panel comparison figures (<code>subplot</code>).
+                        </p>
+                        <p>
+                            When displaying grayscale images, always pass <code>cmap='gray'</code> to
+                            <code>imshow()</code>. Without it, matplotlib applies its default colormap (viridis),
+                            which maps intensity values to a blue-yellow color scale &mdash; technically correct
+                            but visually misleading for grayscale image analysis.
                         </p>
                     </div>
 
@@ -272,9 +976,9 @@
                     </div>
 
                     <div id="tab-mpl-demos" class="tab-content">
-                        <p style="color: var(--ink-light); font-size: 0.9rem; margin-bottom: 1rem;">
-                            These plots are generated live on the server using matplotlib, demonstrating various plotting
-                            capabilities with the actual DIP dataset images.
+                        <p class="tab-description">
+                            These plots are generated live on the server using matplotlib, demonstrating various
+                            plotting capabilities with the actual DIP dataset images.
                         </p>
                         <div class="btn-group">
                             <button class="btn btn-primary" id="btn-load-demos">
@@ -289,92 +993,415 @@
             </div>
         </section>
 
-        <!-- ============ THEORY NOTES ============ -->
+        <!-- ================================================================ -->
+        <!-- SECTION 6: THEORY NOTES                                          -->
+        <!-- ================================================================ -->
         <section id="theory">
             <div class="panel">
                 <div class="panel-header">
-                    <span class="panel-number">&#x1F4D6;</span>
+                    <span class="panel-number">T</span>
                     <h2>Chapter 2: Digital Image Fundamentals &mdash; Key Concepts</h2>
                 </div>
                 <div class="panel-body">
 
-                    <div class="theory-block">
-                        <h4>2.1 Elements of Visual Perception</h4>
+                    <!-- 2.1 Visual Perception -->
+                    <article class="theory-block">
+                        <h3>2.1 Elements of Visual Perception</h3>
                         <p>
-                            The human eye contains approximately <strong>6&ndash;7 million cones</strong> (photopic/color vision, concentrated in the fovea)
-                            and <strong>75&ndash;150 million rods</strong> (scotopic/dim-light vision). Image formation occurs when the lens focuses
-                            light onto the retina. The visual system can adapt to an intensity range of approximately 10<sup>10</sup> levels,
-                            though simultaneous discrimination is far more limited. Key phenomena include <em>Mach bands</em> (perceived intensity
-                            overshoot/undershoot at edges) and <em>simultaneous contrast</em> (perceived brightness depends on surroundings).
+                            Understanding how the human eye perceives images is essential before we can process
+                            them computationally. The retina contains two types of photoreceptor cells:
                         </p>
-                    </div>
+                        <ul>
+                            <li>
+                                <strong>Cones (6&ndash;7 million):</strong> Concentrated in the fovea (central
+                                region of the retina). Responsible for <em>photopic vision</em> (bright-light,
+                                color vision). Three types: sensitive to red, green, and blue wavelengths. This
+                                is why RGB is the fundamental color model in digital imaging.
+                            </li>
+                            <li>
+                                <strong>Rods (75&ndash;150 million):</strong> Distributed across the retina,
+                                absent in the fovea. Responsible for <em>scotopic vision</em> (dim-light vision).
+                                Cannot distinguish color. This is why you see only shades of gray in very dark
+                                environments.
+                            </li>
+                        </ul>
+                        <p>
+                            The visual system can adapt to an enormous intensity range of approximately
+                            \( 10^{10} \) levels (from starlight to bright sunlight), but simultaneous
+                            discrimination is far more limited &mdash; roughly 200 distinct intensity levels
+                            at any given adaptation level. Two important perceptual phenomena are:
+                        </p>
+                        <ul>
+                            <li>
+                                <strong>Mach Bands:</strong> At the boundary between a dark and light region,
+                                the human eye perceives an intensity overshoot on the light side and undershoot
+                                on the dark side. The bands are <em>not physically present</em> in the stimulus
+                                &mdash; they are created by lateral inhibition in the retina. This makes edges
+                                appear sharper than they actually are.
+                            </li>
+                            <li>
+                                <strong>Simultaneous Contrast:</strong> A gray patch appears darker when
+                                surrounded by a light background and lighter when surrounded by a dark
+                                background. The actual pixel values are identical &mdash; only the context
+                                changes. This demonstrates that human perception is relative, not absolute.
+                            </li>
+                        </ul>
+                    </article>
 
-                    <div class="theory-block">
-                        <h4>2.3 Image Formation Model</h4>
+                    <!-- 2.3 Image Formation -->
+                    <article class="theory-block">
+                        <h3>2.3 Image Formation Model</h3>
                         <p>
-                            A monochrome image can be modeled as:
+                            Every image we capture is the product of two independent physical phenomena: how
+                            much light falls on the scene, and how much of that light is reflected by the
+                            objects. A monochrome image can be modeled as:
                         </p>
-                        <span class="math-formula">f(x,y) = i(x,y) &times; r(x,y)</span>
+                        <div class="math-formula">
+                            \[
+                            f(x,y) = i(x,y) \times r(x,y)
+                            \]
+                        </div>
                         <p>
-                            where <code>i(x,y)</code> is the <strong>illumination component</strong> (0 &lt; i &lt; &infin;) and
-                            <code>r(x,y)</code> is the <strong>reflectance component</strong> (0 &lt; r &lt; 1). The intensity at any
-                            point is thus determined by both the light falling on the scene and the fraction reflected by the object surface.
+                            where:
                         </p>
-                    </div>
+                        <ul>
+                            <li>
+                                \( i(x,y) \) is the <strong>illumination component</strong>
+                                (\( 0 < i < \infty \)) &mdash; determined by the light source(s). Typically
+                                varies slowly across the image (low-frequency component).
+                            </li>
+                            <li>
+                                \( r(x,y) \) is the <strong>reflectance component</strong>
+                                (\( 0 < r < 1 \)) &mdash; determined by the physical properties of the object
+                                surfaces. Contains the detail and edges (high-frequency component).
+                            </li>
+                        </ul>
+                        <p>
+                            <strong>Why this matters:</strong> Many image enhancement techniques work by
+                            separating these two components. For example, homomorphic filtering operates in
+                            the frequency domain to reduce illumination variation (normalize lighting) while
+                            enhancing reflectance (sharpen edges). Taking the logarithm converts the
+                            multiplicative model into an additive one:
+                        </p>
+                        <div class="math-formula">
+                            \[
+                            \ln f(x,y) = \ln i(x,y) + \ln r(x,y)
+                            \]
+                        </div>
+                        <p>
+                            This additive decomposition allows us to use linear filtering techniques (like
+                            high-pass and low-pass filters) to independently manipulate illumination and
+                            reflectance.
+                        </p>
+                    </article>
 
-                    <div class="theory-block">
-                        <h4>2.4 Sampling and Quantization</h4>
+                    <!-- 2.4 Sampling and Quantization -->
+                    <article class="theory-block">
+                        <h3>2.4 Sampling and Quantization</h3>
                         <p>
-                            <strong>Sampling</strong> digitizes the spatial coordinates (continuous &rarr; discrete x,y grid of M&times;N pixels).
-                            <strong>Quantization</strong> digitizes the amplitude (continuous intensity &rarr; L = 2<sup>k</sup> discrete gray levels).
-                            Storage requirement: <code>b = M &times; N &times; k</code> bits. Reducing spatial resolution causes <em>blocky/pixelated</em>
-                            appearance; reducing intensity resolution causes <em>false contouring</em>.
+                            Converting a continuous optical image into a digital image requires two fundamental
+                            discretization processes:
                         </p>
+                        <h4>Sampling (Spatial Discretization)</h4>
                         <p>
-                            <strong>Interpolation methods</strong> for resizing: <em>Nearest-neighbor</em> (simplest, blocky),
-                            <em>Bilinear</em> (4 neighbors, smooth), <em>Bicubic</em> (16 neighbors, highest quality, used in OpenCV's <code>INTER_CUBIC</code>).
+                            <strong>Sampling</strong> converts the continuous spatial coordinates into a discrete
+                            grid of \( M \times N \) pixels. The sampling rate determines spatial resolution.
+                            Under-sampling causes <strong>aliasing</strong> (the Nyquist-Shannon theorem requires
+                            at least 2 samples per cycle of the highest frequency). Over-sampling wastes storage
+                            without adding information. Reducing spatial resolution causes a <em>blocky, pixelated</em>
+                            appearance.
                         </p>
-                    </div>
 
-                    <div class="theory-block">
-                        <h4>2.5 Pixel Relationships</h4>
+                        <h4>Quantization (Amplitude Discretization)</h4>
                         <p>
-                            A pixel p at (x,y) has three types of neighbors:
-                            <strong>N<sub>4</sub></strong> (4-neighbors at unit distance: up, down, left, right),
-                            <strong>N<sub>D</sub></strong> (4 diagonal neighbors at &radic;2 distance), and
-                            <strong>N<sub>8</sub></strong> (all 8 surrounding pixels = N<sub>4</sub> &cup; N<sub>D</sub>).
+                            <strong>Quantization</strong> converts continuous intensity values into
+                            \( L = 2^k \) discrete gray levels. With \( k = 8 \) bits, we get 256 levels (the
+                            standard). Reducing intensity resolution causes <strong>false contouring</strong>
+                            &mdash; smooth gradients become visible staircase-like bands. This artifact is
+                            particularly objectionable in regions with slowly varying intensity (like sky in
+                            photographs).
                         </p>
-                        <p>
-                            <strong>Adjacency types</strong>: 4-adjacency, 8-adjacency, and m-adjacency (mixed, eliminates ambiguity).
-                            <strong>Distance measures</strong>:
-                            Euclidean D<sub>e</sub> = &radic;[(x&minus;s)&sup2; + (y&minus;t)&sup2;],
-                            City-block D<sub>4</sub> = |x&minus;s| + |y&minus;t| (diamond shape),
-                            Chessboard D<sub>8</sub> = max(|x&minus;s|, |y&minus;t|) (square shape).
-                        </p>
-                    </div>
 
-                    <div class="theory-block">
-                        <h4>2.6 Arithmetic Operations on Images</h4>
                         <p>
-                            The four fundamental arithmetic operations on images:
+                            Storage requirement:
                         </p>
+                        <div class="math-formula">
+                            \[
+                            b = M \times N \times k \quad \text{bits}
+                            \]
+                        </div>
+
+                        <h4>Interpolation Methods for Resizing</h4>
                         <p>
-                            <strong>Addition:</strong> <code>s(x,y) = f(x,y) + g(x,y)</code> &mdash; noise reduction by averaging multiple noisy acquisitions.<br>
-                            <strong>Subtraction:</strong> <code>s(x,y) = f(x,y) - g(x,y)</code> &mdash; change detection, background removal, digital subtraction angiography.<br>
-                            <strong>Multiplication:</strong> <code>s(x,y) = f(x,y) &times; g(x,y)</code> &mdash; masking, region-of-interest extraction.<br>
-                            <strong>Division:</strong> <code>s(x,y) = f(x,y) / g(x,y)</code> &mdash; shading/illumination correction.
+                            When an image needs to be resized (upsampled or downsampled), new pixel values must
+                            be estimated from existing ones. Three common methods:
                         </p>
+
+                        <!-- Neighborhood diagram container for JS to render -->
+                        <div id="interpolation-diagram" class="diagram-container">
+                            <div class="diagram-grid">
+                                <div class="diagram-card">
+                                    <h5>Nearest-Neighbor</h5>
+                                    <p>Copies the value of the closest existing pixel. Fastest but produces blocky
+                                    artifacts. Uses 1 neighbor.</p>
+                                    <code>cv2.INTER_NEAREST</code>
+                                </div>
+                                <div class="diagram-card">
+                                    <h5>Bilinear</h5>
+                                    <p>Weighted average of the 4 nearest neighbors. Smooth results, good for most
+                                    applications. Standard default.</p>
+                                    <code>cv2.INTER_LINEAR</code>
+                                </div>
+                                <div class="diagram-card">
+                                    <h5>Bicubic</h5>
+                                    <p>Weighted average of the 16 nearest neighbors. Highest quality, preserves
+                                    edges best. Used in professional image editing.</p>
+                                    <code>cv2.INTER_CUBIC</code>
+                                </div>
+                            </div>
+                        </div>
+                    </article>
+
+                    <!-- 2.5 Pixel Relationships -->
+                    <article class="theory-block">
+                        <h3>2.5 Pixel Relationships</h3>
                         <p>
-                            An operator H is <strong>linear</strong> if H[af<sub>1</sub> + bf<sub>2</sub>] = aH[f<sub>1</sub>] + bH[f<sub>2</sub>].
-                            Mean filtering is linear; median filtering is <em>nonlinear</em>.
+                            A pixel \( p \) at coordinates \( (x, y) \) has three types of neighbors that
+                            define its spatial relationships:
                         </p>
-                    </div>
+
+                        <!-- Neighborhood grids - JS can enhance these -->
+                        <div id="neighborhood-diagram" class="diagram-container">
+                            <div class="diagram-grid">
+                                <div class="diagram-card">
+                                    <h5>\( N_4 \) (4-Neighbors)</h5>
+                                    <p>The 4 pixels at unit distance: above \((x-1,y)\), below \((x+1,y)\),
+                                    left \((x,y-1)\), right \((x,y+1)\). Also called the
+                                    <strong>Von Neumann neighborhood</strong>.</p>
+                                    <div class="neighborhood-visual">
+                                        <div class="n-grid n-grid-3x3">
+                                            <span class="n-cell"></span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell"></span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell n-center">p</span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell"></span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="diagram-card">
+                                    <h5>\( N_D \) (Diagonal Neighbors)</h5>
+                                    <p>The 4 diagonal pixels at \(\sqrt{2}\) distance:
+                                    \((x-1,y-1)\), \((x-1,y+1)\), \((x+1,y-1)\), \((x+1,y+1)\).</p>
+                                    <div class="neighborhood-visual">
+                                        <div class="n-grid n-grid-3x3">
+                                            <span class="n-cell n-active">D</span>
+                                            <span class="n-cell"></span>
+                                            <span class="n-cell n-active">D</span>
+                                            <span class="n-cell"></span>
+                                            <span class="n-cell n-center">p</span>
+                                            <span class="n-cell"></span>
+                                            <span class="n-cell n-active">D</span>
+                                            <span class="n-cell"></span>
+                                            <span class="n-cell n-active">D</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="diagram-card">
+                                    <h5>\( N_8 \) (8-Neighbors)</h5>
+                                    <p>All 8 surrounding pixels: \( N_8 = N_4 \cup N_D \).
+                                    Also called the <strong>Moore neighborhood</strong>.</p>
+                                    <div class="neighborhood-visual">
+                                        <div class="n-grid n-grid-3x3">
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell n-center">p</span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell n-active">N</span>
+                                            <span class="n-cell n-active">N</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <h4>Adjacency and Connectivity</h4>
+                        <p>
+                            Two pixels are <strong>adjacent</strong> if they are neighbors AND their intensities
+                            satisfy a similarity criterion (e.g., both belong to a defined set of values \( V \)).
+                            Three types of adjacency:
+                        </p>
+                        <ul>
+                            <li><strong>4-adjacency:</strong> \( q \in N_4(p) \) and \( q \in V \)</li>
+                            <li><strong>8-adjacency:</strong> \( q \in N_8(p) \) and \( q \in V \)</li>
+                            <li>
+                                <strong>m-adjacency (mixed):</strong> Eliminates the ambiguity of 8-adjacency
+                                by checking if 4-adjacency exists first. If not, uses diagonal adjacency
+                                only when the connecting 4-neighbors do not share the value set \( V \).
+                            </li>
+                        </ul>
+
+                        <h4>Distance Measures</h4>
+                        <p>
+                            Three standard distance metrics between pixels \( p = (x,y) \) and \( q = (s,t) \):
+                        </p>
+                        <div class="math-formula">
+                            \[
+                            D_e(p,q) = \sqrt{(x-s)^2 + (y-t)^2} \quad \text{(Euclidean &mdash; circular isodistance)}
+                            \]
+                        </div>
+                        <div class="math-formula">
+                            \[
+                            D_4(p,q) = |x-s| + |y-t| \quad \text{(City-block / Manhattan &mdash; diamond isodistance)}
+                            \]
+                        </div>
+                        <div class="math-formula">
+                            \[
+                            D_8(p,q) = \max(|x-s|, |y-t|) \quad \text{(Chessboard / Chebyshev &mdash; square isodistance)}
+                            \]
+                        </div>
+                        <p>
+                            The choice of distance metric affects the shape of operations like dilation and
+                            erosion in morphological processing, and the definition of &ldquo;neighborhoods&rdquo;
+                            in spatial filtering.
+                        </p>
+                    </article>
+
+                    <!-- 2.6 Arithmetic Operations -->
+                    <article class="theory-block">
+                        <h3>2.6 Arithmetic Operations on Images</h3>
+                        <p>
+                            The four fundamental arithmetic operations on images, each with distinct practical
+                            applications:
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            \begin{aligned}
+                            \text{Addition:} \quad & s(x,y) = f(x,y) + g(x,y) \\
+                            \text{Subtraction:} \quad & s(x,y) = f(x,y) - g(x,y) \\
+                            \text{Multiplication:} \quad & s(x,y) = f(x,y) \times g(x,y) \\
+                            \text{Division:} \quad & s(x,y) = f(x,y) \div g(x,y)
+                            \end{aligned}
+                            \]
+                        </div>
+
+                        <h4>Application Summary</h4>
+                        <ul>
+                            <li>
+                                <strong>Addition:</strong> Noise reduction by averaging \( K \) noisy acquisitions
+                                of the same scene. If noise is zero-mean and uncorrelated, averaging reduces
+                                noise variance by factor \( K \):
+                                \( \bar{g}(x,y) = \frac{1}{K}\sum_{i=1}^{K} g_i(x,y) \).
+                                The signal stays constant while noise averages toward zero.
+                            </li>
+                            <li>
+                                <strong>Subtraction:</strong> Change detection, background removal, digital
+                                subtraction angiography. Covered extensively in Practical 1.
+                            </li>
+                            <li>
+                                <strong>Multiplication:</strong> Masking (multiplying by a binary mask extracts
+                                a region of interest) and shading correction (multiplying by the inverse of the
+                                illumination pattern).
+                            </li>
+                            <li>
+                                <strong>Division:</strong> Illumination correction. Dividing by the estimated
+                                illumination pattern normalizes brightness across the image. Common in
+                                microscopy where illumination is inherently uneven.
+                            </li>
+                        </ul>
+
+                        <h4>Linearity of Operators</h4>
+                        <p>
+                            An operator \( H \) is <strong>linear</strong> if it satisfies superposition and
+                            homogeneity:
+                        </p>
+                        <div class="math-formula">
+                            \[
+                            H[a \cdot f_1 + b \cdot f_2] = a \cdot H[f_1] + b \cdot H[f_2]
+                            \]
+                        </div>
+                        <p>
+                            Mean filtering (averaging) is linear. Median filtering is <em>nonlinear</em>
+                            (the median of a sum is not the sum of medians). Most classical filters (Gaussian
+                            blur, Laplacian, Sobel) are linear, while many modern and robust operations
+                            (median, bilateral filter, morphological operations) are nonlinear.
+                        </p>
+                    </article>
+
+                    <!-- Real-World Applications -->
+                    <article class="theory-block">
+                        <h3>Real-World Applications of Digital Image Processing</h3>
+                        <p>
+                            The techniques covered in this chapter form the foundation for applications across
+                            every field of science and engineering. Here are some of the most impactful:
+                        </p>
+
+                        <div id="applications-grid" class="applications-grid">
+                            <div class="application-card">
+                                <h5>Medical Imaging</h5>
+                                <p>
+                                    CT scans, MRI, X-ray enhancement, digital subtraction angiography, retinal
+                                    imaging, pathology slide analysis. Image subtraction and enhancement
+                                    save lives by making subtle abnormalities visible.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Remote Sensing</h5>
+                                <p>
+                                    Satellite imagery for agriculture monitoring, deforestation tracking, urban
+                                    planning, disaster assessment, and military surveillance. Image differencing
+                                    between temporal acquisitions reveals changes on the Earth's surface.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Autonomous Vehicles</h5>
+                                <p>
+                                    Lane detection, pedestrian recognition, obstacle avoidance, traffic sign
+                                    reading. Every frame from a camera undergoes real-time image processing
+                                    before being fed to decision-making algorithms.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Security and Surveillance</h5>
+                                <p>
+                                    Face recognition, motion detection (via background subtraction), license plate
+                                    recognition, anomaly detection. Spatial differencing is the backbone of
+                                    motion detection in CCTV systems.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Industrial Quality Control</h5>
+                                <p>
+                                    Defect detection in manufacturing (PCB inspection, textile analysis, food
+                                    sorting). A reference image of a &ldquo;perfect&rdquo; product is subtracted
+                                    from each inspection image to highlight defects.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Document Processing</h5>
+                                <p>
+                                    OCR (Optical Character Recognition), binarization, noise removal, skew
+                                    correction, handwriting recognition. Thresholding (1-bit quantization) is
+                                    the first step in most document analysis pipelines.
+                                </p>
+                            </div>
+                        </div>
+                    </article>
 
                 </div>
             </div>
         </section>
 
-        <!-- ============ PRACTICAL 2 ============ -->
+        <!-- ================================================================ -->
+        <!-- SECTION 7: PRACTICAL 2                                           -->
+        <!-- ================================================================ -->
         <section id="practical-2">
             <div class="panel">
                 <div class="panel-header">
@@ -386,9 +1413,17 @@
                         <div class="coming-soon-badge">Upcoming</div>
                         <h3>Next Practical Session</h3>
                         <p>
-                            The next practical will be added here once assigned in class.
-                            Common topics for Practical 2 include histogram equalization,
-                            spatial filtering, or intensity transformations.
+                            The next practical will be added here once assigned in class. Common topics for
+                            Practical 2 include histogram equalization, spatial filtering (mean, median, Gaussian),
+                            or intensity transformations (log, power-law / gamma correction, contrast stretching).
+                        </p>
+                        <p>
+                            Each of these builds directly on the foundations covered above. Histogram equalization,
+                            for instance, redistributes pixel intensities to maximize the use of available gray
+                            levels &mdash; a direct application of the quantization and gray-level concepts from
+                            Section 1b. Spatial filtering uses the pixel neighborhood concepts from Section 2.5
+                            to compute weighted averages (smoothing) or differences (sharpening) across local
+                            regions.
                         </p>
                     </div>
                 </div>
@@ -403,11 +1438,11 @@
             <p class="footer-brand">Shoolini University of Biotechnology and Management Sciences</p>
             <p>Yogananda School of AI, Computer and Data Sciences</p>
             <p>QS World #503 &bull; NAAC A+ &bull; NIRF #69</p>
-            <p style="margin-top: 0.8rem; font-size: 0.8rem;">
+            <p class="footer-student">
                 Divya Mohan &bull; BTech CSE Cybersecurity &bull; Semester 8 &bull;
                 <a href="https://dmj.one">dmj.one</a>
             </p>
-            <p style="font-size: 0.75rem; color: #8d6e63; margin-top: 0.5rem;">
+            <p class="footer-textbook">
                 Textbook: R.C. Gonzalez &amp; R.E. Woods, <em>Digital Image Processing</em>, 3rd Edition, Pearson
             </p>
         </div>

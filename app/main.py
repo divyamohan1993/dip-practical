@@ -15,6 +15,11 @@ from app.image_processor import (
     MATPLOTLIB_REFERENCE,
     load_image,
     image_to_base64_png,
+    get_pixel_region,
+    get_step_by_step_pipeline,
+    generate_surface_plot,
+    compute_pixel_arithmetic,
+    generate_bit_depth_comparison,
 )
 
 app = Flask(__name__,
@@ -108,6 +113,97 @@ def api_matplotlib_demos():
 def health():
     """Health check endpoint."""
     return jsonify({"status": "healthy", "service": "dip-practical"})
+
+
+# ---------------------------------------------------------------------------
+# Educational feature routes
+# ---------------------------------------------------------------------------
+
+@app.route('/api/pixel-view', methods=['POST'])
+def api_pixel_view():
+    """Return raw pixel values for a square region around (x, y)."""
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+
+    x = int(data.get('x', 0))
+    y = int(data.get('y', 0))
+    size = int(data.get('size', 10))
+
+    result = get_pixel_region(data['filename'], x, y, size)
+    if result is None:
+        return jsonify({"error": "Failed to load image. Check filename."}), 400
+
+    return jsonify(result)
+
+
+@app.route('/api/step-by-step', methods=['POST'])
+def api_step_by_step():
+    """Return a comprehensive step-by-step breakdown of the spatial
+    difference pipeline between two images."""
+    data = request.get_json()
+    if not data or 'image1' not in data or 'image2' not in data:
+        return jsonify({"error": "Provide 'image1' and 'image2' filenames"}), 400
+
+    result = get_step_by_step_pipeline(data['image1'], data['image2'])
+    if result is None:
+        return jsonify({"error": "Failed to process images. Check filenames."}), 400
+
+    return jsonify(result)
+
+
+@app.route('/api/surface-plot', methods=['POST'])
+def api_surface_plot():
+    """Generate a 3-D surface plot of pixel intensities for a region."""
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+
+    x = int(data.get('x', 0))
+    y = int(data.get('y', 0))
+    size = int(data.get('size', 64))
+
+    result = generate_surface_plot(data['filename'], region_x=x, region_y=y,
+                                   region_size=size)
+    if result is None:
+        return jsonify({"error": "Failed to generate surface plot."}), 400
+
+    return jsonify({"plot": result})
+
+
+@app.route('/api/pixel-arithmetic', methods=['POST'])
+def api_pixel_arithmetic():
+    """Demonstrate uint8 arithmetic on two pixel values (0-255)."""
+    data = request.get_json()
+    if not data or 'val1' not in data or 'val2' not in data:
+        return jsonify({"error": "Provide 'val1' and 'val2' (integers 0-255)"}), 400
+
+    try:
+        val1 = int(data['val1'])
+        val2 = int(data['val2'])
+    except (ValueError, TypeError):
+        return jsonify({"error": "val1 and val2 must be integers"}), 400
+
+    if not (0 <= val1 <= 255 and 0 <= val2 <= 255):
+        return jsonify({"error": "val1 and val2 must be in range 0-255"}), 400
+
+    result = compute_pixel_arithmetic(val1, val2)
+    return jsonify(result)
+
+
+@app.route('/api/bit-depth', methods=['POST'])
+def api_bit_depth():
+    """Return base64 PNGs showing the same image at 8, 4, 2, and 1-bit
+    depth with corresponding histograms."""
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+
+    result = generate_bit_depth_comparison(data['filename'])
+    if result is None:
+        return jsonify({"error": "Failed to generate bit-depth comparison."}), 400
+
+    return jsonify({"images": result})
 
 
 if __name__ == '__main__':
