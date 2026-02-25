@@ -1,15 +1,29 @@
+# Python
 __pycache__/
 *.pyc
 *.pyo
-.env
-venv/
-.venv/
 *.egg-info/
 dist/
 build/
+venv/
+.venv/
+
+# Environment
+.env
+
+# OS
 .DS_Store
 Thumbs.db
+
+# Logs
 *.log
+
+# Generated / temp
 difference_images/
 extracted_images/
 Untitled8.ipynb
+.playwright-mcp/
+
+# IDE
+.vscode/
+.idea/
