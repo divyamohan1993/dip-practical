@@ -2088,48 +2088,56 @@
             var score = 0;
             var answered = 0;
 
-            // Score display
+            // Score display - prepend as first child of quiz container
             var scoreDisplay = createEl('div', 'quiz-score');
             var scoreText = createEl('span', 'quiz-score-text', 'Score: 0 / ' + totalQuestions);
             scoreDisplay.appendChild(scoreText);
             var progressBar = createEl('div', 'quiz-progress-bar');
             progressBar.style.height = '6px';
-            progressBar.style.backgroundColor = 'var(--cream-dark, #e0d5c0)';
+            progressBar.style.backgroundColor = '#e2e8f0';
             progressBar.style.borderRadius = '3px';
             progressBar.style.overflow = 'hidden';
             progressBar.style.marginTop = '6px';
             var progressFill = createEl('div', 'quiz-progress-fill');
             progressFill.style.height = '100%';
             progressFill.style.width = '0%';
-            progressFill.style.backgroundColor = 'var(--green-felt, #2e7d32)';
+            progressFill.style.backgroundColor = '#10b981';
             progressFill.style.transition = 'width 0.4s ease, background-color 0.4s ease';
             progressBar.appendChild(progressFill);
             scoreDisplay.appendChild(progressBar);
 
-            if (questions.length > 0) {
-                quizContainer.insertBefore(scoreDisplay, questions[0]);
+            // Insert before the first child of container (safe - always a direct child)
+            if (quizContainer.firstChild) {
+                quizContainer.insertBefore(scoreDisplay, quizContainer.firstChild);
+            } else {
+                quizContainer.appendChild(scoreDisplay);
             }
 
             questions.forEach(function (questionEl) {
                 var options = questionEl.querySelectorAll('.quiz-option');
                 var explanationEl = questionEl.querySelector('.quiz-explanation');
+                // Correct answer index from data-correct on the question element
+                var correctIndex = parseInt(questionEl.dataset.correct, 10);
                 var isAnswered = false;
 
-                options.forEach(function (option) {
+                options.forEach(function (option, optIdx) {
                     option.addEventListener('click', function () {
                         if (isAnswered) return;
                         isAnswered = true;
                         answered++;
 
-                        var isCorrect = option.dataset.correct === 'true';
+                        // Check correct by comparing option index to data-correct
+                        var optIndex = parseInt(option.dataset.index, 10);
+                        var isCorrect = optIndex === correctIndex;
 
                         if (isCorrect) {
                             score++;
                             option.classList.add('quiz-option-correct');
                         } else {
                             option.classList.add('quiz-option-wrong');
+                            // Highlight the correct answer
                             options.forEach(function (opt) {
-                                if (opt.dataset.correct === 'true') {
+                                if (parseInt(opt.dataset.index, 10) === correctIndex) {
                                     opt.classList.add('quiz-option-correct');
                                 }
                             });
@@ -2145,7 +2153,7 @@
 
                         scoreText.textContent = 'Score: ' + score + ' / ' + totalQuestions;
                         progressFill.style.width = ((answered / totalQuestions) * 100) + '%';
-                        progressFill.style.backgroundColor = score === answered ? 'var(--green-felt, #2e7d32)' : 'var(--gold, #d4a030)';
+                        progressFill.style.backgroundColor = score === answered ? '#10b981' : '#f59e0b';
 
                         if (answered === totalQuestions) {
                             showQuizResult(quizContainer, score, totalQuestions);
