@@ -201,7 +201,7 @@ def generate_histogram(filename):
     axes[1].set_title('Intensity Histogram', fontsize=10)
     axes[1].grid(True, alpha=0.3)
 
-    plt.tight_layout()
+    fig.tight_layout()
     buf = io.BytesIO()
     fig.savefig(buf, format='png', dpi=120, bbox_inches='tight',
                 facecolor='#fafafa', edgecolor='none')
@@ -244,7 +244,7 @@ def generate_comparison_plot(filename1, filename2):
     im = axes[0, 3].imshow(diff_enhanced, cmap='hot')
     axes[0, 3].set_title('Enhanced Difference\n(Heatmap)', fontsize=9)
     axes[0, 3].axis('off')
-    plt.colorbar(im, ax=axes[0, 3], fraction=0.046, pad=0.04)
+    fig.colorbar(im, ax=axes[0, 3], fraction=0.046, pad=0.04)
 
     # Row 2: Histograms
     hist1 = cv2.calcHist([img1], [0], None, [256], [0, 256])
@@ -277,7 +277,7 @@ def generate_comparison_plot(filename1, filename2):
     axes[1, 3].legend(fontsize=8)
     axes[1, 3].grid(True, alpha=0.3)
 
-    plt.tight_layout()
+    fig.tight_layout()
     buf = io.BytesIO()
     fig.savefig(buf, format='png', dpi=120, bbox_inches='tight',
                 facecolor='white', edgecolor='none')
@@ -309,7 +309,7 @@ def generate_matplotlib_demo():
         ax.set_title(title, fontsize=10)
         ax.grid(True, alpha=0.3)
 
-    plt.tight_layout()
+    fig.tight_layout()
     buf = io.BytesIO()
     fig.savefig(buf, format='png', dpi=120, bbox_inches='tight', facecolor='white')
     plt.close(fig)
@@ -327,9 +327,9 @@ def generate_matplotlib_demo():
             im = ax.imshow(img, cmap=cmap_name)
             ax.set_title(f"cmap='{cmap_name}'", fontsize=10)
             ax.axis('off')
-            plt.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
+            fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
 
-        plt.tight_layout()
+        fig.tight_layout()
         buf = io.BytesIO()
         fig.savefig(buf, format='png', dpi=120, bbox_inches='tight', facecolor='white')
         plt.close(fig)
@@ -362,7 +362,7 @@ def generate_matplotlib_demo():
     ax2.fill(theta, r, alpha=0.2, color='green')
     ax2.set_title('Polar Plot: r = 1 + cos(3\u03b8)', pad=20)
 
-    plt.tight_layout()
+    fig.tight_layout()
     buf = io.BytesIO()
     fig.savefig(buf, format='png', dpi=120, bbox_inches='tight', facecolor='white')
     plt.close(fig)
@@ -1072,7 +1072,7 @@ def generate_bit_depth_comparison(filename):
         axes[1].set_title(f'Histogram  ({bits}-bit)', fontsize=11)
         axes[1].grid(True, alpha=0.3)
 
-        plt.tight_layout()
+        fig.tight_layout()
         buf = io.BytesIO()
         fig.savefig(buf, format='png', dpi=120, bbox_inches='tight',
                     facecolor='white', edgecolor='none')
