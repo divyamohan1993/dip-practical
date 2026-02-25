@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Image Processing Lab | CSU2543 | Shoolini University</title>
+    <meta name="description" content="Digital Image Processing Practical Lab - CSU2543. Spatial difference analysis, matplotlib visualization, and interactive image processing. Shoolini University, BTech CSE Cybersecurity.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <style>
+        :root {
+            --font-serif: 'Playfair Display', Georgia, serif;
+            --font-sans: 'Poppins', 'Segoe UI', sans-serif;
+            --font-mono: 'JetBrains Mono', 'Consolas', monospace;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- University Banner -->
+    <div class="university-banner">
+        <p>Shoolini University of Biotechnology and Management Sciences &mdash; Solan, Himachal Pradesh</p>
+    </div>
+
+    <!-- Main Header -->
+    <header class="main-header">
+        <div class="header-content">
+            <div class="course-code">CSU2543</div>
+            <h1>Digital Image Processing</h1>
+            <p style="color: var(--leather-light); font-size: 0.95rem; margin-bottom: 0.3rem;">Practical Laboratory</p>
+            <div class="header-meta">
+                <span class="meta-item"><strong>Faculty:</strong> Ishani Sharma</span>
+                <span class="meta-item"><strong>Student:</strong> Divya Mohan</span>
+                <span class="meta-item"><strong>Program:</strong> BTech CSE Cybersecurity, Sem 8</span>
+                <span class="meta-item"><strong>Textbook:</strong> Gonzalez &amp; Woods, 3<sup>rd</sup> Ed.</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation -->
+    <nav class="nav-bar">
+        <ul>
+            <li><a href="#practical-1" class="active">Practical 1</a></li>
+            <li><a href="#image-explorer">Image Explorer</a></li>
+            <li><a href="#matplotlib-ref">Matplotlib Reference</a></li>
+            <li><a href="#theory">Theory Notes</a></li>
+            <li><a href="#practical-2">Practical 2</a></li>
+        </ul>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- ============ PRACTICAL 1 ============ -->
+        <section id="practical-1">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">1</span>
+                    <h2>Spatial Image Differencing &mdash; Practical 1</h2>
+                </div>
+                <div class="panel-body">
+
+                    <!-- Theory Introduction -->
+                    <div class="theory-block">
+                        <h4>What is Spatial Image Differencing?</h4>
+                        <p>
+                            Image subtraction (or spatial differencing) is a fundamental arithmetic operation in digital image processing.
+                            Given two images <code>f(x,y)</code> and <code>g(x,y)</code>, their absolute difference is:
+                        </p>
+                        <span class="math-formula">d(x,y) = |f(x,y) &minus; g(x,y)|</span>
+                        <p>
+                            This technique is central to <strong>change detection</strong>, <strong>digital subtraction angiography</strong>,
+                            <strong>background subtraction</strong>, and <strong>shading correction</strong>. The resulting difference image
+                            highlights regions where the two images differ in intensity, with brighter pixels indicating larger differences.
+                        </p>
+                        <p>
+                            In OpenCV, this is implemented using <code>cv2.absdiff(img1, img2)</code>, which computes the per-element
+                            absolute difference, handling unsigned integer underflow correctly (unlike simple subtraction which would wrap around).
+                        </p>
+                    </div>
+
+                    <!-- Tabs: Recommended Pairs vs Custom Selection -->
+                    <div class="tabs mt-2">
+                        <button class="tab-btn active" data-tab="recommended">Recommended Pairs</button>
+                        <button class="tab-btn" data-tab="custom">Custom Selection</button>
+                    </div>
+
+                    <!-- Tab: Recommended Pairs -->
+                    <div id="tab-recommended" class="tab-content active">
+                        <p style="color: var(--ink-light); font-size: 0.9rem; margin-bottom: 1rem;">
+                            These image pairs from Chapter 2 of Gonzalez &amp; Woods produce the most meaningful spatial differences,
+                            each illustrating a key application of image subtraction:
+                        </p>
+                        <div class="pair-cards" id="pair-cards-container">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+
+                    <!-- Tab: Custom Selection -->
+                    <div id="tab-custom" class="tab-content">
+                        <p style="color: var(--ink-light); font-size: 0.9rem; margin-bottom: 1rem;">
+                            Select any two images from the dataset to compute their spatial difference.
+                            Images with different dimensions will be automatically resized.
+                        </p>
+                        <div class="pair-selector">
+                            <div class="selector-col">
+                                <label for="select-img1">Image 1 (f)</label>
+                                <select id="select-img1">
+                                    <option value="">Loading images...</option>
+                                </select>
+                            </div>
+                            <div class="selector-col">
+                                <label for="select-img2">Image 2 (g)</label>
+                                <select id="select-img2">
+                                    <option value="">Loading images...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="btn-compute-custom" disabled>
+                                Compute Spatial Difference
+                            </button>
+                            <button class="btn btn-secondary" id="btn-histogram-1" disabled>
+                                Histogram (Image 1)
+                            </button>
+                            <button class="btn btn-secondary" id="btn-histogram-2" disabled>
+                                Histogram (Image 2)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Results Display -->
+                    <div id="result-container" class="result-container hidden">
+                        <div class="section-divider">Analysis Results</div>
+
+                        <!-- Result Theory (for recommended pairs) -->
+                        <div id="result-theory" class="theory-block hidden">
+                            <h4 id="result-theory-title"></h4>
+                            <p id="result-theory-text"></p>
+                        </div>
+
+                        <!-- Result Images -->
+                        <div class="result-images" id="result-images">
+                            <div class="result-image-card">
+                                <img id="result-img1" alt="Image 1">
+                                <div class="image-caption" id="caption-img1">Image 1</div>
+                            </div>
+                            <div class="result-image-card">
+                                <img id="result-img2" alt="Image 2">
+                                <div class="image-caption" id="caption-img2">Image 2</div>
+                            </div>
+                            <div class="result-image-card">
+                                <img id="result-diff" alt="Absolute Difference">
+                                <div class="image-caption">Absolute Difference |f - g|</div>
+                            </div>
+                            <div class="result-image-card">
+                                <img id="result-diff-enhanced" alt="Enhanced Difference">
+                                <div class="image-caption">Enhanced Difference (Normalized)</div>
+                            </div>
+                        </div>
+
+                        <!-- Statistics -->
+                        <div class="stats-grid" id="stats-grid">
+                            <div class="stat-card">
+                                <span class="stat-value" id="stat-mean">--</span>
+                                <span class="stat-label">Mean Difference</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="stat-max">--</span>
+                                <span class="stat-label">Max Difference</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="stat-std">--</span>
+                                <span class="stat-label">Std Deviation</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="stat-nonzero">--</span>
+                                <span class="stat-label">Non-Zero Pixels</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="stat-pct">--</span>
+                                <span class="stat-label">% Changed</span>
+                            </div>
+                            <div class="stat-card">
+                                <span class="stat-value" id="stat-size">--</span>
+                                <span class="stat-label">Image Size</span>
+                            </div>
+                        </div>
+
+                        <!-- Full Comparison Plot -->
+                        <div class="btn-group">
+                            <button class="btn btn-green" id="btn-full-plot">
+                                Generate Full Comparison Plot (Matplotlib)
+                            </button>
+                        </div>
+                        <div id="full-plot-container" class="comparison-plot hidden">
+                            <img id="full-plot-img" alt="Full Comparison Plot">
+                        </div>
+                    </div>
+
+                    <!-- Histogram Display -->
+                    <div id="histogram-container" class="hidden mt-2">
+                        <div class="section-divider">Histogram Analysis</div>
+                        <div class="comparison-plot">
+                            <img id="histogram-img" alt="Histogram">
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ IMAGE EXPLORER ============ -->
+        <section id="image-explorer">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">&#x1F5BC;</span>
+                    <h2>Image Dataset Explorer &mdash; DIP3E Chapter 2</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="theory-block">
+                        <h4>About the Dataset</h4>
+                        <p>
+                            These images are from the official <em>Digital Image Processing, 3rd Edition</em> companion website
+                            by Gonzalez &amp; Woods. Chapter 2 covers <strong>Digital Image Fundamentals</strong> and these images
+                            illustrate key concepts: varying spatial resolution, intensity resolution, sensor shading,
+                            medical imaging (angiography, CT, dental X-ray), and contrast levels.
+                        </p>
+                    </div>
+                    <div class="image-gallery" id="image-gallery">
+                        <div class="loading-spinner">Loading images from dataset...</div>
+                    </div>
+                    <p class="mt-1" style="font-size: 0.8rem; color: var(--ink-light);">
+                        Click any image to view its histogram. All images are stored as TIFF format and served as PNG.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ MATPLOTLIB REFERENCE ============ -->
+        <section id="matplotlib-ref">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">&#x1F4CA;</span>
+                    <h2>Matplotlib Plotting Commands Reference</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <h4>About Matplotlib</h4>
+                        <p>
+                            Matplotlib is Python's foundational 2D plotting library, created by John D. Hunter in 2003.
+                            It produces publication-quality figures in a variety of formats and interactive environments.
+                            The <code>pyplot</code> module provides a MATLAB-like interface for quick plotting.
+                            In DIP, matplotlib is essential for displaying images (<code>imshow</code>), plotting histograms,
+                            and creating multi-panel comparison figures (<code>subplot</code>).
+                        </p>
+                    </div>
+
+                    <!-- Tabs: Reference vs Live Demos -->
+                    <div class="tabs mt-2">
+                        <button class="tab-btn active" data-tab="mpl-reference">Command Reference</button>
+                        <button class="tab-btn" data-tab="mpl-demos">Live Generated Demos</button>
+                    </div>
+
+                    <div id="tab-mpl-reference" class="tab-content active">
+                        <div id="matplotlib-reference-content">
+                            <div class="loading-spinner">Loading reference...</div>
+                        </div>
+                    </div>
+
+                    <div id="tab-mpl-demos" class="tab-content">
+                        <p style="color: var(--ink-light); font-size: 0.9rem; margin-bottom: 1rem;">
+                            These plots are generated live on the server using matplotlib, demonstrating various plotting
+                            capabilities with the actual DIP dataset images.
+                        </p>
+                        <div class="btn-group">
+                            <button class="btn btn-primary" id="btn-load-demos">
+                                Generate Matplotlib Demos
+                            </button>
+                        </div>
+                        <div id="matplotlib-demos-content">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ THEORY NOTES ============ -->
+        <section id="theory">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">&#x1F4D6;</span>
+                    <h2>Chapter 2: Digital Image Fundamentals &mdash; Key Concepts</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <h4>2.1 Elements of Visual Perception</h4>
+                        <p>
+                            The human eye contains approximately <strong>6&ndash;7 million cones</strong> (photopic/color vision, concentrated in the fovea)
+                            and <strong>75&ndash;150 million rods</strong> (scotopic/dim-light vision). Image formation occurs when the lens focuses
+                            light onto the retina. The visual system can adapt to an intensity range of approximately 10<sup>10</sup> levels,
+                            though simultaneous discrimination is far more limited. Key phenomena include <em>Mach bands</em> (perceived intensity
+                            overshoot/undershoot at edges) and <em>simultaneous contrast</em> (perceived brightness depends on surroundings).
+                        </p>
+                    </div>
+
+                    <div class="theory-block">
+                        <h4>2.3 Image Formation Model</h4>
+                        <p>
+                            A monochrome image can be modeled as:
+                        </p>
+                        <span class="math-formula">f(x,y) = i(x,y) &times; r(x,y)</span>
+                        <p>
+                            where <code>i(x,y)</code> is the <strong>illumination component</strong> (0 &lt; i &lt; &infin;) and
+                            <code>r(x,y)</code> is the <strong>reflectance component</strong> (0 &lt; r &lt; 1). The intensity at any
+                            point is thus determined by both the light falling on the scene and the fraction reflected by the object surface.
+                        </p>
+                    </div>
+
+                    <div class="theory-block">
+                        <h4>2.4 Sampling and Quantization</h4>
+                        <p>
+                            <strong>Sampling</strong> digitizes the spatial coordinates (continuous &rarr; discrete x,y grid of M&times;N pixels).
+                            <strong>Quantization</strong> digitizes the amplitude (continuous intensity &rarr; L = 2<sup>k</sup> discrete gray levels).
+                            Storage requirement: <code>b = M &times; N &times; k</code> bits. Reducing spatial resolution causes <em>blocky/pixelated</em>
+                            appearance; reducing intensity resolution causes <em>false contouring</em>.
+                        </p>
+                        <p>
+                            <strong>Interpolation methods</strong> for resizing: <em>Nearest-neighbor</em> (simplest, blocky),
+                            <em>Bilinear</em> (4 neighbors, smooth), <em>Bicubic</em> (16 neighbors, highest quality, used in OpenCV's <code>INTER_CUBIC</code>).
+                        </p>
+                    </div>
+
+                    <div class="theory-block">
+                        <h4>2.5 Pixel Relationships</h4>
+                        <p>
+                            A pixel p at (x,y) has three types of neighbors:
+                            <strong>N<sub>4</sub></strong> (4-neighbors at unit distance: up, down, left, right),
+                            <strong>N<sub>D</sub></strong> (4 diagonal neighbors at &radic;2 distance), and
+                            <strong>N<sub>8</sub></strong> (all 8 surrounding pixels = N<sub>4</sub> &cup; N<sub>D</sub>).
+                        </p>
+                        <p>
+                            <strong>Adjacency types</strong>: 4-adjacency, 8-adjacency, and m-adjacency (mixed, eliminates ambiguity).
+                            <strong>Distance measures</strong>:
+                            Euclidean D<sub>e</sub> = &radic;[(x&minus;s)&sup2; + (y&minus;t)&sup2;],
+                            City-block D<sub>4</sub> = |x&minus;s| + |y&minus;t| (diamond shape),
+                            Chessboard D<sub>8</sub> = max(|x&minus;s|, |y&minus;t|) (square shape).
+                        </p>
+                    </div>
+
+                    <div class="theory-block">
+                        <h4>2.6 Arithmetic Operations on Images</h4>
+                        <p>
+                            The four fundamental arithmetic operations on images:
+                        </p>
+                        <p>
+                            <strong>Addition:</strong> <code>s(x,y) = f(x,y) + g(x,y)</code> &mdash; noise reduction by averaging multiple noisy acquisitions.<br>
+                            <strong>Subtraction:</strong> <code>s(x,y) = f(x,y) - g(x,y)</code> &mdash; change detection, background removal, digital subtraction angiography.<br>
+                            <strong>Multiplication:</strong> <code>s(x,y) = f(x,y) &times; g(x,y)</code> &mdash; masking, region-of-interest extraction.<br>
+                            <strong>Division:</strong> <code>s(x,y) = f(x,y) / g(x,y)</code> &mdash; shading/illumination correction.
+                        </p>
+                        <p>
+                            An operator H is <strong>linear</strong> if H[af<sub>1</sub> + bf<sub>2</sub>] = aH[f<sub>1</sub>] + bH[f<sub>2</sub>].
+                            Mean filtering is linear; median filtering is <em>nonlinear</em>.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ============ PRACTICAL 2 ============ -->
+        <section id="practical-2">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">2</span>
+                    <h2>Practical 2 &mdash; Coming Soon</h2>
+                </div>
+                <div class="panel-body">
+                    <div class="coming-soon">
+                        <div class="coming-soon-badge">Upcoming</div>
+                        <h3>Next Practical Session</h3>
+                        <p>
+                            The next practical will be added here once assigned in class.
+                            Common topics for Practical 2 include histogram equalization,
+                            spatial filtering, or intensity transformations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="main-footer">
+        <div class="footer-content">
+            <p class="footer-brand">Shoolini University of Biotechnology and Management Sciences</p>
+            <p>Yogananda School of AI, Computer and Data Sciences</p>
+            <p>QS World #503 &bull; NAAC A+ &bull; NIRF #69</p>
+            <p style="margin-top: 0.8rem; font-size: 0.8rem;">
+                Divya Mohan &bull; BTech CSE Cybersecurity &bull; Semester 8 &bull;
+                <a href="https://dmj.one">dmj.one</a>
+            </p>
+            <p style="font-size: 0.75rem; color: #8d6e63; margin-top: 0.5rem;">
+                Textbook: R.C. Gonzalez &amp; R.E. Woods, <em>Digital Image Processing</em>, 3rd Edition, Pearson
+            </p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
