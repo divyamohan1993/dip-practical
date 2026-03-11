@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}Practical {{ num }}: {{ title }}{% endblock %}
+
+{% block header_title %}Practical {{ num }}: {{ title }}{% endblock %}
+
+{% block header_subtitle %}{{ chapter }} &mdash; Coming Soon{% endblock %}
+
+{% block content %}
+<section style="text-align:center; padding: 4rem 1rem;">
+    <div style="font-size:4rem; margin-bottom:1rem; opacity:0.5;">&#128679;</div>
+    <h2 style="font-family:'Maven Pro',sans-serif; margin-bottom:1rem;">Under Construction</h2>
+    <p style="max-width:480px; margin:0 auto 2rem; font-size:1.05rem; opacity:0.8;">
+        This practical is being built. Check back soon for interactive visualizations,
+        theory notes, and quizzes covering <strong>{{ title }}</strong>.
+    </p>
+    <a href="/" class="btn btn-outline-primary" style="text-decoration:none;">
+        &larr; Back to All Practicals
+    </a>
+</section>
+{% endblock %}

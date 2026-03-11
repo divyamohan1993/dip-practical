@@ -1,0 +1,48 @@
+<!-- Bootstrap 5 Navbar: Sticky, Glassmorphic -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top dip-navbar" id="mainNav">
+    <div class="container">
+        <a class="navbar-brand fw-bold" href="/">DIP Lab</a>
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">Home</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/1' %}active{% endif %}" href="/practical/1">P1</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/2' %}active{% endif %}" href="/practical/2">P2</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/3' %}active{% endif %}" href="/practical/3">P3</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/4' %}active{% endif %}" href="/practical/4">P4</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/5' %}active{% endif %}" href="/practical/5">P5</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/6' %}active{% endif %}" href="/practical/6">P6</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/7' %}active{% endif %}" href="/practical/7">P7</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/8' %}active{% endif %}" href="/practical/8">P8</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/9' %}active{% endif %}" href="/practical/9">P9</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/practical/10' %}active{% endif %}" href="/practical/10">P10</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>

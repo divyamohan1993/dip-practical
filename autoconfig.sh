@@ -61,16 +61,24 @@ fi
 "${VENV_DIR}/bin/pip" install --quiet -r requirements.txt
 
 # --- Gunicorn config for production ---
+# NOTE: gunicorn.conf.py is now committed to the repo (gthread, 2x8 threads).
+# Only overwrite if it does not exist (first deploy).
+if [ ! -f "${APP_DIR}/gunicorn.conf.py" ]; then
 cat > "${APP_DIR}/gunicorn.conf.py" << 'GUNICORN_EOF'
 bind = "127.0.0.1:8000"
-workers = 4
-worker_class = "sync"
+workers = 2
+threads = 8
+worker_class = "gthread"
 timeout = 120
+graceful_timeout = 30
 keepalive = 5
+max_requests = 500
+max_requests_jitter = 50
 accesslog = "/var/log/dip-practical/access.log"
 errorlog = "/var/log/dip-practical/error.log"
 loglevel = "info"
 GUNICORN_EOF
+fi
 
 # --- Systemd service ---
 echo "[*] Configuring systemd service..."
@@ -85,7 +93,7 @@ User=${APP_USER}
 Group=${APP_USER}
 WorkingDirectory=${APP_DIR}
 Environment=PATH=${VENV_DIR}/bin:/usr/local/bin:/usr/bin:/bin
-ExecStart=${VENV_DIR}/bin/gunicorn -c gunicorn.conf.py app.main:app
+ExecStart=${VENV_DIR}/bin/gunicorn -c gunicorn.conf.py run:app
 Restart=always
 RestartSec=5
 
@@ -97,50 +105,9 @@ systemctl daemon-reload
 systemctl enable ${APP_NAME}
 systemctl restart ${APP_NAME}
 
-# --- Nginx ---
+# --- Nginx (use the advanced config with microcaching from the repo) ---
 echo "[*] Configuring Nginx..."
-cat > /etc/nginx/sites-available/${APP_NAME} << 'NGINX_EOF'
-server {
-    listen 80;
-    server_name dip.dmj.one _;
-
-    # Trust Cloudflare proxy headers
-    set_real_ip_from 173.245.48.0/20;
-    set_real_ip_from 103.21.244.0/22;
-    set_real_ip_from 103.22.200.0/22;
-    set_real_ip_from 103.31.4.0/22;
-    set_real_ip_from 141.101.64.0/18;
-    set_real_ip_from 108.162.192.0/18;
-    set_real_ip_from 190.93.240.0/20;
-    set_real_ip_from 188.114.96.0/20;
-    set_real_ip_from 197.234.240.0/22;
-    set_real_ip_from 198.41.128.0/17;
-    set_real_ip_from 162.158.0.0/15;
-    set_real_ip_from 104.16.0.0/13;
-    set_real_ip_from 104.24.0.0/14;
-    set_real_ip_from 172.64.0.0/13;
-    set_real_ip_from 131.0.72.0/22;
-    real_ip_header CF-Connecting-IP;
-
-    client_max_body_size 10M;
-
-    location / {
-        proxy_pass http://127.0.0.1:8000;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_read_timeout 120s;
-    }
-
-    # Static files served directly by nginx for performance
-    location /static/ {
-        alias /opt/dip-practical/app/static/;
-        expires 7d;
-        add_header Cache-Control "public, immutable";
-    }
-}
-NGINX_EOF
+cp "${APP_DIR}/deploy/nginx-site.conf" /etc/nginx/sites-available/${APP_NAME}
 
 ln -sf /etc/nginx/sites-available/${APP_NAME} /etc/nginx/sites-enabled/${APP_NAME}
 rm -f /etc/nginx/sites-enabled/default

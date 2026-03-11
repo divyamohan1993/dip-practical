@@ -1,0 +1,585 @@
+{% extends "base.html" %}
+
+{% block title %}Practical 3: Histogram Equalization & CLAHE{% endblock %}
+
+{% block description %}Digital Image Processing Practical 3 - Histogram Equalization, CLAHE, Histogram Matching, and Local Histogram Processing. CSU2543, Shoolini University. Interactive visualizations covering histogram processing techniques from Gonzalez &amp; Woods Chapter 3.3.{% endblock %}
+
+{% block header_title %}Practical 3: Histogram Equalization &amp; CLAHE{% endblock %}
+
+{% block header_subtitle %}G&amp;W Chapter 3.3 &mdash; Histogram Processing{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/practicals/p03.css') }}">
+{% endblock %}
+
+{% block content %}
+
+        <!-- ================================================================ -->
+        <!-- SECTION 0: THEORY - Histogram Processing Overview                -->
+        <!-- ================================================================ -->
+        <section id="theory">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">0</span>
+                    <h2>Theory &mdash; Histogram Processing Overview</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <p>
+                            Histogram processing is one of the most fundamental and powerful tools in image
+                            enhancement. Before applying any algorithm, we must understand exactly what a
+                            histogram tells us and why manipulating it produces such dramatic visual improvements.
+                            This section builds your understanding from the ground up.
+                        </p>
+                    </div>
+
+                    <!-- What is a Histogram? -->
+                    <article class="theory-block" id="what-is-histogram">
+                        <h3>What is a Histogram?</h3>
+
+                        <p>
+                            The <strong>histogram</strong> of a digital image with intensity levels in the range
+                            \([0, L-1]\) is a discrete function that counts how many pixels in the image have
+                            each intensity value:
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            h(r_k) = n_k \quad \text{for } k = 0, 1, 2, \ldots, L-1
+                            \]
+                        </div>
+
+                        <p>
+                            where \( r_k \) is the \( k \)-th intensity value and \( n_k \) is the number of
+                            pixels in the image with intensity \( r_k \). For an 8-bit grayscale image,
+                            \( L = 256 \), so the histogram has 256 bins. The histogram is simply a
+                            <strong>frequency distribution</strong> of intensity values.
+                        </p>
+
+                        <p>
+                            It is common practice to normalize the histogram by dividing each component by the
+                            total number of pixels \( MN \) (where \( M \) and \( N \) are the image dimensions),
+                            giving us an estimate of the <strong>probability density function (PDF)</strong> of
+                            the intensity levels:
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            p(r_k) = \frac{h(r_k)}{MN} = \frac{n_k}{MN} \quad \text{for } k = 0, 1, 2, \ldots, L-1
+                            \]
+                        </div>
+
+                        <p>
+                            This normalized histogram \( p(r_k) \) satisfies two properties of a valid probability
+                            distribution: each value is non-negative, and the sum of all values equals 1. The
+                            <strong>cumulative distribution function (CDF)</strong> is then:
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            \text{CDF}(r_k) = \sum_{j=0}^{k} p(r_j) = \sum_{j=0}^{k} \frac{n_j}{MN}
+                            \]
+                        </div>
+
+                        <p>
+                            The CDF at any intensity level \( r_k \) tells us the fraction of pixels with
+                            intensity <em>at most</em> \( r_k \). For \( r_0 \) the CDF equals \( p(r_0) \),
+                            and for \( r_{L-1} \) the CDF always equals 1.
+                        </p>
+                    </article>
+
+                    <!-- Why Histogram Equalization Works -->
+                    <article class="theory-block" id="why-heq-works">
+                        <h3>Why Histogram Equalization Works</h3>
+
+                        <p>
+                            An image whose pixels are clustered in a narrow intensity range looks
+                            <strong>low-contrast</strong>. The ideal for maximum contrast is a
+                            <strong>uniform distribution</strong> &mdash; equal numbers of pixels at every
+                            intensity level. This uses the full dynamic range \([0, L-1]\) as effectively
+                            as possible.
+                        </p>
+
+                        <p>
+                            Histogram equalization finds a monotonic, intensity-preserving transformation
+                            \( T(r) \) that maps the original intensity distribution as close to uniform as
+                            the discrete nature of the image allows. The key insight is that if we use the
+                            CDF of the original image as the transformation function, the resulting image
+                            will have an approximately uniform histogram.
+                        </p>
+
+                        <h4>The Equalization Transform</h4>
+
+                        <p>
+                            For a continuous random variable, the transformation \( s = T(r) = (L-1) \int_0^r p_r(w)\,dw \)
+                            produces an output with a perfectly uniform distribution. For discrete images, the
+                            equivalent is:
+                        </p>
+
+                        <div class="math-formula">
+                            \[
+                            s_k = T(r_k) = (L-1) \sum_{j=0}^{k} p_r(r_j)
+                            = \frac{L-1}{MN} \sum_{j=0}^{k} n_j
+                            \quad \text{for } k = 0, 1, \ldots, L-1
+                            \]
+                        </div>
+
+                        <p>
+                            Each original intensity \( r_k \) is mapped to a new intensity \( s_k \) by
+                            scaling the CDF value to the output range \([0, L-1]\) and rounding to the nearest
+                            integer. Intensities that are common (large \( n_k \)) get spread over a wider
+                            range, while rare intensities get compressed. The net effect is a
+                            <strong>contrast stretch</strong> that reveals detail hidden in the original
+                            distribution.
+                        </p>
+                    </article>
+
+                    <!-- Real-World Applications -->
+                    <article class="theory-block" id="hist-applications">
+                        <h3>Real-World Applications</h3>
+
+                        <div class="applications-grid">
+                            <div class="application-card">
+                                <h5>Medical Imaging</h5>
+                                <p>
+                                    Enhancing X-rays and CT scans so that soft-tissue structures become visible
+                                    against bone. CLAHE is standard for chest radiograph preprocessing.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Satellite Imagery</h5>
+                                <p>
+                                    Improving contrast of terrain features in multispectral bands. Histogram
+                                    matching normalizes images taken at different times or illumination conditions.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Underwater Photography</h5>
+                                <p>
+                                    Correcting for light absorption by water, which compresses the intensity
+                                    range. Equalization restores color depth and reveals fine detail.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Security &amp; Surveillance</h5>
+                                <p>
+                                    Enhancing low-light footage for face recognition. Adaptive methods like CLAHE
+                                    preserve local detail critical for identification.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Document Scanning</h5>
+                                <p>
+                                    Improving readability of faded or unevenly-lit documents before OCR. Local
+                                    histogram processing handles varying illumination across the page.
+                                </p>
+                            </div>
+                            <div class="application-card">
+                                <h5>Computer Vision Pipelines</h5>
+                                <p>
+                                    Histogram equalization as a preprocessing step normalizes intensity
+                                    distributions, making downstream features more robust to lighting changes.
+                                </p>
+                            </div>
+                        </div>
+                    </article>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================ -->
+        <!-- SECTION 1: HISTOGRAM EQUALIZATION LAB                            -->
+        <!-- ================================================================ -->
+        <section id="equalization">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">1</span>
+                    <h2>Histogram Equalization Lab</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <p>
+                            Select an image and click <strong>Equalize</strong> to apply global histogram
+                            equalization. Compare the before/after images, their histograms, and the intensity
+                            statistics side by side.
+                        </p>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="p3-controls">
+                        <div class="p3-control-group" style="flex: 1;">
+                            <label for="eq-image-select">Image</label>
+                            <select id="eq-image-select">
+                                <option value="">-- Select an image --</option>
+                            </select>
+                        </div>
+                        <button id="eq-run-btn" class="btn btn-primary" disabled>Equalize</button>
+                    </div>
+
+                    <!-- Result Area -->
+                    <div id="eq-result" class="p3-result-area">
+                        <div class="p3-img-placeholder">
+                            Select an image above and click Equalize to see results
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================ -->
+        <!-- SECTION 2: STEP-BY-STEP WALKTHROUGH                             -->
+        <!-- ================================================================ -->
+        <section id="walkthrough">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">2</span>
+                    <h2>Step-by-Step Walkthrough</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <p>
+                            Walk through the histogram equalization algorithm one step at a time. This section
+                            breaks down the computation into six stages, showing exactly how each intensity
+                            level is mapped to its equalized value &mdash; with actual data from the selected
+                            image.
+                        </p>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="p3-controls">
+                        <div class="p3-control-group" style="flex: 1;">
+                            <label for="wt-image-select">Image</label>
+                            <select id="wt-image-select">
+                                <option value="">-- Select an image --</option>
+                            </select>
+                        </div>
+                        <button id="wt-run-btn" class="btn btn-green" disabled>Walk Through</button>
+                    </div>
+
+                    <!-- Timeline Result -->
+                    <div id="wt-result" class="p3-result-area">
+                        <div class="p3-img-placeholder">
+                            Select an image and click Walk Through to begin
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================ -->
+        <!-- SECTION 3: CLAHE                                                 -->
+        <!-- ================================================================ -->
+        <section id="clahe">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">3</span>
+                    <h2>CLAHE &mdash; Contrast Limited Adaptive Histogram Equalization</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <h4>Why CLAHE?</h4>
+                        <p>
+                            Global histogram equalization applies the same transformation to every pixel
+                            in the image. This can over-amplify noise in uniform regions and wash out
+                            local detail. <strong>Adaptive Histogram Equalization (AHE)</strong> fixes this
+                            by computing a separate histogram for each local neighborhood (tile). However,
+                            AHE can over-enhance noise in homogeneous areas.
+                        </p>
+                        <p>
+                            <strong>CLAHE</strong> adds a critical refinement: it clips the histogram at a
+                            user-defined threshold (the <strong>clip limit</strong>) before computing the CDF.
+                            The clipped counts are redistributed uniformly across all bins. This limits the
+                            maximum contrast amplification, preventing noise blow-up while still enhancing
+                            local contrast effectively.
+                        </p>
+                        <p>
+                            The <strong>tile size</strong> controls the spatial extent of adaptation:
+                            smaller tiles produce more localized enhancement, larger tiles approach global
+                            equalization.
+                        </p>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="p3-controls">
+                        <div class="p3-control-group" style="flex: 1;">
+                            <label for="clahe-image-select">Image</label>
+                            <select id="clahe-image-select">
+                                <option value="">-- Select an image --</option>
+                            </select>
+                        </div>
+                        <div class="p3-control-group">
+                            <label for="clahe-clip">Clip Limit: <span id="clahe-clip-val" class="p3-range-value">2.0</span></label>
+                            <input type="range" id="clahe-clip" min="0.5" max="40" step="0.5" value="2.0">
+                        </div>
+                        <div class="p3-control-group">
+                            <label for="clahe-tile">Tile Size</label>
+                            <select id="clahe-tile">
+                                <option value="4">4 &times; 4</option>
+                                <option value="8" selected>8 &times; 8</option>
+                                <option value="16">16 &times; 16</option>
+                                <option value="32">32 &times; 32</option>
+                            </select>
+                        </div>
+                        <button id="clahe-run-btn" class="btn btn-primary" disabled>Apply CLAHE</button>
+                    </div>
+
+                    <!-- Result Area -->
+                    <div id="clahe-result" class="p3-result-area">
+                        <div class="p3-img-placeholder">
+                            Select an image, adjust parameters, and click Apply CLAHE
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================ -->
+        <!-- SECTION 4: HISTOGRAM MATCHING (SPECIFICATION)                    -->
+        <!-- ================================================================ -->
+        <section id="matching">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">4</span>
+                    <h2>Histogram Matching (Specification)</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <h4>Beyond Uniform &mdash; Matching a Target Distribution</h4>
+                        <p>
+                            Histogram equalization always targets a <em>uniform</em> distribution. But what
+                            if you need a specific target distribution? <strong>Histogram matching</strong>
+                            (also called <em>histogram specification</em>) transforms the source image so
+                            its histogram approximates that of a given target image or distribution.
+                        </p>
+                        <p>
+                            The algorithm: (1) compute the CDF of both source and target, (2) for each
+                            source intensity, find the target intensity whose CDF value is closest. This
+                            is useful for normalizing images from different sensors or lighting conditions.
+                        </p>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="p3-controls">
+                        <div class="p3-control-group" style="flex: 1;">
+                            <label for="match-source-select">Source Image</label>
+                            <select id="match-source-select">
+                                <option value="">-- Source --</option>
+                            </select>
+                        </div>
+                        <div class="p3-control-group" style="flex: 1;">
+                            <label for="match-target-select">Target Image</label>
+                            <select id="match-target-select">
+                                <option value="">-- Target --</option>
+                            </select>
+                        </div>
+                        <button id="match-run-btn" class="btn btn-primary" disabled>Match</button>
+                    </div>
+
+                    <!-- Result Area -->
+                    <div id="match-result" class="p3-result-area">
+                        <div class="p3-img-placeholder">
+                            Select a source and target image, then click Match
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================ -->
+        <!-- SECTION 5: LOCAL HISTOGRAM PROCESSING                            -->
+        <!-- ================================================================ -->
+        <section id="local-stats">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">5</span>
+                    <h2>Local Histogram Processing</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="theory-block">
+                        <h4>Local Statistics for Enhancement</h4>
+                        <p>
+                            Instead of computing a single global histogram, we can slide a window across
+                            the image and compute statistics (mean, standard deviation) within each local
+                            neighborhood. These local statistics reveal how contrast and brightness vary
+                            spatially. By combining conditions on local mean and local standard deviation,
+                            we can selectively enhance regions that are dark <em>and</em> low-contrast &mdash;
+                            exactly where detail is hardest to see.
+                        </p>
+                        <p>
+                            This approach, described in Gonzalez &amp; Woods Section 3.3.4, is the foundation
+                            of many adaptive enhancement techniques and is closely related to CLAHE.
+                        </p>
+                    </div>
+
+                    <!-- Controls -->
+                    <div class="p3-controls">
+                        <div class="p3-control-group" style="flex: 1;">
+                            <label for="local-image-select">Image</label>
+                            <select id="local-image-select">
+                                <option value="">-- Select an image --</option>
+                            </select>
+                        </div>
+                        <div class="p3-control-group">
+                            <label for="local-window">Window Size</label>
+                            <select id="local-window">
+                                <option value="3">3 &times; 3</option>
+                                <option value="5" selected>5 &times; 5</option>
+                                <option value="7">7 &times; 7</option>
+                                <option value="11">11 &times; 11</option>
+                            </select>
+                        </div>
+                        <button id="local-run-btn" class="btn btn-primary" disabled>Compute</button>
+                    </div>
+
+                    <!-- Result Area -->
+                    <div id="local-result" class="p3-result-area">
+                        <div class="p3-img-placeholder">
+                            Select an image and window size, then click Compute
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+        <!-- ================================================================ -->
+        <!-- SECTION 6: QUIZ                                                  -->
+        <!-- ================================================================ -->
+        <section id="quiz">
+            <div class="panel">
+                <div class="panel-header">
+                    <span class="panel-number">6</span>
+                    <h2>Knowledge Check &mdash; Histogram Processing</h2>
+                </div>
+                <div class="panel-body">
+
+                    <div class="quiz-container" id="quiz-histogram">
+                        <h3>Test Your Understanding</h3>
+                        <div class="quiz-questions">
+
+                            <div class="quiz-question" data-correct="2">
+                                <p class="quiz-question-text">
+                                    <strong>Q1.</strong> The normalized histogram \( p(r_k) = n_k / MN \)
+                                    estimates which statistical quantity?
+                                </p>
+                                <button class="quiz-option" data-index="0">Cumulative distribution function (CDF)</button>
+                                <button class="quiz-option" data-index="1">Variance of intensity values</button>
+                                <button class="quiz-option" data-index="2">Probability density function (PDF)</button>
+                                <button class="quiz-option" data-index="3">Mean intensity of the image</button>
+                                <div class="quiz-explanation hidden">
+                                    The normalized histogram divides each bin count by the total number of pixels,
+                                    giving the relative frequency of each intensity &mdash; an estimate of the
+                                    <strong>probability density function (PDF)</strong>. The CDF is the cumulative
+                                    sum of the PDF.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="1">
+                                <p class="quiz-question-text">
+                                    <strong>Q2.</strong> Histogram equalization maps each intensity \( r_k \)
+                                    using which function?
+                                </p>
+                                <button class="quiz-option" data-index="0">The inverse of the histogram</button>
+                                <button class="quiz-option" data-index="1">The CDF of the original image, scaled to [0, L-1]</button>
+                                <button class="quiz-option" data-index="2">The logarithm of the pixel count</button>
+                                <button class="quiz-option" data-index="3">The square root of the intensity value</button>
+                                <div class="quiz-explanation hidden">
+                                    The transformation is \( s_k = (L-1) \sum_{j=0}^{k} p_r(r_j) \), which is the
+                                    CDF of the original image scaled to the output intensity range \([0, L-1]\).
+                                    This is the mathematical heart of histogram equalization.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="0">
+                                <p class="quiz-question-text">
+                                    <strong>Q3.</strong> What distribution does histogram equalization
+                                    attempt to produce?
+                                </p>
+                                <button class="quiz-option" data-index="0">Uniform (flat) distribution</button>
+                                <button class="quiz-option" data-index="1">Gaussian (bell curve) distribution</button>
+                                <button class="quiz-option" data-index="2">Exponential distribution</button>
+                                <button class="quiz-option" data-index="3">Bimodal distribution</button>
+                                <div class="quiz-explanation hidden">
+                                    Histogram equalization targets a <strong>uniform distribution</strong>,
+                                    meaning equal numbers of pixels at every intensity level. This maximizes
+                                    the use of the available dynamic range and produces maximum contrast.
+                                    For discrete images, the result is only approximately uniform.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="3">
+                                <p class="quiz-question-text">
+                                    <strong>Q4.</strong> What problem does CLAHE solve that basic AHE
+                                    (Adaptive Histogram Equalization) does not?
+                                </p>
+                                <button class="quiz-option" data-index="0">AHE cannot handle color images</button>
+                                <button class="quiz-option" data-index="1">AHE is too slow for real-time applications</button>
+                                <button class="quiz-option" data-index="2">AHE does not adapt to local regions</button>
+                                <button class="quiz-option" data-index="3">AHE over-amplifies noise in homogeneous regions</button>
+                                <div class="quiz-explanation hidden">
+                                    AHE computes local histograms and equalizes them independently, which
+                                    dramatically amplifies noise in near-uniform regions. CLAHE clips the
+                                    histogram at a threshold before computing the CDF, limiting the maximum
+                                    contrast amplification and preventing noise blow-up.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="2">
+                                <p class="quiz-question-text">
+                                    <strong>Q5.</strong> In CLAHE, what happens to the histogram counts
+                                    that exceed the clip limit?
+                                </p>
+                                <button class="quiz-option" data-index="0">They are discarded entirely</button>
+                                <button class="quiz-option" data-index="1">They are set to zero</button>
+                                <button class="quiz-option" data-index="2">They are redistributed uniformly across all bins</button>
+                                <button class="quiz-option" data-index="3">They are moved to the nearest unclipped bin</button>
+                                <div class="quiz-explanation hidden">
+                                    CLAHE clips histogram bins that exceed the limit and <strong>redistributes
+                                    the excess counts uniformly</strong> across all bins. This ensures the total
+                                    pixel count is preserved while limiting contrast amplification. The
+                                    redistribution may itself cause bins to exceed the limit, so the process
+                                    can be iterative.
+                                </div>
+                            </div>
+
+                            <div class="quiz-question" data-correct="1">
+                                <p class="quiz-question-text">
+                                    <strong>Q6.</strong> Histogram matching (specification) differs from
+                                    histogram equalization in that it:
+                                </p>
+                                <button class="quiz-option" data-index="0">Does not use the CDF at all</button>
+                                <button class="quiz-option" data-index="1">Targets an arbitrary specified distribution instead of uniform</button>
+                                <button class="quiz-option" data-index="2">Only works on color images</button>
+                                <button class="quiz-option" data-index="3">Produces a histogram with a single peak</button>
+                                <div class="quiz-explanation hidden">
+                                    Histogram equalization always targets a uniform distribution. Histogram
+                                    <strong>matching (specification)</strong> generalizes this by allowing
+                                    the user to specify <em>any</em> target distribution (or target image
+                                    histogram). It uses CDFs of both source and target to compute the mapping.
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
+<script src="{{ url_for('static', filename='js/practicals/p03.js') }}"></script>
+{% endblock %}

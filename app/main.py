@@ -29,8 +29,21 @@ app = Flask(__name__,
 
 @app.route('/')
 def index():
-    """Serve the main page."""
+    """Serve the home page with practical cards."""
     return render_template('index.html')
+
+
+@app.route('/practical/<int:num>')
+def practical(num):
+    """Serve individual practical pages."""
+    template_map = {
+        1: 'practicals/p01.html',
+    }
+    template = template_map.get(num)
+    if template is None:
+        # For practicals not yet built, return a placeholder
+        return render_template('index.html'), 200
+    return render_template(template)
 
 
 @app.route('/api/images')
