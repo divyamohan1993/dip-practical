@@ -7,6 +7,11 @@
     <meta name="description" content="{% block description %}Digital Image Processing Practical Lab - CSU2543. Shoolini University, BTech CSE Cybersecurity.{% endblock %}">
     <meta name="author" content="Divya Mohan">
 
+    <!-- FOUC prevention: apply theme before any CSS loads -->
+    <script>
+        (function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();
+    </script>
+
     <!-- Google Fonts: Maven Pro (headings), Lato (body), Hack (monospace) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -26,10 +31,13 @@
 </head>
 <body>
 
+    <!-- Skip link for keyboard/screen reader users (WCAG 2.2 AAA) -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     {% include 'partials/_nav.html' %}
 
     <!-- Main Header -->
-    <header class="main-header">
+    <header class="main-header" aria-label="Course information">
         <div class="header-content container">
             <div class="course-code">CSU2543</div>
             <h1>{% block header_title %}Digital Image Processing{% endblock %}</h1>
@@ -43,7 +51,7 @@
     </header>
 
     <!-- Main Content -->
-    <main class="main-content">
+    <main class="main-content" id="main-content">
         <div class="container">
             {% block content %}{% endblock %}
         </div>
@@ -52,13 +60,14 @@
     {% include 'partials/_footer.html' %}
 
     <!-- Toast Notification -->
-    <div id="toast" class="toast" role="alert" aria-live="polite"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
     <!-- Bootstrap 5.3.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
     <!-- Application JS -->
     <script src="{{ url_for('static', filename='js/core.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/nav.js') }}"></script>
     <script src="{{ url_for('static', filename='js/interactive.js') }}"></script>
 

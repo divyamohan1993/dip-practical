@@ -2,6 +2,7 @@
    P01 - Introduction to Digital Image Processing
    Practical-specific components: pixel grid, arithmetic,
    pipeline visualization, bit depth, surface plots
+   Glassmorphic + Neumorphic treatment
    ============================================================ */
 
 /* ---------- Recommended Pairs ---------- */
@@ -13,13 +14,15 @@
 }
 
 .pair-card {
-    background: white;
-    border: 1px solid var(--surface-200);
+    background: var(--glass-bg-1);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border-subtle);
     border-radius: var(--radius-lg);
     padding: 1.2rem;
     cursor: pointer;
-    transition: all var(--transition-base);
-    box-shadow: var(--shadow-sm);
+    transition: all 0.3s var(--transition-spring);
+    box-shadow: var(--neu-flat);
     position: relative;
     overflow: hidden;
 }
@@ -38,8 +41,8 @@
 
 .pair-card:hover {
     transform: translateY(-4px);
-    box-shadow: var(--shadow-xl);
-    border-color: #1a9d64;
+    box-shadow: var(--neu-raised), var(--shadow-glow);
+    border-color: var(--accent-hover);
 }
 
 .pair-card:hover::before { opacity: 1; }
@@ -60,7 +63,7 @@
 
 .pair-card .pair-badge {
     display: inline-block;
-    background: linear-gradient(135deg, var(--success), #157347);
+    background: linear-gradient(135deg, var(--success), #166534);
     color: white;
     padding: 3px 12px;
     border-radius: var(--radius-full);
@@ -69,6 +72,7 @@
     margin-bottom: 0.5rem;
     text-transform: uppercase;
     letter-spacing: 1px;
+    box-shadow: 0 2px 8px rgba(21, 128, 61, 0.2), var(--clay-inner);
 }
 
 /* ---------- Pixel Grid Visualization ---------- */
@@ -89,7 +93,7 @@
     left: 0;
     right: 0;
     bottom: 0;
-    background: radial-gradient(ellipse at center, rgba(53, 165, 221, 0.05) 0%, transparent 70%);
+    background: radial-gradient(ellipse at center, rgba(14, 116, 144, 0.05) 0%, transparent 70%);
     pointer-events: none;
 }
 
@@ -97,7 +101,7 @@
     display: block;
     width: 100%;
     height: auto;
-    border: 1px solid rgba(34, 110, 147, 0.3);
+    border: 1px solid rgba(14, 116, 144, 0.3);
     border-radius: var(--radius-sm);
     cursor: crosshair;
     image-rendering: pixelated;
@@ -115,7 +119,7 @@
     pointer-events: none;
     z-index: 50;
     border: 1px solid var(--accent-hover);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 10px rgba(53, 165, 221, 0.2);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), 0 0 10px rgba(14, 116, 144, 0.2);
     white-space: nowrap;
     transform: translate(-50%, -110%);
 }
@@ -145,26 +149,28 @@
 
 /* ---------- Pixel Arithmetic Calculator ---------- */
 .arithmetic-calculator {
-    background: white;
-    border: 1px solid var(--surface-200);
+    background: var(--glass-bg-1);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border-subtle);
     border-radius: var(--radius-lg);
     padding: 1.5rem;
     margin: 1rem 0;
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--glass-shadow);
 }
 
 .arithmetic-input {
     width: 80px;
     padding: 8px 10px;
-    border: 1px solid var(--surface-300);
+    border: 1px solid var(--glass-border-subtle);
     border-radius: var(--radius-md);
-    background: white;
+    background: var(--glass-bg-1);
     font-family: var(--font-mono);
     font-size: 1rem;
     font-weight: 700;
     color: var(--text-900);
     text-align: center;
-    box-shadow: var(--shadow-sm);
+    box-shadow: var(--neu-concave);
     transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
     -moz-appearance: textfield;
 }
@@ -178,7 +184,7 @@
 .arithmetic-input:focus {
     outline: none;
     border-color: var(--accent-hover);
-    box-shadow: 0 0 0 3px rgba(53, 165, 221, 0.15);
+    box-shadow: 0 0 0 3px rgba(14, 116, 144, 0.15), var(--neu-concave);
 }
 
 .arithmetic-results {
@@ -189,15 +195,17 @@
 }
 
 .arithmetic-operation {
-    background: var(--surface-50);
-    border: 1px solid var(--surface-200);
+    background: var(--glass-bg-2);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border-subtle);
     border-radius: var(--radius-lg);
     padding: 1rem;
-    transition: box-shadow var(--transition-base), transform var(--transition-base);
+    transition: box-shadow var(--transition-base), transform 0.3s var(--transition-spring);
 }
 
 .arithmetic-operation:hover {
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--neu-raised);
     transform: translateY(-2px);
 }
 
@@ -233,7 +241,7 @@
 
 .arithmetic-bar .bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent-hover), var(--info));
+    background: linear-gradient(90deg, var(--accent-hover), #22d3ee);
     border-radius: var(--radius-full);
     transition: width 0.4s ease;
 }
@@ -242,13 +250,13 @@
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    background: #f8d7da;
-    color: #842029;
+    background: rgba(185, 28, 28, 0.08);
+    color: var(--error);
     font-size: 0.78rem;
     font-weight: 600;
     padding: 3px 10px;
     border-radius: var(--radius-sm);
-    border: 1px solid rgba(220, 53, 69, 0.2);
+    border: 1px solid rgba(185, 28, 28, 0.15);
     margin-top: 0.4rem;
 }
 
@@ -268,9 +276,11 @@
 .pipeline-visualization {
     margin: 1.5rem 0;
     padding: 1.5rem;
-    background: var(--surface-100);
+    background: var(--glass-bg-2);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
     border-radius: var(--radius-lg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--glass-border-subtle);
 }
 
 .pipeline-steps {
@@ -285,14 +295,16 @@
     top: 0;
     bottom: 0;
     width: 2px;
-    background: linear-gradient(180deg, var(--accent-hover), var(--info), var(--htag));
+    background: linear-gradient(180deg, var(--accent-hover), #22d3ee, var(--htag));
     opacity: 0.3;
 }
 
 .pipeline-step {
     position: relative;
-    background: white;
-    border: 1px solid var(--surface-200);
+    background: var(--glass-bg-1);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border-subtle);
     border-radius: var(--radius-lg);
     padding: 1.2rem 1.5rem;
     margin-bottom: 1.2rem;
@@ -301,7 +313,7 @@
 }
 
 .pipeline-step:hover {
-    box-shadow: var(--shadow-lg);
+    box-shadow: var(--glass-shadow);
     transform: translateX(4px);
 }
 
@@ -324,7 +336,7 @@
     font-family: var(--font-primary);
     font-weight: 700;
     font-size: 0.85rem;
-    box-shadow: 0 2px 8px rgba(53, 165, 221, 0.3);
+    box-shadow: 0 3px 8px rgba(14, 116, 144, 0.3), var(--clay-inner);
     z-index: 2;
 }
 
@@ -363,8 +375,8 @@
 }
 
 .pipeline-step-data {
-    background: var(--surface-50);
-    border: 1px solid var(--surface-200);
+    background: var(--glass-bg-2);
+    border: 1px solid var(--glass-border-subtle);
     border-radius: var(--radius-md);
     padding: 1rem;
     margin: 0.8rem 0;
@@ -382,7 +394,7 @@
 .pipeline-step.step-visible {
     opacity: 1;
     transform: translateY(0);
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition: opacity 0.5s ease, transform 0.5s ease, box-shadow var(--transition-base);
 }
 
 /* ---------- Step-by-Step Container ---------- */
@@ -402,13 +414,15 @@
 .surface-plot-container img {
     max-width: 100%;
     border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-md);
+    box-shadow: var(--glass-shadow);
 }
 
 .pixel-inspector-section {
     margin: 1.5rem 0;
     padding: 1rem;
-    background: var(--surface-100);
+    background: var(--glass-bg-2);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
     border-radius: var(--radius-lg);
     border: 1px dashed var(--accent-hover);
 }
@@ -422,17 +436,19 @@
 }
 
 .bit-depth-card {
-    background: white;
-    border: 1px solid var(--surface-200);
+    background: var(--glass-bg-1);
+    backdrop-filter: var(--glass-blur-sm);
+    -webkit-backdrop-filter: var(--glass-blur-sm);
+    border: 1px solid var(--glass-border-subtle);
     border-radius: var(--radius-lg);
     overflow: hidden;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition-base), transform var(--transition-base);
+    box-shadow: var(--neu-flat);
+    transition: box-shadow var(--transition-base), transform 0.3s var(--transition-spring);
 }
 
 .bit-depth-card:hover {
     transform: translateY(-3px);
-    box-shadow: var(--shadow-xl);
+    box-shadow: var(--neu-raised), var(--shadow-glow);
 }
 
 .bit-depth-card img,
@@ -447,8 +463,8 @@
     font-size: 0.8rem;
     font-weight: 600;
     text-align: center;
-    background: var(--surface-50);
-    border-top: 1px solid var(--surface-200);
+    background: var(--glass-bg-2);
+    border-top: 1px solid var(--glass-border-subtle);
     color: var(--text-700);
     font-family: var(--font-mono);
     letter-spacing: 0.5px;
@@ -475,38 +491,36 @@
 }
 
 /* ---------- Dark Mode - P01 ---------- */
-@media (prefers-color-scheme: dark) {
-    .pair-card,
-    .arithmetic-calculator,
-    .pipeline-step,
-    .bit-depth-card {
-        background: var(--surface-100);
-        border-color: var(--border-color);
-    }
+[data-theme="dark"] .pair-card,
+[data-theme="dark"] .arithmetic-calculator,
+[data-theme="dark"] .pipeline-step,
+[data-theme="dark"] .bit-depth-card {
+    background: var(--glass-bg-1);
+    border-color: var(--glass-border);
+}
 
-    .arithmetic-input {
-        background: var(--surface-50);
-        border-color: var(--border-color);
-        color: var(--text-900);
-    }
+[data-theme="dark"] .arithmetic-input {
+    background: var(--glass-bg-2);
+    border-color: var(--glass-border);
+    color: var(--text-900);
+}
 
-    .arithmetic-operation {
-        background: var(--surface-50);
-        border-color: var(--border-color);
-    }
+[data-theme="dark"] .arithmetic-operation {
+    background: var(--glass-bg-2);
+    border-color: var(--glass-border);
+}
 
-    .pipeline-visualization {
-        background: var(--surface-50);
-        border-color: var(--border-color);
-    }
+[data-theme="dark"] .pipeline-visualization {
+    background: var(--glass-bg-2);
+    border-color: var(--glass-border);
+}
 
-    .pixel-inspector-section {
-        background: var(--surface-50);
-        border-color: var(--htag);
-    }
+[data-theme="dark"] .pixel-inspector-section {
+    background: var(--glass-bg-2);
+    border-color: var(--htag);
+}
 
-    .bit-depth-label {
-        background: var(--surface-50);
-        border-top-color: var(--border-color);
-    }
+[data-theme="dark"] .bit-depth-label {
+    background: var(--glass-bg-2);
+    border-top-color: var(--glass-border);
 }
