@@ -8,14 +8,15 @@ import json
 import os
 import sys
 
-# Add project root to path
 sys.path.insert(0, os.path.dirname(__file__))
 
-from app.processors.common import get_available_images
+from app.processors.common import get_chapter_images, ensure_chapter
 from app.processors import p01_display, p02_downsampling, p03_negation_subtraction, p04_gamma
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "app", "static", "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
+
+DEFAULT_CHAPTER = 'CH02'
 
 
 def save(name, data):
@@ -27,9 +28,11 @@ def save(name, data):
 
 
 def main():
-    images = get_available_images()
+    # Ensure default chapter is downloaded
+    ensure_chapter(DEFAULT_CHAPTER)
+    images = get_chapter_images(DEFAULT_CHAPTER)
     if not images:
-        print("ERROR: No images found. Ensure dataset is present.")
+        print("ERROR: No images found. Check network/dataset availability.")
         return
 
     # Default images
@@ -42,38 +45,44 @@ def main():
     galaxy = next((i["filename"] for i in images if "galaxy" in i["filename"]), images[2]["filename"])
     dental = next((i["filename"] for i in images if "dental_xray).tif" in i["filename"]), images[3]["filename"])
 
-    print(f"Dataset: {len(images)} images")
+    ch = DEFAULT_CHAPTER
+    print(f"Dataset: {len(images)} images from {ch}")
     print(f"Defaults: {cameraman}, {body_scan}, {einstein_low}")
     print()
 
     # === Practical 1 ===
     print("Practical 1: Display")
-    save("p1_display", p01_display.display_image(cameraman))
-    save("p1_histogram", p01_display.display_histogram(cameraman))
-    save("p1_multi", p01_display.display_multiple([cameraman, skull, dental, galaxy]))
+    save("p1_display", p01_display.display_image(cameraman, chapter=ch))
+    save("p1_histogram", p01_display.display_histogram(cameraman, chapter=ch))
+    save("p1_multi", p01_display.display_multiple([
+        {"chapter": ch, "filename": cameraman},
+        {"chapter": ch, "filename": skull},
+        {"chapter": ch, "filename": dental},
+        {"chapter": ch, "filename": galaxy},
+    ]))
 
     # === Practical 2 ===
     print("Practical 2: Downsampling")
-    save("p2_downsample", p02_downsampling.downsample_series(cameraman, steps=5))
-    save("p2_comparison", p02_downsampling.downsample_comparison_plot(cameraman))
-    save("p2_upscale", p02_downsampling.upscale_comparison_plot(cameraman))
+    save("p2_downsample", p02_downsampling.downsample_series(cameraman, chapter=ch, steps=5))
+    save("p2_comparison", p02_downsampling.downsample_comparison_plot(cameraman, chapter=ch))
+    save("p2_upscale", p02_downsampling.upscale_comparison_plot(cameraman, chapter=ch))
 
     # === Practical 3 ===
     print("Practical 3: Negation/Subtraction")
-    save("p3_negate", p03_negation_subtraction.compute_negation(body_scan))
+    save("p3_negate", p03_negation_subtraction.compute_negation(body_scan, chapter=ch))
     if angio_mask and angio_live:
-        save("p3_subtract", p03_negation_subtraction.compute_subtraction(angio_mask, angio_live))
-        save("p3_pipeline", p03_negation_subtraction.compute_pipeline(angio_mask, angio_live))
+        save("p3_subtract", p03_negation_subtraction.compute_subtraction(angio_mask, angio_live, chapter1=ch, chapter2=ch))
+        save("p3_pipeline", p03_negation_subtraction.compute_pipeline(angio_mask, angio_live, chapter1=ch, chapter2=ch))
 
     # === Practical 4 ===
     print("Practical 4: Gamma")
-    save("p4_gamma", p04_gamma.apply_gamma(einstein_low, gamma=0.4))
-    save("p4_series", p04_gamma.gamma_series(einstein_low))
+    save("p4_gamma", p04_gamma.apply_gamma(einstein_low, chapter=ch, gamma=0.4))
+    save("p4_series", p04_gamma.gamma_series(einstein_low, chapter=ch))
     save("p4_curves", p04_gamma.transformation_curves())
-    save("p4_log", p04_gamma.log_transform(einstein_low))
-    save("p4_contrast", p04_gamma.contrast_enhancement(einstein_low, mode="dark"))
+    save("p4_log", p04_gamma.log_transform(einstein_low, chapter=ch))
+    save("p4_contrast", p04_gamma.contrast_enhancement(einstein_low, chapter=ch, mode="dark"))
 
-    # === Image list ===
+    # === Image list (legacy) ===
     save("images", {"images": images, "count": len(images)})
 
     print(f"\nDone! {len(os.listdir(CACHE_DIR))} cache files in {CACHE_DIR}")

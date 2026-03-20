@@ -5,8 +5,8 @@
 
 {% block content %}
 <h2>Practical 2: Impact of Sampling Rate on Spatial Resolution</h2>
-<p class="no-print" style="margin-bottom:1.5rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_2.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
-<!-- Objective -->
+<p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_2.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
+
 <div class="section-card">
     <h3>Objective</h3>
     <p>To evaluate the relationship between the sampling rate (N) and spatial resolution in digital images.</p>
@@ -15,15 +15,8 @@
     </div>
 </div>
 
-<!-- Image Selector -->
-<div class="section-card">
-    <h3>Select Image from Dataset</h3>
-    <select id="imageSelect" class="image-select">
-        <option value="">Loading images...</option>
-    </select>
-</div>
+<div class="picker-bar" id="mainPicker"></div>
 
-<!-- Part 1: Downsampling Steps -->
 <div class="section-card">
     <h3>Part 1: Progressive Downsampling</h3>
     <p>The image is resized to a 1024x1024 baseline, then progressively halved 5 times using <code>cv2.INTER_AREA</code> interpolation: 1024 → 512 → 256 → 128 → 64 → 32.</p>
@@ -31,7 +24,6 @@
     <div id="dsSteps"></div>
 </div>
 
-<!-- Part 2: Side-by-side Comparison -->
 <div class="section-card">
     <h3>Part 2: Comparison Plot</h3>
     <p>View all resolution levels in a single comparison figure.</p>
@@ -39,7 +31,6 @@
     <div id="comparePlot"></div>
 </div>
 
-<!-- Part 3: Upscale Back -->
 <div class="section-card">
     <h3>Part 3: Quality Loss Visualization</h3>
     <p>Each downsampled image is resized back to 1024x1024 to reveal the quality degradation at each level.</p>
@@ -47,7 +38,6 @@
     <div id="upscalePlot"></div>
 </div>
 
-<!-- Analysis Questions -->
 <div class="analysis-box">
     <h4>Analysis Questions</h4>
     <ol>
@@ -60,116 +50,98 @@
 
 {% block extra_js %}
 <script>
-(function() {
+(async function() {
     const API = '/api';
 
-    async function loadImages() {
-        try {
-            const resp = await DIP.apiCall(`${API}/images`);
-            const sel = document.getElementById('imageSelect');
-            sel.innerHTML = '<option value="">-- Select an image --</option>';
-            resp.images.forEach(img => {
-                const opt = document.createElement('option');
-                opt.value = img.filename;
-                opt.textContent = `${img.display_name} (${img.width}x${img.height})`;
-                sel.appendChild(opt);
-            });
-            // Default to cameraman
-            const cam = resp.images.find(i => i.filename.includes('cameraman'));
-            if (cam) sel.value = cam.filename;
-            document.querySelectorAll('.btn-run').forEach(b => b.disabled = false);
-        } catch (e) {
-            DIP.showToast('Failed to load image list');
+    const picker = await DIP.createPicker('mainPicker', {
+        id: 'main',
+        defaultChapter: 'CH02',
+        defaultImage: 'cameraman',
+        onReady: function() {
+            document.querySelectorAll('.btn-run').forEach(function(b) { b.disabled = false; });
         }
-    }
+    });
 
-    function getSelected() {
-        const v = document.getElementById('imageSelect').value;
-        if (!v) DIP.showToast('Select an image first');
-        return v;
+    function getSel() {
+        var s = picker.getSelection();
+        if (!s.filename) DIP.showToast('Select an image first');
+        return s;
     }
 
     document.getElementById('btnDownsample').addEventListener('click', async function() {
-        const filename = getSelected();
-        if (!filename) return;
-        const container = document.getElementById('dsSteps');
+        var sel = getSel();
+        if (!sel.filename) return;
+        var container = document.getElementById('dsSteps');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p2/downsample`, {
+            var resp = await DIP.apiCall(API + '/p2/downsample', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({filename, steps: 5})
+                body: JSON.stringify({filename: sel.filename, chapter: sel.chapter, steps: 5})
             });
-            let html = '<div class="ds-grid">';
-            resp.steps.forEach(step => {
-                html += `<div class="ds-item">
-                    <img src="data:image/png;base64,${step.image}" alt="${step.label}">
-                    <div class="ds-label">${step.label}</div>
-                </div>`;
+            var html = '<div class="ds-grid">';
+            resp.steps.forEach(function(step) {
+                html += '<div class="ds-item"><img src="data:image/png;base64,' + step.image + '" alt="' + step.label + '"><div class="ds-label">' + step.label + '</div></div>';
             });
             html += '</div>';
             container.innerHTML = html;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
     document.getElementById('btnCompare').addEventListener('click', async function() {
-        const filename = getSelected();
-        if (!filename) return;
-        const container = document.getElementById('comparePlot');
+        var sel = getSel();
+        if (!sel.filename) return;
+        var container = document.getElementById('comparePlot');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p2/downsample-plot`, {
+            var resp = await DIP.apiCall(API + '/p2/downsample-plot', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({filename})
+                body: JSON.stringify({filename: sel.filename, chapter: sel.chapter})
             });
-            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Comparison plot">`;
+            container.innerHTML = '<img class="result-img" src="data:image/png;base64,' + resp.plot + '" alt="Comparison plot">';
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
     document.getElementById('btnUpscale').addEventListener('click', async function() {
-        const filename = getSelected();
-        if (!filename) return;
-        const container = document.getElementById('upscalePlot');
+        var sel = getSel();
+        if (!sel.filename) return;
+        var container = document.getElementById('upscalePlot');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p2/upscale-compare`, {
+            var resp = await DIP.apiCall(API + '/p2/upscale-compare', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({filename})
+                body: JSON.stringify({filename: sel.filename, chapter: sel.chapter})
             });
-            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Upscale comparison">`;
+            container.innerHTML = '<img class="result-img" src="data:image/png;base64,' + resp.plot + '" alt="Upscale comparison">';
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
-    loadImages();
-
-    async function autoLoad() {
-        try {
-            const r = await fetch('/static/cache/p2_downsample.json?v=1').then(r=>r.json());
-            let html = '<div class="ds-grid">';
-            r.steps.forEach(step => {
-                html += `<div class="ds-item"><img src="data:image/png;base64,${step.image}" alt="${step.label}"><div class="ds-label">${step.label}</div></div>`;
-            });
-            html += '</div>';
-            document.getElementById('dsSteps').innerHTML = html;
-        } catch(e) {}
-        try {
-            const c = await fetch('/static/cache/p2_comparison.json?v=1').then(r=>r.json());
-            document.getElementById('comparePlot').innerHTML = `<img class="result-img" src="data:image/png;base64,${c.plot}" alt="Comparison">`;
-        } catch(e) {}
-        try {
-            const u = await fetch('/static/cache/p2_upscale.json?v=1').then(r=>r.json());
-            document.getElementById('upscalePlot').innerHTML = `<img class="result-img" src="data:image/png;base64,${u.plot}" alt="Upscale comparison">`;
-        } catch(e) {}
-    }
-    autoLoad();
+    // Auto-load cached defaults
+    try {
+        var r = await fetch('/static/cache/p2_downsample.json?v=2').then(function(r) { return r.json(); });
+        var html = '<div class="ds-grid">';
+        r.steps.forEach(function(step) {
+            html += '<div class="ds-item"><img src="data:image/png;base64,' + step.image + '" alt="' + step.label + '"><div class="ds-label">' + step.label + '</div></div>';
+        });
+        html += '</div>';
+        document.getElementById('dsSteps').innerHTML = html;
+    } catch(e) {}
+    try {
+        var c = await fetch('/static/cache/p2_comparison.json?v=2').then(function(r) { return r.json(); });
+        document.getElementById('comparePlot').innerHTML = '<img class="result-img" src="data:image/png;base64,' + c.plot + '" alt="Comparison">';
+    } catch(e) {}
+    try {
+        var u = await fetch('/static/cache/p2_upscale.json?v=2').then(function(r) { return r.json(); });
+        document.getElementById('upscalePlot').innerHTML = '<img class="result-img" src="data:image/png;base64,' + u.plot + '" alt="Upscale comparison">';
+    } catch(e) {}
 })();
 </script>
 {% endblock %}

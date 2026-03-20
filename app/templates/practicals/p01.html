@@ -5,8 +5,8 @@
 
 {% block content %}
 <h2>Practical 1: Loading &amp; Displaying Images</h2>
-<p class="no-print" style="margin-bottom:1.5rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_1.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
-<!-- Objective -->
+<p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_1.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
+
 <div class="section-card">
     <h3>Objective</h3>
     <p>To learn how to load, display, and inspect digital images using OpenCV and Matplotlib.</p>
@@ -15,15 +15,9 @@
     </div>
 </div>
 
-<!-- Image Selector -->
-<div class="section-card">
-    <h3>Select Image from Dataset</h3>
-    <select id="imageSelect" class="image-select">
-        <option value="">Loading images...</option>
-    </select>
-</div>
+<!-- Shared picker for Parts 1 & 2 -->
+<div class="picker-bar" id="mainPicker"></div>
 
-<!-- Part 1: Load & Display -->
 <div class="section-card">
     <h3>Part 1: Load and Display a Single Image</h3>
     <p>Load the selected image in grayscale and display it with its properties.</p>
@@ -31,27 +25,23 @@
     <div id="displayResult"></div>
 </div>
 
-<!-- Part 2: Histogram -->
 <div class="section-card">
     <h3>Part 2: Pixel Intensity Histogram</h3>
-    <p>Visualize the distribution of pixel intensities. The histogram shows how many pixels have each intensity value (0–255).</p>
+    <p>Visualize the distribution of pixel intensities. The histogram shows how many pixels have each intensity value (0-255).</p>
     <button class="btn-run" id="btnHistogram" disabled>Generate Histogram</button>
     <div id="histogramResult"></div>
 </div>
 
-<!-- Part 3: Multiple Images -->
 <div class="section-card">
     <h3>Part 3: Display Multiple Images</h3>
-    <p>Select up to 4 images to compare in a grid.</p>
-    <select id="multiSelect1" class="image-select mb-2"></select>
-    <select id="multiSelect2" class="image-select mb-2"></select>
-    <select id="multiSelect3" class="image-select mb-2"></select>
-    <select id="multiSelect4" class="image-select mb-2"></select>
+    <p>Select up to 4 images from any chapter to compare in a grid.</p>
+    <div class="picker-bar">
+        <div class="picker-grid" id="multiPickers"></div>
+    </div>
     <button class="btn-run" id="btnMulti" disabled>Display Grid</button>
     <div id="multiResult"></div>
 </div>
 
-<!-- Analysis Questions -->
 <div class="analysis-box">
     <h4>Analysis Questions</h4>
     <ol>
@@ -64,135 +54,127 @@
 
 {% block extra_js %}
 <script>
-(function() {
+(async function() {
     const API = '/api';
-    let images = [];
 
-    async function loadImages() {
-        try {
-            const resp = await DIP.apiCall(`${API}/images`);
-            images = resp.images;
-            const selects = ['imageSelect', 'multiSelect1', 'multiSelect2', 'multiSelect3', 'multiSelect4'];
-            selects.forEach(id => {
-                const sel = document.getElementById(id);
-                sel.innerHTML = '<option value="">-- Select an image --</option>';
-                images.forEach(img => {
-                    const opt = document.createElement('option');
-                    opt.value = img.filename;
-                    opt.textContent = `${img.display_name} (${img.width}x${img.height})`;
-                    sel.appendChild(opt);
-                });
-            });
-            // Pre-select defaults
-            if (images.length > 0) {
-                document.getElementById('imageSelect').value = images.find(i => i.filename.includes('cameraman'))?.filename || images[0].filename;
-                if (images.length >= 4) {
-                    document.getElementById('multiSelect1').value = images[Math.min(5, images.length-1)]?.filename;
-                    document.getElementById('multiSelect2').value = images[Math.min(3, images.length-1)]?.filename;
-                    document.getElementById('multiSelect3').value = images[Math.min(12, images.length-1)]?.filename;
-                    document.getElementById('multiSelect4').value = images[Math.min(7, images.length-1)]?.filename;
-                }
-            }
-            document.querySelectorAll('.btn-run').forEach(b => b.disabled = false);
-        } catch (e) {
-            DIP.showToast('Failed to load image list');
+    // Main picker for Parts 1 & 2
+    const mainPicker = await DIP.createPicker('mainPicker', {
+        id: 'main',
+        defaultChapter: 'CH02',
+        defaultImage: 'cameraman',
+        onReady: function() {
+            document.querySelectorAll('.btn-run').forEach(function(b) { b.disabled = false; });
         }
+    });
+
+    // Multi-image pickers (Part 3)
+    const multiContainer = document.getElementById('multiPickers');
+    const multiPickers = [];
+    var defaults = [
+        {ch: 'CH02', img: 'cameraman'},
+        {ch: 'CH02', img: 'ctskull'},
+        {ch: 'CH02', img: 'dental_xray)'},
+        {ch: 'CH02', img: 'galaxy'}
+    ];
+    for (var i = 0; i < 4; i++) {
+        var div = document.createElement('div');
+        multiContainer.appendChild(div);
+        var picker = await DIP.createPicker(div, {
+            id: 'multi' + i,
+            defaultChapter: defaults[i].ch,
+            defaultImage: defaults[i].img
+        });
+        multiPickers.push(picker);
     }
 
     document.getElementById('btnDisplay').addEventListener('click', async function() {
-        const filename = document.getElementById('imageSelect').value;
-        if (!filename) return DIP.showToast('Select an image first');
-        const container = document.getElementById('displayResult');
+        var sel = mainPicker.getSelection();
+        if (!sel.filename) return DIP.showToast('Select an image first');
+        var container = document.getElementById('displayResult');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p1/display`, {
+            var resp = await DIP.apiCall(API + '/p1/display', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({filename})
+                body: JSON.stringify({filename: sel.filename, chapter: sel.chapter})
             });
-            const p = resp.properties;
-            container.innerHTML = `
-                <img class="result-img" src="data:image/png;base64,${resp.image}" alt="${filename}">
-                <table class="props-table">
-                    <tr><th>Filename</th><td>${resp.filename}</td></tr>
-                    <tr><th>Dimensions</th><td>${p.width} x ${p.height}</td></tr>
-                    <tr><th>Total Pixels</th><td>${p.total_pixels.toLocaleString()}</td></tr>
-                    <tr><th>Data Type</th><td>${p.dtype}</td></tr>
-                    <tr><th>Min Intensity</th><td>${p.min}</td></tr>
-                    <tr><th>Max Intensity</th><td>${p.max}</td></tr>
-                    <tr><th>Mean Intensity</th><td>${p.mean}</td></tr>
-                    <tr><th>Std Deviation</th><td>${p.std}</td></tr>
-                </table>`;
+            var p = resp.properties;
+            container.innerHTML =
+                '<img class="result-img" src="data:image/png;base64,' + resp.image + '" alt="' + resp.filename + '">' +
+                '<table class="props-table">' +
+                '<tr><th>Filename</th><td>' + resp.filename + '</td></tr>' +
+                '<tr><th>Dimensions</th><td>' + p.width + ' x ' + p.height + '</td></tr>' +
+                '<tr><th>Total Pixels</th><td>' + p.total_pixels.toLocaleString() + '</td></tr>' +
+                '<tr><th>Data Type</th><td>' + p.dtype + '</td></tr>' +
+                '<tr><th>Min Intensity</th><td>' + p.min + '</td></tr>' +
+                '<tr><th>Max Intensity</th><td>' + p.max + '</td></tr>' +
+                '<tr><th>Mean Intensity</th><td>' + p.mean + '</td></tr>' +
+                '<tr><th>Std Deviation</th><td>' + p.std + '</td></tr>' +
+                '</table>';
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
     document.getElementById('btnHistogram').addEventListener('click', async function() {
-        const filename = document.getElementById('imageSelect').value;
-        if (!filename) return DIP.showToast('Select an image first');
-        const container = document.getElementById('histogramResult');
+        var sel = mainPicker.getSelection();
+        if (!sel.filename) return DIP.showToast('Select an image first');
+        var container = document.getElementById('histogramResult');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p1/histogram`, {
+            var resp = await DIP.apiCall(API + '/p1/histogram', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({filename})
+                body: JSON.stringify({filename: sel.filename, chapter: sel.chapter})
             });
-            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Histogram">`;
+            container.innerHTML = '<img class="result-img" src="data:image/png;base64,' + resp.plot + '" alt="Histogram">';
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
     document.getElementById('btnMulti').addEventListener('click', async function() {
-        const filenames = ['multiSelect1','multiSelect2','multiSelect3','multiSelect4']
-            .map(id => document.getElementById(id).value).filter(Boolean);
-        if (filenames.length === 0) return DIP.showToast('Select at least one image');
-        const container = document.getElementById('multiResult');
+        var images = multiPickers.map(function(p) { return p.getSelection(); }).filter(function(s) { return s.filename; });
+        if (images.length === 0) return DIP.showToast('Select at least one image');
+        var container = document.getElementById('multiResult');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p1/multi-display`, {
+            var resp = await DIP.apiCall(API + '/p1/multi-display', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({filenames})
+                body: JSON.stringify({images: images})
             });
-            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Multi-image grid">`;
+            container.innerHTML = '<img class="result-img" src="data:image/png;base64,' + resp.plot + '" alt="Multi-image grid">';
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
-    loadImages();
-
-    // Auto-load cached defaults (instant, no server computation)
-    async function autoLoad() {
-        try {
-            const d = await fetch('/static/cache/p1_display.json?v=1').then(r=>r.json());
-            const p = d.properties;
-            document.getElementById('displayResult').innerHTML = `
-                <img class="result-img" src="data:image/png;base64,${d.image}" alt="${d.filename}">
-                <table class="props-table">
-                    <tr><th>Filename</th><td>${d.filename}</td></tr>
-                    <tr><th>Dimensions</th><td>${p.width} x ${p.height}</td></tr>
-                    <tr><th>Total Pixels</th><td>${p.total_pixels.toLocaleString()}</td></tr>
-                    <tr><th>Data Type</th><td>${p.dtype}</td></tr>
-                    <tr><th>Min Intensity</th><td>${p.min}</td></tr>
-                    <tr><th>Max Intensity</th><td>${p.max}</td></tr>
-                    <tr><th>Mean Intensity</th><td>${p.mean}</td></tr>
-                    <tr><th>Std Deviation</th><td>${p.std}</td></tr>
-                </table>`;
-        } catch(e) {}
-        try {
-            const h = await fetch('/static/cache/p1_histogram.json?v=1').then(r=>r.json());
-            document.getElementById('histogramResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${h.plot}" alt="Histogram">`;
-        } catch(e) {}
-        try {
-            const m = await fetch('/static/cache/p1_multi.json?v=1').then(r=>r.json());
-            document.getElementById('multiResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${m.plot}" alt="Multi-image grid">`;
-        } catch(e) {}
-    }
-    autoLoad();
+    // Auto-load cached defaults
+    try {
+        var d = await fetch('/static/cache/p1_display.json?v=2').then(function(r) { return r.json(); });
+        var p = d.properties;
+        document.getElementById('displayResult').innerHTML =
+            '<img class="result-img" src="data:image/png;base64,' + d.image + '" alt="' + d.filename + '">' +
+            '<table class="props-table">' +
+            '<tr><th>Filename</th><td>' + d.filename + '</td></tr>' +
+            '<tr><th>Dimensions</th><td>' + p.width + ' x ' + p.height + '</td></tr>' +
+            '<tr><th>Total Pixels</th><td>' + p.total_pixels.toLocaleString() + '</td></tr>' +
+            '<tr><th>Data Type</th><td>' + p.dtype + '</td></tr>' +
+            '<tr><th>Min Intensity</th><td>' + p.min + '</td></tr>' +
+            '<tr><th>Max Intensity</th><td>' + p.max + '</td></tr>' +
+            '<tr><th>Mean Intensity</th><td>' + p.mean + '</td></tr>' +
+            '<tr><th>Std Deviation</th><td>' + p.std + '</td></tr>' +
+            '</table>';
+    } catch(e) {}
+    try {
+        var h = await fetch('/static/cache/p1_histogram.json?v=2').then(function(r) { return r.json(); });
+        document.getElementById('histogramResult').innerHTML = '<img class="result-img" src="data:image/png;base64,' + h.plot + '" alt="Histogram">';
+    } catch(e) {}
+    try {
+        var m = await fetch('/static/cache/p1_multi.json?v=2').then(function(r) { return r.json(); });
+        document.getElementById('multiResult').innerHTML = '<img class="result-img" src="data:image/png;base64,' + m.plot + '" alt="Multi-image grid">';
+    } catch(e) {}
 })();
 </script>
 {% endblock %}

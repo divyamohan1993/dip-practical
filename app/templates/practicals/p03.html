@@ -5,8 +5,8 @@
 
 {% block content %}
 <h2>Practical 3: Negation, Subtraction &amp; Inversion</h2>
-<p class="no-print" style="margin-bottom:1.5rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_3.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
-<!-- Objective -->
+<p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_3.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
+
 <div class="section-card">
     <h3>Objective</h3>
     <p>To implement and analyze fundamental intensity transformation operations: image negation, image subtraction, and intensity inversion.</p>
@@ -17,35 +17,29 @@
     </div>
 </div>
 
-<!-- Part 1: Negation -->
+<!-- Part 1: Negation — single image picker -->
 <div class="section-card">
     <h3>Part 1: Image Negation (s = 255 - r)</h3>
     <p>Compute the negative of an image by inverting all pixel intensities.</p>
-    <label><strong>Select image:</strong></label>
-    <select id="negateSelect" class="image-select"></select>
+    <div class="picker-bar" id="negatePicker"></div>
     <button class="btn-run" id="btnNegate" disabled>Compute Negative</button>
     <div id="negateResult"></div>
 </div>
 
-<!-- Part 2: Image Subtraction -->
+<!-- Part 2: Subtraction — dual image picker with cross-chapter support -->
 <div class="section-card">
     <h3>Part 2: Image Subtraction |Img1 - Img2|</h3>
     <p>Compute the absolute difference between two images to reveal hidden structures.</p>
-
-    <div style="margin-bottom: 1rem;">
-        <strong>Quick select recommended pairs:</strong><br>
-        <div id="pairButtons"></div>
+    <div class="picker-bar">
+        <div id="subPicker1"></div>
+        <div id="subPicker2"></div>
+        <div style="margin-top:0.375rem"><span class="picker-label">Pairs</span> <span id="pairButtons"></span></div>
     </div>
-
-    <label><strong>Image 1:</strong></label>
-    <select id="subImg1" class="image-select"></select>
-    <label><strong>Image 2:</strong></label>
-    <select id="subImg2" class="image-select"></select>
     <button class="btn-run" id="btnSubtract" disabled>Compute Subtraction</button>
     <div id="subtractResult"></div>
 </div>
 
-<!-- Part 3: Complete Pipeline -->
+<!-- Part 3: Pipeline -->
 <div class="section-card">
     <h3>Part 3: Complete Pipeline (Subtraction → Negation → Enhancement)</h3>
     <p>Run the full pipeline on the selected image pair: subtraction, then negation of result, then contrast enhancement.</p>
@@ -53,7 +47,6 @@
     <div id="pipelineResult"></div>
 </div>
 
-<!-- Analysis Questions -->
 <div class="analysis-box">
     <h4>Analysis Questions</h4>
     <ol>
@@ -66,133 +59,125 @@
 
 {% block extra_js %}
 <script>
-(function() {
+(async function() {
     const API = '/api';
-    let pairs = [];
 
-    async function loadImages() {
-        try {
-            const resp = await DIP.apiCall(`${API}/images`);
-            const selects = ['negateSelect', 'subImg1', 'subImg2'];
-            selects.forEach(id => {
-                const sel = document.getElementById(id);
-                sel.innerHTML = '<option value="">-- Select an image --</option>';
-                resp.images.forEach(img => {
-                    const opt = document.createElement('option');
-                    opt.value = img.filename;
-                    opt.textContent = `${img.display_name} (${img.width}x${img.height})`;
-                    sel.appendChild(opt);
-                });
-            });
-            // Default negation image
-            const body = resp.images.find(i => i.filename.includes('partial_body'));
-            if (body) document.getElementById('negateSelect').value = body.filename;
-
-            document.querySelectorAll('.btn-run').forEach(b => b.disabled = false);
-        } catch (e) {
-            DIP.showToast('Failed to load image list');
+    // Part 1: Negation picker
+    const negatePicker = await DIP.createPicker('negatePicker', {
+        id: 'negate',
+        defaultChapter: 'CH02',
+        defaultImage: 'partial_body',
+        onReady: function() {
+            document.querySelectorAll('.btn-run').forEach(function(b) { b.disabled = false; });
         }
-    }
+    });
 
-    async function loadPairs() {
-        try {
-            const resp = await DIP.apiCall(`${API}/p3/pairs`);
-            pairs = resp.pairs;
-            const container = document.getElementById('pairButtons');
-            pairs.forEach(pair => {
-                const btn = document.createElement('button');
-                btn.className = 'btn-pair';
-                btn.textContent = pair.name;
-                btn.addEventListener('click', () => {
-                    document.getElementById('subImg1').value = pair.image1;
-                    document.getElementById('subImg2').value = pair.image2;
-                });
-                container.appendChild(btn);
+    // Part 2: Subtraction pickers
+    const subPicker1 = await DIP.createPicker('subPicker1', {
+        id: 'sub1',
+        label: 'Image 1',
+        defaultChapter: 'CH02',
+        defaultImage: 'angiography_mask'
+    });
+    const subPicker2 = await DIP.createPicker('subPicker2', {
+        id: 'sub2',
+        label: 'Image 2',
+        defaultChapter: 'CH02',
+        defaultImage: 'angiography_live'
+    });
+
+    // Load recommended pairs
+    try {
+        var resp = await DIP.apiCall(API + '/p3/pairs');
+        var container = document.getElementById('pairButtons');
+        resp.pairs.forEach(function(pair) {
+            var btn = document.createElement('button');
+            btn.className = 'btn-pair';
+            btn.textContent = pair.name;
+            btn.addEventListener('click', async function() {
+                await subPicker1.setSelection(pair.chapter, pair.image1);
+                await subPicker2.setSelection(pair.chapter, pair.image2);
             });
-        } catch (e) { /* pairs are optional */ }
-    }
+            container.appendChild(btn);
+        });
+    } catch (e) {}
 
     document.getElementById('btnNegate').addEventListener('click', async function() {
-        const filename = document.getElementById('negateSelect').value;
-        if (!filename) return DIP.showToast('Select an image first');
-        const container = document.getElementById('negateResult');
+        var sel = negatePicker.getSelection();
+        if (!sel.filename) return DIP.showToast('Select an image first');
+        var container = document.getElementById('negateResult');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p3/negate`, {
+            var resp = await DIP.apiCall(API + '/p3/negate', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({filename})
+                body: JSON.stringify({filename: sel.filename, chapter: sel.chapter})
             });
-            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Negation result">`;
+            container.innerHTML = '<img class="result-img" src="data:image/png;base64,' + resp.plot + '" alt="Negation result">';
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
     document.getElementById('btnSubtract').addEventListener('click', async function() {
-        const image1 = document.getElementById('subImg1').value;
-        const image2 = document.getElementById('subImg2').value;
-        if (!image1 || !image2) return DIP.showToast('Select both images');
-        const container = document.getElementById('subtractResult');
+        var s1 = subPicker1.getSelection();
+        var s2 = subPicker2.getSelection();
+        if (!s1.filename || !s2.filename) return DIP.showToast('Select both images');
+        var container = document.getElementById('subtractResult');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p3/subtract`, {
+            var resp = await DIP.apiCall(API + '/p3/subtract', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({image1, image2})
+                body: JSON.stringify({image1: s1.filename, chapter1: s1.chapter, image2: s2.filename, chapter2: s2.chapter})
             });
-            let html = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Subtraction result">`;
+            var html = '<img class="result-img" src="data:image/png;base64,' + resp.plot + '" alt="Subtraction result">';
             if (resp.stats) {
-                html += `<div class="stats-inline">
-                    <span><strong>Mean Diff:</strong> ${resp.stats.mean_diff}</span>
-                    <span><strong>Max Diff:</strong> ${resp.stats.max_diff}</span>
-                    <span><strong>Non-zero:</strong> ${resp.stats.nonzero_pct}%</span>
-                </div>`;
+                html += '<div class="stats-inline">' +
+                    '<span><strong>Mean Diff:</strong> ' + resp.stats.mean_diff + '</span>' +
+                    '<span><strong>Max Diff:</strong> ' + resp.stats.max_diff + '</span>' +
+                    '<span><strong>Non-zero:</strong> ' + resp.stats.nonzero_pct + '%</span>' +
+                    '</div>';
             }
             container.innerHTML = html;
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
     document.getElementById('btnPipeline').addEventListener('click', async function() {
-        const image1 = document.getElementById('subImg1').value;
-        const image2 = document.getElementById('subImg2').value;
-        if (!image1 || !image2) return DIP.showToast('Select both images in Part 2 first');
-        const container = document.getElementById('pipelineResult');
+        var s1 = subPicker1.getSelection();
+        var s2 = subPicker2.getSelection();
+        if (!s1.filename || !s2.filename) return DIP.showToast('Select both images in Part 2 first');
+        var container = document.getElementById('pipelineResult');
         DIP.setLoading(container, true);
         try {
-            const resp = await DIP.apiCall(`${API}/p3/pipeline`, {
+            var resp = await DIP.apiCall(API + '/p3/pipeline', {
                 method: 'POST', headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({image1, image2})
+                body: JSON.stringify({image1: s1.filename, chapter1: s1.chapter, image2: s2.filename, chapter2: s2.chapter})
             });
-            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Pipeline result">`;
+            container.innerHTML = '<img class="result-img" src="data:image/png;base64,' + resp.plot + '" alt="Pipeline result">';
         } catch (e) {
-            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+            container.innerHTML = '<p style="color:var(--error)">Error: ' + e.message + '</p>';
         }
         DIP.setLoading(container, false);
     });
 
-    loadImages();
-    loadPairs();
-
-    async function autoLoad() {
-        try {
-            const n = await fetch('/static/cache/p3_negate.json?v=1').then(r=>r.json());
-            document.getElementById('negateResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${n.plot}" alt="Negation">`;
-        } catch(e) {}
-        try {
-            const s = await fetch('/static/cache/p3_subtract.json?v=1').then(r=>r.json());
-            let html = `<img class="result-img" src="data:image/png;base64,${s.plot}" alt="Subtraction">`;
-            if (s.stats) html += `<div class="stats-inline"><span><strong>Mean Diff:</strong> ${s.stats.mean_diff}</span><span><strong>Max Diff:</strong> ${s.stats.max_diff}</span><span><strong>Non-zero:</strong> ${s.stats.nonzero_pct}%</span></div>`;
-            document.getElementById('subtractResult').innerHTML = html;
-        } catch(e) {}
-        try {
-            const p = await fetch('/static/cache/p3_pipeline.json?v=1').then(r=>r.json());
-            document.getElementById('pipelineResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${p.plot}" alt="Pipeline">`;
-        } catch(e) {}
-    }
-    autoLoad();
+    // Auto-load cached defaults
+    try {
+        var n = await fetch('/static/cache/p3_negate.json?v=2').then(function(r) { return r.json(); });
+        document.getElementById('negateResult').innerHTML = '<img class="result-img" src="data:image/png;base64,' + n.plot + '" alt="Negation">';
+    } catch(e) {}
+    try {
+        var s = await fetch('/static/cache/p3_subtract.json?v=2').then(function(r) { return r.json(); });
+        var html = '<img class="result-img" src="data:image/png;base64,' + s.plot + '" alt="Subtraction">';
+        if (s.stats) html += '<div class="stats-inline"><span><strong>Mean Diff:</strong> ' + s.stats.mean_diff + '</span><span><strong>Max Diff:</strong> ' + s.stats.max_diff + '</span><span><strong>Non-zero:</strong> ' + s.stats.nonzero_pct + '%</span></div>';
+        document.getElementById('subtractResult').innerHTML = html;
+    } catch(e) {}
+    try {
+        var p = await fetch('/static/cache/p3_pipeline.json?v=2').then(function(r) { return r.json(); });
+        document.getElementById('pipelineResult').innerHTML = '<img class="result-img" src="data:image/png;base64,' + p.plot + '" alt="Pipeline">';
+    } catch(e) {}
 })();
 </script>
 {% endblock %}

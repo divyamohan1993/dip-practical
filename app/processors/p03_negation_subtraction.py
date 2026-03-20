@@ -10,25 +10,28 @@ from app.processors.common import load_image, image_to_base64_png, fig_to_base64
 RECOMMENDED_PAIRS = [
     {
         "name": "Digital Subtraction Angiography",
+        "chapter": "CH02",
         "image1": "Fig0228(a)(angiography_mask_image).tif",
         "image2": "Fig0228(b)(angiography_live_ image).tif",
     },
     {
         "name": "Dental X-ray Subtraction",
+        "chapter": "CH02",
         "image1": "Fig0230(a)(dental_xray).tif",
         "image2": "Fig0230(b)(dental_xray_mask).tif",
     },
     {
         "name": "Shading Correction (Tungsten)",
+        "chapter": "CH02",
         "image1": "Fig0229(a)(tungsten_filament_shaded).tif",
         "image2": "Fig0229(b)(tungsten_sensor_shading).tif",
     },
 ]
 
 
-def compute_negation(filename):
-    """Compute image negative: s = 255 - r. Returns original, negative, and histogram comparison."""
-    img = load_image(filename)
+def compute_negation(filename, chapter='CH02'):
+    """Compute image negative: s = 255 - r."""
+    img = load_image(filename, chapter)
     if img is None:
         return None
 
@@ -65,14 +68,13 @@ def compute_negation(filename):
     }
 
 
-def compute_subtraction(image1, image2):
-    """Compute absolute difference |img1 - img2|. Returns both images + difference."""
-    img1 = load_image(image1)
-    img2 = load_image(image2)
+def compute_subtraction(image1, image2, chapter1='CH02', chapter2='CH02'):
+    """Compute absolute difference |img1 - img2|."""
+    img1 = load_image(image1, chapter1)
+    img2 = load_image(image2, chapter2)
     if img1 is None or img2 is None:
         return None
 
-    # Resize to match if needed
     if img1.shape != img2.shape:
         img2 = cv2.resize(img2, (img1.shape[1], img1.shape[0]))
 
@@ -107,15 +109,15 @@ def compute_subtraction(image1, image2):
     }
 
 
-def compute_inversion(filename):
-    """Compute intensity inversion (same as negation but named differently for clarity)."""
-    return compute_negation(filename)
+def compute_inversion(filename, chapter='CH02'):
+    """Compute intensity inversion (same as negation)."""
+    return compute_negation(filename, chapter)
 
 
-def compute_pipeline(image1, image2):
-    """Full pipeline: subtraction → negation → enhancement. Returns 2x3 plot."""
-    img1 = load_image(image1)
-    img2 = load_image(image2)
+def compute_pipeline(image1, image2, chapter1='CH02', chapter2='CH02'):
+    """Full pipeline: subtraction -> negation -> enhancement."""
+    img1 = load_image(image1, chapter1)
+    img2 = load_image(image2, chapter2)
     if img1 is None or img2 is None:
         return None
 
@@ -153,7 +155,7 @@ def compute_pipeline(image1, image2):
     axes[1, 2].set_title("6. Enhanced Result")
     axes[1, 2].axis('off')
 
-    fig.suptitle("Complete Pipeline: Subtraction → Negation → Enhancement", fontsize=14, fontweight='bold')
+    fig.suptitle("Complete Pipeline: Subtraction -> Negation -> Enhancement", fontsize=14, fontweight='bold')
     fig.tight_layout()
 
     return {"plot": fig_to_base64(fig)}

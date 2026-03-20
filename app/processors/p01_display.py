@@ -7,9 +7,9 @@ import matplotlib.pyplot as plt
 from app.processors.common import load_image, image_to_base64_png, fig_to_base64
 
 
-def display_image(filename):
+def display_image(filename, chapter='CH02'):
     """Load and return image with properties."""
-    img = load_image(filename)
+    img = load_image(filename, chapter)
     if img is None:
         return None
     h, w = img.shape
@@ -29,9 +29,9 @@ def display_image(filename):
     }
 
 
-def display_histogram(filename):
+def display_histogram(filename, chapter='CH02'):
     """Generate histogram plot for an image."""
-    img = load_image(filename)
+    img = load_image(filename, chapter)
     if img is None:
         return None
 
@@ -51,10 +51,12 @@ def display_histogram(filename):
     return {"plot": fig_to_base64(fig)}
 
 
-def display_multiple(filenames):
-    """Display up to 4 images in a 2x2 grid."""
-    filenames = filenames[:4]
-    n = len(filenames)
+def display_multiple(images):
+    """Display up to 4 images in a 2x2 grid.
+    images: list of {chapter, filename} dicts.
+    """
+    images = images[:4]
+    n = len(images)
     if n == 0:
         return None
 
@@ -67,13 +69,15 @@ def display_multiple(filenames):
         axes = axes.flatten()
 
     images_data = []
-    for i, (ax, fname) in enumerate(zip(axes, filenames)):
-        img = load_image(fname)
+    for i, (ax, item) in enumerate(zip(axes, images)):
+        ch = item.get('chapter', 'CH02')
+        fname = item.get('filename', '')
+        img = load_image(fname, ch)
         if img is not None:
             ax.imshow(img, cmap='gray')
             h, w = img.shape
             ax.set_title(f"{fname.split('(')[-1].replace(').tif','')}\n{w}x{h}", fontsize=9)
-            images_data.append({"filename": fname, "width": w, "height": h})
+            images_data.append({"filename": fname, "chapter": ch, "width": w, "height": h})
         ax.axis('off')
 
     # Hide unused axes
