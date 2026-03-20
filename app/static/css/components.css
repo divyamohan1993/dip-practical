@@ -158,6 +158,11 @@
 .ds-item img { width: 100%; border-radius: var(--radius-md); border: 1px solid var(--border); }
 .ds-item .ds-label { font-weight: 600; font-size: 0.85rem; margin-top: 0.5rem; color: var(--text-muted); }
 
+/* --- Colab Badge --- */
+.colab-badge { display: inline-block; margin-bottom: 1.25rem; }
+.colab-badge img { height: 24px; transition: opacity 0.15s; }
+.colab-badge:hover img { opacity: 0.8; }
+
 /* --- Formula Box --- */
 .formula-box { text-align: center; font-size: 1.15rem; padding: 1rem; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-md); margin: 1rem 0; }
 
