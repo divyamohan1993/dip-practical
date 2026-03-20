@@ -1,29 +1,24 @@
 {% extends "base.html" %}
 
 {% block title %}Digital Image Processing Lab{% endblock %}
-
-{% block description %}Digital Image Processing Practical Lab - CSU2543. 4 interactive practicals covering Gonzalez & Woods 3rd Edition. Shoolini University, BTech CSE Cybersecurity.{% endblock %}
+{% block description %}Digital Image Processing Practical Lab - CSU2543. 4 interactive practicals. Shoolini University.{% endblock %}
+{% block print_title %}Practical Lab Report — Complete{% endblock %}
 
 {% block extra_css %}
 <style>
 .hero { text-align: center; padding: clamp(2rem, 1rem + 4vw, 4rem) 0 clamp(1rem, 0.5rem + 2vw, 2rem); }
 .hero h1 { font-size: clamp(2rem, 1.2rem + 3vw, 3.25rem); font-weight: 700; letter-spacing: -0.04em; color: var(--text); margin-bottom: 0.75rem; }
 .hero p { color: var(--text-muted); font-size: clamp(0.95rem, 0.85rem + 0.5vw, 1.15rem); max-width: 540px; margin: 0 auto; line-height: 1.6; }
-.hero .hero-badge { display: inline-block; padding: 0.3rem 1rem; border-radius: var(--radius-full); background: var(--accent-subtle); color: var(--accent); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 1rem; }
-
+.hero .hero-badge { display: inline-block; padding: 0.3rem 1rem; border-radius: var(--radius-full); background: var(--accent-light); color: var(--accent); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 1rem; }
 .practical-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; padding: 1rem 0 3rem; }
 @media (max-width: 640px) { .practical-grid { grid-template-columns: 1fr; } }
-
 .practical-card {
     display: flex; flex-direction: column; gap: 0.5rem; padding: 2rem;
     background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-lg);
     text-decoration: none; color: var(--text); position: relative; overflow: hidden;
     transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s var(--ease-spring);
 }
-.practical-card::before {
-    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
-    background: var(--accent); opacity: 0; transition: opacity 0.2s ease;
-}
+.practical-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); opacity: 0; transition: opacity 0.2s ease; }
 .practical-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-4px); color: var(--text); text-decoration: none; }
 .practical-card:hover::before { opacity: 1; }
 .practical-card:active { transform: translateY(-1px); box-shadow: var(--shadow-md); }
@@ -37,6 +32,7 @@
 {% endblock %}
 
 {% block content %}
+<!-- Screen: Interactive card grid -->
 <div class="hero">
     <span class="hero-badge">CSU2543</span>
     <h1>Digital Image Processing Lab</h1>
@@ -73,4 +69,176 @@
         <span class="card-arrow">Explore &rarr;</span>
     </a>
 </div>
+
+<!-- ============================================================
+     PRINT ONLY: Table of Contents + All Practicals
+     Hidden on screen, visible when printing from home page
+     ============================================================ -->
+
+<!-- Table of Contents -->
+<div class="print-only print-toc">
+    <h2>Table of Contents</h2>
+    <table>
+        <tr>
+            <td class="toc-num">1.</td>
+            <td class="toc-title">Loading and Displaying Images</td>
+            <td class="toc-chapter">G&amp;W Ch 2</td>
+        </tr>
+        <tr><td colspan="3" class="toc-desc">Image loading, grayscale display, pixel properties, intensity histograms, and multi-image comparison.</td></tr>
+
+        <tr>
+            <td class="toc-num">2.</td>
+            <td class="toc-title">Impact of Sampling Rate on Spatial Resolution</td>
+            <td class="toc-chapter">G&amp;W Ch 2</td>
+        </tr>
+        <tr><td colspan="3" class="toc-desc">Progressive downsampling, aliasing artifacts, and quality loss analysis through upscale comparison.</td></tr>
+
+        <tr>
+            <td class="toc-num">3.</td>
+            <td class="toc-title">Image Negation, Subtraction, and Inversion</td>
+            <td class="toc-chapter">G&amp;W Ch 2&ndash;3</td>
+        </tr>
+        <tr><td colspan="3" class="toc-desc">Intensity negation, absolute difference for Digital Subtraction Angiography, and enhancement pipeline.</td></tr>
+
+        <tr>
+            <td class="toc-num">4.</td>
+            <td class="toc-title">Gamma Correction and Power Law Transformations</td>
+            <td class="toc-chapter">G&amp;W Ch 3</td>
+        </tr>
+        <tr><td colspan="3" class="toc-desc">Power law transformation curves, log transform comparison, dark/bright image contrast enhancement.</td></tr>
+    </table>
+</div>
+
+<!-- Practical 1 (print only) -->
+<div class="print-only print-practical">
+    <h2>Practical 1: Loading and Displaying Images</h2>
+    <div class="section-card">
+        <h3>1.1 Objective</h3>
+        <p>To learn how to load, display, and inspect digital images using OpenCV and Matplotlib.</p>
+        <div class="theory-box">
+            <strong>Theory:</strong> A digital image is a 2D matrix of pixel intensity values. For an 8-bit grayscale image, each pixel holds a value between 0 (black) and 255 (white). Understanding image representation is the foundation of all image processing.
+        </div>
+    </div>
+    <div class="section-card">
+        <h3>1.2 Part 1: Load and Display a Single Image</h3>
+        <p>Load a grayscale image using <code>cv2.imread()</code> and display it using <code>plt.imshow()</code> with <code>cmap='gray'</code>. Print the image shape, data type, and intensity range.</p>
+    </div>
+    <div class="section-card">
+        <h3>1.3 Part 2: Pixel Intensity Histogram</h3>
+        <p>Visualize the distribution of pixel intensities using <code>plt.hist()</code> with 256 bins. The histogram reveals the contrast characteristics and dynamic range of the image.</p>
+    </div>
+    <div class="section-card">
+        <h3>1.4 Part 3: Display Multiple Images</h3>
+        <p>Load 4 images from the dataset and display them in a 2&times;2 subplot grid using <code>plt.subplots(2, 2)</code>. Each subplot displays the image name and its dimensions.</p>
+    </div>
+    <div class="analysis-box">
+        <h4>Analysis Questions</h4>
+        <ol>
+            <li>What does the shape of the image array represent? How do grayscale and color images differ in shape?</li>
+            <li>Why do we specify <code>cmap='gray'</code> when displaying grayscale images? What happens if we don't?</li>
+            <li>Compare the histogram distributions of two different images. What does a narrow histogram vs. a wide histogram indicate about the image?</li>
+        </ol>
+    </div>
+</div>
+
+<!-- Practical 2 (print only) -->
+<div class="print-only print-practical">
+    <h2>Practical 2: Impact of Sampling Rate on Spatial Resolution</h2>
+    <div class="section-card">
+        <h3>2.1 Objective</h3>
+        <p>To evaluate the relationship between the sampling rate (N) and spatial resolution in digital images.</p>
+        <div class="theory-box">
+            <strong>Problem Statement:</strong> Spatial resolution represents the size of the smallest perceptible detail in an image and is fundamentally dependent on the sampling rate. A decrease in the number of samples (N) results in a loss of geometric detail. In this experiment, the student simulates progressive spatial resolution reduction and analyzes the resulting artifacts.
+        </div>
+    </div>
+    <div class="section-card">
+        <h3>2.2 Part 1: Progressive Downsampling</h3>
+        <p>The image is resized to a 1024&times;1024 baseline, then progressively halved 5 times using <code>cv2.INTER_AREA</code> interpolation: 1024 &rarr; 512 &rarr; 256 &rarr; 128 &rarr; 64 &rarr; 32.</p>
+    </div>
+    <div class="section-card">
+        <h3>2.3 Part 2: Comparison Plot</h3>
+        <p>All resolution levels are displayed in a single comparison figure to visually assess the progressive loss of detail at each downsampling step.</p>
+    </div>
+    <div class="section-card">
+        <h3>2.4 Part 3: Quality Loss Visualization</h3>
+        <p>Each downsampled image is resized back to 1024&times;1024 using bilinear interpolation to reveal the quality degradation. This demonstrates that information lost during downsampling cannot be recovered.</p>
+    </div>
+    <div class="analysis-box">
+        <h4>Analysis Questions</h4>
+        <ol>
+            <li><strong>Artifact Identification:</strong> At which resolution (N) do aliasing artifacts (jagged lines) become visible to the eye? Explain how this correlates to the sampling rate.</li>
+            <li><strong>Sensitivity Analysis:</strong> Theory suggests spatial resolution is more sensitive to shape variations than lighting variations. Compare the detail in textured areas vs. smooth areas; which loses perceptible detail first?</li>
+            <li><strong>DPI Correlation:</strong> If the physical size of the image remains constant while the pixel count is halved, how does this affect the Dots Per Inch (DPI)? Relate this to the blocky appearance of lower-resolution images.</li>
+        </ol>
+    </div>
+</div>
+
+<!-- Practical 3 (print only) -->
+<div class="print-only print-practical">
+    <h2>Practical 3: Image Negation, Subtraction, and Inversion</h2>
+    <div class="section-card">
+        <h3>3.1 Objective</h3>
+        <p>To implement and analyze fundamental intensity transformation operations: image negation, image subtraction, and intensity inversion.</p>
+        <div class="theory-box">
+            <strong>Theory:</strong> Intensity transformations are point operations that modify pixel values individually. <strong>Negation</strong> reverses the intensity scale: <em>s</em> = (<em>L</em>&minus;1) &minus; <em>r</em>, useful for enhancing detail in dark regions. <strong>Image subtraction</strong> <em>g</em> = |<em>f</em><sub>1</sub> &minus; <em>f</em><sub>2</sub>| reveals differences between two images, widely used in medical imaging (Digital Subtraction Angiography).
+        </div>
+    </div>
+    <div class="section-card">
+        <h3>3.2 Part 1: Image Negation (s = 255 &minus; r)</h3>
+        <p>Compute the negative of a grayscale image by inverting all pixel intensities. Display the original and negative side by side with their histograms to observe the intensity transformation.</p>
+    </div>
+    <div class="section-card">
+        <h3>3.3 Part 2: Image Subtraction |Img1 &minus; Img2|</h3>
+        <p>Compute the absolute difference between two related images to reveal hidden structures. Applications include Digital Subtraction Angiography (mask vs. live), dental X-ray comparison, and tungsten filament shading correction.</p>
+    </div>
+    <div class="section-card">
+        <h3>3.4 Part 3: Complete Pipeline</h3>
+        <p>Run the full pipeline on an image pair: subtraction to extract differences, negation of the result for enhanced visibility, and contrast stretching for final enhancement.</p>
+    </div>
+    <div class="analysis-box">
+        <h4>Analysis Questions</h4>
+        <ol>
+            <li>In the angiography example, what structures become visible after subtraction that were not visible in either original image?</li>
+            <li>Why is absolute difference used instead of simple subtraction? What would happen with signed vs. unsigned arithmetic?</li>
+            <li>Compare the histogram of the original image with its negative. What mathematical relationship exists between them?</li>
+        </ol>
+    </div>
+</div>
+
+<!-- Practical 4 (print only) -->
+<div class="print-only print-practical">
+    <h2>Practical 4: Gamma Correction and Power Law Transformations</h2>
+    <div class="section-card">
+        <h3>4.1 Objective</h3>
+        <p>To understand and implement power law (gamma) transformations for image contrast enhancement.</p>
+        <div class="theory-box">
+            <strong>Theory:</strong> The power law transformation <em>s</em> = <em>c</em> &middot; <em>r</em><sup>&gamma;</sup> is one of the most important intensity transformations. With &gamma; &lt; 1, dark regions are enhanced (brightening). With &gamma; &gt; 1, bright regions are compressed (darkening). Setting &gamma; = 1, <em>c</em> = 1 produces the identity transform.
+        </div>
+    </div>
+    <div class="section-card">
+        <h3>4.2 Part 1: Apply Gamma Correction</h3>
+        <p>Apply the power law transformation with adjustable &gamma; and constant <em>c</em>. Compare the original and corrected images with their histograms to observe the intensity redistribution.</p>
+    </div>
+    <div class="section-card">
+        <h3>4.3 Part 2: Gamma Series Comparison</h3>
+        <p>Compare the effect of multiple gamma values (&gamma; = 0.3, 0.5, 1.0, 1.5, 2.5, 5.0) on a single image displayed in a comparison grid.</p>
+    </div>
+    <div class="section-card">
+        <h3>4.4 Part 3: Log Transformation</h3>
+        <p>Apply the logarithmic transformation <em>s</em> = <em>c</em> &middot; log(1 + <em>r</em>) and compare its result with gamma correction at &gamma; = 0.4 on the same image.</p>
+    </div>
+    <div class="section-card">
+        <h3>4.5 Part 4: Contrast Enhancement</h3>
+        <p>Enhance dark images using &gamma; &lt; 1 (values 0.3, 0.4, 0.6) or compress bright images using &gamma; &gt; 1 (values 3.0, 4.0, 5.0). Compare across images with low, medium, and high contrast.</p>
+    </div>
+    <div class="analysis-box">
+        <h4>Analysis Questions</h4>
+        <ol>
+            <li>For a dark image, which gamma value produces the best visual enhancement? Why does &gamma; &lt; 1 brighten dark regions?</li>
+            <li>Compare log transformation with &gamma; = 0.4 on the same image. Which produces better results and why?</li>
+            <li>How does gamma correction relate to display devices? If a monitor has &gamma; = 2.5, what pre-correction gamma should be applied?</li>
+        </ol>
+    </div>
+</div>
+
 {% endblock %}
