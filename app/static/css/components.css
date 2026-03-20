@@ -8,19 +8,22 @@
     background: var(--surface-1);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
-    padding: 2rem;
-    margin-bottom: 1.5rem;
+    padding: clamp(1.5rem, 1rem + 1.5vw, 2.25rem);
+    margin-bottom: 1.25rem;
     box-shadow: var(--shadow-sm);
-    transition: box-shadow var(--transition-base) var(--ease-spring);
+    transition: box-shadow 0.2s ease;
 }
+.section-card:hover { box-shadow: var(--shadow-md); }
 
 .section-card h3 {
     color: var(--accent);
     font-family: var(--font-sans);
-    font-size: clamp(1.05rem, 1.5vw, 1.25rem);
-    font-weight: 650;
+    font-size: clamp(1.1rem, 1rem + 0.5vw, 1.35rem);
+    font-weight: 700;
     letter-spacing: -0.02em;
-    margin: 0 0 1.25rem;
+    margin: 0 0 1rem;
+    padding-bottom: 0.6rem;
+    border-bottom: 1px solid var(--border);
     line-height: 1.3;
 }
 
@@ -88,6 +91,7 @@
     background-repeat: no-repeat;
     background-position: right 0.75rem center;
     cursor: pointer;
+    margin-bottom: 0.5rem;
 }
 
 .image-select:focus {
@@ -101,15 +105,16 @@
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
-    padding: 0.6rem 1.5rem;
+    padding: 0.7rem 2rem;
     background: var(--accent);
     color: #fff;
     border: none;
     border-radius: var(--radius-md);
     font-family: var(--font-sans);
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     font-weight: 600;
     cursor: pointer;
+    margin-top: 0.5rem;
     transition: background var(--transition-fast),
                 transform var(--transition-fast) var(--ease-spring);
 }

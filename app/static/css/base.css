@@ -87,6 +87,14 @@ h3 { font-size: clamp(1.15rem, 1rem + 0.6vw, 1.5rem); }
 h4 { font-size: clamp(1rem, 0.95rem + 0.3vw, 1.2rem); }
 p { max-width: 68ch; }
 
+/* Page title */
+main > .container > h2:first-child {
+    margin-bottom: 1.75rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--accent);
+    display: inline-block;
+}
+
 a { color: var(--accent); text-decoration: none; transition: color var(--duration) var(--ease-out); }
 a:hover { color: var(--accent-hover); }
 code, pre, .code-block { font-family: var(--font-mono); font-size: 0.9em; }
@@ -104,18 +112,25 @@ code, pre, .code-block { font-family: var(--font-mono); font-size: 0.9em; }
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     border-bottom: 1px solid var(--nav-border);
+    padding: 0.25rem 0;
 }
-.dip-navbar .navbar-brand { font-weight: 700; font-size: 1rem; color: var(--text) !important; letter-spacing: -0.02em; }
+.dip-navbar .navbar-brand {
+    font-weight: 700; font-size: 1.05rem; color: var(--accent) !important; letter-spacing: -0.02em;
+}
 .dip-navbar .nav-link {
     color: var(--text-muted) !important;
     font-weight: 500;
     font-size: 0.875rem;
-    padding: 0.4rem 0.65rem !important;
+    padding: 0.45rem 0.8rem !important;
     border-radius: var(--radius-md);
     transition: color var(--duration) var(--ease-out), background var(--duration) var(--ease-out);
 }
 .dip-navbar .nav-link:hover { color: var(--text) !important; background: var(--accent-subtle); }
-.dip-navbar .nav-link.active { color: var(--accent) !important; background: var(--accent-subtle); }
+.dip-navbar .nav-link.active {
+    color: var(--accent) !important;
+    background: var(--accent-subtle);
+    font-weight: 600;
+}
 .dip-navbar .nav-item { position: relative; }
 .dip-navbar .navbar-toggler { color: var(--text); border: 1px solid var(--border); }
 .dip-navbar .navbar-toggler-icon { filter: var(--toggler-filter, none); }
