@@ -7,15 +7,15 @@
     <meta name="description" content="{% block description %}Digital Image Processing Practical Lab - CSU2543. Shoolini University.{% endblock %}">
     <meta name="author" content="Divya Mohan">
 
-    <!-- FOUC prevention: apply theme before any CSS loads -->
+    <!-- FOUC prevention -->
     <script>
         (function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();
     </script>
 
-    <!-- Google Fonts: Inter -->
+    <!-- Fonts: Inter (screen) + Crimson Pro (print/serif) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5.3.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -24,15 +24,33 @@
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
     <!-- Application CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=20260320b">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=20260320b">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=20260320c">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=20260320c">
 
-    <!-- Print Styles -->
+    <!-- Print Styles: Academic paper format -->
     <style>
         .print-front-page { display: none; }
         .print-header { display: none; }
 
         @media print {
+            /* --- Global print reset --- */
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            body {
+                background: white !important;
+                color: #1a1a1a !important;
+                font-family: 'Crimson Pro', 'Georgia', 'Times New Roman', serif !important;
+                font-size: 11.5pt;
+                line-height: 1.6;
+                margin: 0;
+            }
+
+            /* --- Hide screen-only elements --- */
+            .dip-navbar, .theme-toggle, .skip-link, #toast, .btn-run,
+            .image-select, select, .btn-pair, .pair-btn, input[type="range"],
+            .slider-group, .no-print, .site-footer, .card-arrow, .hero-badge,
+            label[for], .formula-box { display: none !important; }
+
+            /* --- Cover Page --- */
             .print-front-page {
                 display: flex !important;
                 flex-direction: column;
@@ -41,126 +59,227 @@
                 min-height: 100vh;
                 page-break-after: always;
                 text-align: center;
-                font-family: 'Inter', sans-serif;
-                padding: 3rem 2rem;
+                padding: 2cm 2.5cm;
                 background: white !important;
-                color: black !important;
+                color: #1a1a1a !important;
+                font-family: 'Crimson Pro', Georgia, serif !important;
+            }
+            .print-front-page .cover-logo {
+                width: 90px;
+                height: auto;
+                margin-bottom: 1.25rem;
             }
             .print-front-page .university-name {
-                font-size: 1.6rem;
+                font-size: 20pt;
                 font-weight: 700;
                 text-transform: uppercase;
-                letter-spacing: 0.05em;
-                margin-bottom: 0.5rem;
+                letter-spacing: 0.08em;
+                color: #1a3a5c;
+                margin-bottom: 0.25rem;
             }
             .print-front-page .department {
-                font-size: 1rem;
-                margin-bottom: 2rem;
-                color: #333;
+                font-size: 11pt;
+                color: #444;
+                margin-bottom: 2.5rem;
+                line-height: 1.5;
+            }
+            .print-front-page .cover-rule {
+                width: 60%;
+                height: 2px;
+                background: #1a3a5c;
+                margin: 0 auto 1.5rem;
             }
             .print-front-page .subject-title {
-                font-size: 2rem;
+                font-size: 24pt;
                 font-weight: 700;
-                margin-bottom: 0.5rem;
-                border-top: 2px solid #333;
-                border-bottom: 2px solid #333;
-                padding: 0.75rem 2rem;
+                color: #1a3a5c;
+                margin-bottom: 0.4rem;
+                letter-spacing: -0.01em;
             }
             .print-front-page .subject-code {
-                font-size: 1.1rem;
+                font-size: 12pt;
                 font-weight: 600;
                 color: #555;
-                margin-bottom: 2.5rem;
+                margin-bottom: 2rem;
+                font-variant: small-caps;
+                letter-spacing: 0.05em;
             }
             .print-front-page .practical-title {
-                font-size: 1.4rem;
+                font-size: 15pt;
                 font-weight: 600;
-                margin-bottom: 3rem;
+                color: #333;
+                margin-bottom: 2.5rem;
+                font-style: italic;
             }
             .print-front-page .details-table {
                 border-collapse: collapse;
-                font-size: 1rem;
+                font-size: 11pt;
                 margin: 0 auto;
                 text-align: left;
             }
             .print-front-page .details-table td {
-                padding: 0.4rem 1rem;
+                padding: 0.3rem 0.75rem;
                 vertical-align: top;
+                line-height: 1.5;
             }
             .print-front-page .details-table td:first-child {
                 font-weight: 700;
+                color: #1a3a5c;
                 white-space: nowrap;
+                text-align: right;
+                padding-right: 1rem;
+            }
+            .print-front-page .cover-rule-bottom {
+                width: 40%;
+                height: 1px;
+                background: #999;
+                margin: 2rem auto 1rem;
             }
             .print-front-page .session {
-                margin-top: 2.5rem;
-                font-size: 1rem;
-                color: #555;
-            }
-
-            /* Hide interactive/screen-only elements */
-            .dip-navbar,
-            .theme-toggle,
-            .skip-link,
-            #toast,
-            .btn-run,
-            .image-select,
-            select,
-            .btn-pair,
-            input[type="range"],
-            .slider-group,
-            .no-print,
-            footer {
-                display: none !important;
-            }
-
-            body {
-                background: white !important;
-                color: black !important;
                 font-size: 11pt;
-                line-height: 1.5;
+                color: #666;
+                font-style: italic;
             }
-            .container {
-                max-width: 100% !important;
-                padding: 0 1cm !important;
-            }
-            .section-card {
-                background: white !important;
-                border: 1px solid #ccc !important;
-                page-break-inside: avoid;
-                margin-bottom: 1rem !important;
-                padding: 1rem !important;
-            }
-            .theory-box {
-                background: #f5f5f5 !important;
-                border-left: 3px solid #333 !important;
-                color: black !important;
-            }
-            .analysis-box {
-                background: #f5f5f5 !important;
-                color: black !important;
-                page-break-inside: avoid;
-            }
-            .result-img {
-                max-width: 90% !important;
-                page-break-inside: avoid;
-            }
-            h1, h2, h3, h4 {
-                color: black !important;
-                page-break-after: avoid;
-            }
-            img { max-width: 100% !important; }
 
+            /* --- Running header --- */
             .print-header {
                 display: block !important;
                 text-align: center;
-                border-bottom: 2px solid #333;
                 padding-bottom: 0.5rem;
                 margin-bottom: 1.5rem;
+                border-bottom: 0.5pt solid #999;
                 page-break-after: avoid;
             }
-            .print-header .ph-university { font-size: 0.9rem; font-weight: 700; text-transform: uppercase; }
-            .print-header .ph-subject { font-size: 1.1rem; font-weight: 700; margin: 0.25rem 0; }
-            .print-header .ph-meta { font-size: 0.8rem; color: #555; }
+            .print-header .ph-university {
+                font-size: 8.5pt;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.1em;
+                color: #1a3a5c;
+            }
+            .print-header .ph-subject {
+                font-size: 9.5pt;
+                font-weight: 600;
+                color: #333;
+                margin: 0.15rem 0;
+            }
+            .print-header .ph-meta {
+                font-size: 8pt;
+                color: #777;
+                font-style: italic;
+            }
+
+            /* --- Content area --- */
+            .container { max-width: 100% !important; padding: 0 !important; }
+            #main-content { padding: 0 !important; margin: 0 1.5cm !important; }
+
+            /* Page title */
+            #main-content h2 {
+                font-size: 16pt !important;
+                font-weight: 700 !important;
+                color: #1a3a5c !important;
+                border-bottom: 1.5pt solid #1a3a5c !important;
+                padding-bottom: 0.4rem !important;
+                margin-bottom: 1.25rem !important;
+                display: block !important;
+                font-family: 'Crimson Pro', Georgia, serif !important;
+            }
+
+            /* Section cards: NO borders, NO backgrounds — clean paper flow */
+            .section-card {
+                background: transparent !important;
+                border: none !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+                margin-bottom: 1.25rem !important;
+                page-break-inside: avoid;
+            }
+
+            /* Section headings */
+            .section-card h3 {
+                font-size: 13pt !important;
+                font-weight: 700 !important;
+                color: #1a3a5c !important;
+                border-bottom: 0.75pt solid #ccc !important;
+                padding-bottom: 0.2rem !important;
+                margin-bottom: 0.6rem !important;
+                font-family: 'Crimson Pro', Georgia, serif !important;
+            }
+
+            .section-card p {
+                font-size: 11pt !important;
+                text-align: justify !important;
+                max-width: none !important;
+            }
+
+            /* Theory box: subtle academic callout */
+            .theory-box {
+                background: #f7f7f7 !important;
+                border-left: 3pt solid #1a3a5c !important;
+                border-top: none !important;
+                border-right: none !important;
+                border-bottom: none !important;
+                padding: 0.6rem 0.8rem !important;
+                margin: 0.75rem 0 !important;
+                font-size: 10.5pt !important;
+                color: #333 !important;
+            }
+
+            /* Analysis box */
+            .analysis-box {
+                background: transparent !important;
+                border: 1pt solid #ccc !important;
+                padding: 0.8rem 1rem !important;
+                margin-top: 1.25rem !important;
+                page-break-inside: avoid;
+            }
+            .analysis-box h4 {
+                font-size: 12pt !important;
+                font-weight: 700 !important;
+                color: #1a3a5c !important;
+                margin-bottom: 0.5rem !important;
+                font-family: 'Crimson Pro', Georgia, serif !important;
+            }
+            .analysis-box ol { font-size: 10.5pt !important; }
+            .analysis-box li { margin-bottom: 0.35rem !important; text-align: justify !important; }
+
+            /* Images */
+            .result-img {
+                max-width: 85% !important;
+                margin: 0.75rem auto !important;
+                display: block !important;
+                page-break-inside: avoid;
+                border: 0.5pt solid #ddd !important;
+            }
+            img { max-width: 100% !important; }
+
+            /* Properties table */
+            .props-table {
+                font-size: 10pt !important;
+                border: 0.5pt solid #ccc !important;
+                margin: 0.5rem 0 !important;
+            }
+            .props-table th, .props-table td {
+                padding: 0.25rem 0.5rem !important;
+                border-bottom: 0.5pt solid #ddd !important;
+            }
+            .props-table th {
+                background: #f0f0f0 !important;
+                font-size: 9pt !important;
+                color: #1a3a5c !important;
+            }
+
+            /* Code */
+            code {
+                font-size: 9.5pt !important;
+                background: #f5f5f5 !important;
+                padding: 0.1rem 0.3rem !important;
+                border: 0.5pt solid #ddd !important;
+            }
+
+            /* Page margins */
+            @page { margin: 2cm 1.5cm 2cm 1.5cm; }
+            @page :first { margin-top: 0; }
         }
     </style>
 
@@ -172,28 +291,31 @@
 
     {% include 'partials/_nav.html' %}
 
-    <!-- Print-only front page -->
+    <!-- Print-only cover page -->
     <div class="print-front-page">
+        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University">
         <div class="university-name">Shoolini University</div>
         <div class="department">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
+        <div class="cover-rule"></div>
         <div class="subject-title">Digital Image Processing</div>
         <div class="subject-code">Course Code: CSU2543</div>
         <div class="practical-title">{% block print_title %}Practical Lab Report{% endblock %}</div>
         <table class="details-table">
-            <tr><td>Student Name:</td><td>Divya Mohan</td></tr>
-            <tr><td>Programme:</td><td>BTech CSE (Cybersecurity)</td></tr>
+            <tr><td>Submitted by:</td><td>Divya Mohan</td></tr>
+            <tr><td>Programme:</td><td>B.Tech CSE (Cybersecurity)</td></tr>
             <tr><td>Semester:</td><td>8th</td></tr>
-            <tr><td>Faculty:</td><td>Ishani Sharma</td></tr>
-            <tr><td>Textbook:</td><td>Gonzalez &amp; Woods, 3rd Edition</td></tr>
+            <tr><td>Faculty Guide:</td><td>Ishani Sharma</td></tr>
+            <tr><td>Reference Text:</td><td>Gonzalez &amp; Woods, <em>Digital Image Processing</em>, 3rd Ed.</td></tr>
         </table>
-        <div class="session">Academic Session: 2025&ndash;2026</div>
+        <div class="cover-rule-bottom"></div>
+        <div class="session">Academic Session 2025&ndash;2026</div>
     </div>
 
-    <!-- Print header (repeated on each printed page) -->
+    <!-- Print running header -->
     <div class="print-header">
-        <div class="ph-university">Shoolini University | CSU2543</div>
-        <div class="ph-subject">Digital Image Processing &mdash; Practical Lab</div>
-        <div class="ph-meta">Student: Divya Mohan | Faculty: Ishani Sharma | Semester 8</div>
+        <div class="ph-university">Shoolini University &middot; CSU2543</div>
+        <div class="ph-subject">Digital Image Processing &mdash; Practical Lab Report</div>
+        <div class="ph-meta">Divya Mohan &middot; B.Tech CSE (Cybersecurity) &middot; Semester 8</div>
     </div>
 
     <main id="main-content">
@@ -204,13 +326,10 @@
 
     {% include 'partials/_footer.html' %}
 
-    <!-- Toast Notification -->
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <!-- Bootstrap 5.3.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
-    <!-- Application JS -->
     <script src="{{ url_for('static', filename='js/core.js') }}"></script>
     <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
     <script src="{{ url_for('static', filename='js/nav.js') }}"></script>
