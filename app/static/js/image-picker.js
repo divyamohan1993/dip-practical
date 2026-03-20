@@ -2,22 +2,23 @@
  * Image Picker Component for DIP Practical.
  * Two-dropdown system: Chapter (dataset) -> Image.
  * Downloads chapter datasets on-demand from public source.
+ * WCAG 2.2 AAA: proper labels, aria attributes, keyboard accessible.
  */
 (function() {
-    const API = '/api';
-    let _chapters = null;
-    const _imageCache = {};
+    var API = '/api';
+    var _chapters = null;
+    var _imageCache = {};
 
     async function fetchChapters() {
         if (_chapters) return _chapters;
-        const resp = await DIP.apiCall(`${API}/chapters`);
+        var resp = await DIP.apiCall(API + '/chapters');
         _chapters = resp.chapters;
         return _chapters;
     }
 
     async function fetchImages(chapterId) {
         if (_imageCache[chapterId]) return _imageCache[chapterId];
-        const resp = await DIP.apiCall(`${API}/chapters/${chapterId}/images`);
+        var resp = await DIP.apiCall(API + '/chapters/' + chapterId + '/images');
         _imageCache[chapterId] = resp.images;
         return resp.images;
     }
@@ -45,22 +46,31 @@
         var wrapper = document.createElement('div');
         wrapper.className = 'image-picker';
 
-        if (opts.label) {
-            var lbl = document.createElement('span');
-            lbl.className = 'picker-label';
-            lbl.textContent = opts.label;
-            wrapper.appendChild(lbl);
-        }
+        // Accessible label
+        var labelText = opts.label || 'Dataset';
+        var chLabelEl = document.createElement('label');
+        chLabelEl.className = 'picker-label';
+        chLabelEl.setAttribute('for', id + '_ch');
+        chLabelEl.textContent = labelText;
+        wrapper.appendChild(chLabelEl);
 
         var chSel = document.createElement('select');
         chSel.className = 'chapter-select';
         chSel.id = id + '_ch';
+        chSel.setAttribute('aria-label', labelText + ' chapter');
+
+        var imgLabelEl = document.createElement('label');
+        imgLabelEl.className = 'sr-only';
+        imgLabelEl.setAttribute('for', id + '_img');
+        imgLabelEl.textContent = labelText + ' image';
 
         var imgSel = document.createElement('select');
         imgSel.className = 'image-select';
         imgSel.id = id + '_img';
+        imgSel.setAttribute('aria-label', labelText + ' image');
 
         wrapper.appendChild(chSel);
+        wrapper.appendChild(imgLabelEl);
         wrapper.appendChild(imgSel);
         container.appendChild(wrapper);
 
@@ -80,7 +90,7 @@
 
         async function loadImages() {
             var ch = chSel.value;
-            imgSel.innerHTML = '<option value="">Downloading chapter...</option>';
+            imgSel.innerHTML = '<option value="">Downloading chapter\u2026</option>';
             imgSel.disabled = true;
 
             try {

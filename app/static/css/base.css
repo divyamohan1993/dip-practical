@@ -1,8 +1,8 @@
-/* DIP Practical — Design System */
+/* DIP Practical — Design System (WCAG 2.2 AAA) */
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* --- Tokens: Light --- */
+/* --- Tokens: Light (AAA contrast ratios: 7:1 normal text, 4.5:1 large) --- */
 :root {
     --bg: #f5f7fa;
     --surface-1: #ffffff;
@@ -11,15 +11,15 @@
     --border: #d1d5db;
     --border-hover: #9ca3af;
     --text: #111827;
-    --text-secondary: #374151;
-    --text-muted: #6b7280;
-    --accent: #4f46e5;
-    --accent-hover: #4338ca;
+    --text-secondary: #1f2937;
+    --text-muted: #4b5563;
+    --accent: #3730a3;
+    --accent-hover: #312e81;
     --accent-light: #eef2ff;
-    --accent-text: #3730a3;
-    --success: #059669;
-    --error: #dc2626;
-    --warning: #d97706;
+    --accent-text: #312e81;
+    --success: #065f46;
+    --error: #991b1b;
+    --warning: #92400e;
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', ui-monospace, 'Cascadia Code', monospace;
     --radius-sm: 0.375rem;
@@ -35,7 +35,7 @@
     --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* --- Tokens: Dark --- */
+/* --- Tokens: Dark (AAA contrast ratios) --- */
 [data-theme="dark"] {
     --bg: #0f1117;
     --surface-1: #1a1d2e;
@@ -44,15 +44,15 @@
     --border: #374151;
     --border-hover: #4b5563;
     --text: #f3f4f6;
-    --text-secondary: #d1d5db;
-    --text-muted: #9ca3af;
-    --accent: #818cf8;
-    --accent-hover: #a5b4fc;
+    --text-secondary: #e5e7eb;
+    --text-muted: #d1d5db;
+    --accent: #c7d2fe;
+    --accent-hover: #e0e7ff;
     --accent-light: rgba(129,140,248,0.12);
-    --accent-text: #c7d2fe;
-    --success: #34d399;
-    --error: #f87171;
-    --warning: #fbbf24;
+    --accent-text: #e0e7ff;
+    --success: #6ee7b7;
+    --error: #fca5a5;
+    --warning: #fcd34d;
     --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
     --shadow-md: 0 4px 6px rgba(0,0,0,0.4);
     --shadow-lg: 0 10px 25px rgba(0,0,0,0.5);
@@ -70,7 +70,7 @@ body {
     font-family: var(--font-sans);
     background: var(--bg);
     color: var(--text);
-    font-size: 16px;
+    font-size: 1rem;
     line-height: 1.65;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
@@ -80,7 +80,7 @@ h1 { font-size: clamp(1.875rem, 1.5rem + 1.5vw, 2.75rem); }
 h2 { font-size: clamp(1.5rem, 1.25rem + 1vw, 2rem); margin-bottom: 1.5rem; }
 h3 { font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem); }
 h4 { font-size: 1.125rem; }
-a { color: var(--accent); text-decoration: none; transition: color 0.15s; }
+a { color: var(--accent); text-decoration: underline; text-underline-offset: 2px; transition: color 0.15s; }
 a:hover { color: var(--accent-hover); }
 code, pre { font-family: var(--font-mono); font-size: 0.875em; }
 code { background: var(--surface-2); padding: 0.125em 0.375em; border-radius: var(--radius-sm); }
@@ -104,25 +104,29 @@ p { max-width: 72ch; }
     box-shadow: var(--shadow-sm);
 }
 [data-theme="dark"] .dip-navbar { background: rgba(15,17,23,0.95); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); }
-.dip-navbar .navbar-brand { font-weight: 800; font-size: 1.1rem; color: var(--accent) !important; letter-spacing: -0.03em; }
+.dip-navbar .navbar-brand { font-weight: 800; font-size: 1.1rem; color: var(--accent) !important; letter-spacing: -0.03em; text-decoration: none; }
 .dip-navbar .nav-link {
     color: var(--text-muted) !important; font-weight: 500; font-size: 0.9rem;
     padding: 0.5rem 0.85rem !important; border-radius: var(--radius-md);
-    transition: all 0.15s ease;
+    transition: all 0.15s ease; text-decoration: none;
+    min-height: 44px; display: inline-flex; align-items: center;
 }
 .dip-navbar .nav-link:hover { color: var(--text) !important; background: var(--surface-2); }
 .dip-navbar .nav-link.active { color: var(--accent) !important; background: var(--accent-light); font-weight: 600; }
-.dip-navbar .navbar-toggler { border: 1px solid var(--border); padding: 0.35rem 0.6rem; }
+.dip-navbar .nav-link:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.dip-navbar .navbar-toggler { border: 1px solid var(--border); padding: 0.5rem 0.75rem; min-width: 44px; min-height: 44px; }
 .dip-navbar .navbar-toggler-icon { width: 1.2em; height: 1.2em; }
 [data-theme="dark"] .dip-navbar .navbar-toggler-icon { filter: invert(1); }
 
 /* --- Theme Toggle --- */
 .theme-toggle {
-    padding: 0.35rem 0.85rem; margin-left: 0.75rem;
+    padding: 0.5rem 1rem; margin-left: 0.75rem;
     border: 1px solid var(--border); border-radius: var(--radius-full);
     background: var(--surface-2); color: var(--text-muted);
     font-size: 0.8rem; font-weight: 600; cursor: pointer;
-    transition: all 0.15s ease;
+    transition: all 0.15s ease; text-decoration: none;
+    min-width: 44px; min-height: 44px;
+    display: inline-flex; align-items: center; justify-content: center;
 }
 .theme-toggle:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
 
@@ -168,15 +172,21 @@ p { max-width: 72ch; }
 /* --- Accessibility --- */
 .skip-link {
     position: absolute; top: -100%; left: 1rem; z-index: 10000;
-    background: var(--accent); color: #fff; padding: 0.6rem 1.25rem;
+    background: var(--accent); color: #fff; padding: 1rem 1.5rem;
     border-radius: 0 0 var(--radius-md) var(--radius-md);
     font-weight: 600; font-size: 0.875rem; text-decoration: none;
+    min-height: 44px; display: inline-flex; align-items: center;
 }
 .skip-link:focus { top: 0; color: #fff; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+[data-theme="dark"] :focus-visible { outline-color: #c7d2fe; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+/* --- Reduced Motion --- */
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    .btn-run:hover, .btn-run:active { transform: none !important; }
+    .theme-toggle:hover { transform: none !important; }
 }
 
 /* --- Print --- (all print styles are in base.html inline <style>) */

@@ -334,8 +334,8 @@
     {% include 'partials/_nav.html' %}
 
     <!-- Print cover page (hidden on screen) -->
-    <div class="print-only print-cover">
-        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University">
+    <div class="print-only print-cover" aria-hidden="true">
+        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
         <div class="cover-university">Shoolini University</div>
         <div class="cover-dept">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
         <div class="cover-rule"></div>
@@ -354,7 +354,7 @@
     </div>
 
     <!-- Print running header (hidden on screen, shown on print content pages) -->
-    <div class="print-only print-header">
+    <div class="print-only print-header" aria-hidden="true">
         <div class="ph-line">Shoolini University &middot; CSU2543 &middot; Digital Image Processing &middot; Divya Mohan</div>
     </div>
 
@@ -366,7 +366,7 @@
 
     {% include 'partials/_footer.html' %}
 
-    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script src="{{ url_for('static', filename='js/core.js') }}"></script>

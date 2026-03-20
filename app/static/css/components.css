@@ -88,7 +88,8 @@
 }
 
 .chapter-select, .image-select {
-    padding: 0.5rem 2rem 0.5rem 0.75rem;
+    padding: 0.6rem 2rem 0.6rem 0.75rem;
+    min-height: 44px;
     border: 1.5px solid var(--border);
     border-radius: var(--radius-md);
     background: var(--surface-1);
@@ -110,7 +111,7 @@
 [data-theme="dark"] .chapter-select:focus,
 [data-theme="dark"] .image-select:focus { box-shadow: 0 0 0 2px rgba(129,140,248,0.15); }
 
-.chapter-select:disabled, .image-select:disabled { opacity: 0.5; cursor: wait; }
+.chapter-select:disabled, .image-select:disabled { opacity: 0.6; cursor: wait; border-style: dashed; }
 
 .picker-grid {
     display: grid;
@@ -138,12 +139,14 @@
 }
 .btn-run:hover { background: var(--accent-hover); transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79,70,229,0.35); }
 .btn-run:active { transform: translateY(0); box-shadow: 0 1px 3px rgba(79,70,229,0.3); }
-.btn-run:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+.btn-run:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; border: 2px solid var(--border); }
 
 /* --- Quick-select Pair Buttons --- */
 .btn-pair {
-    display: inline-block;
-    padding: 0.35rem 0.75rem;
+    display: inline-flex;
+    align-items: center;
+    padding: 0.6rem 1rem;
+    min-height: 44px;
     background: var(--surface-1);
     color: var(--text-secondary);
     border: 1px solid var(--border);
@@ -181,7 +184,7 @@
 .slider-group label { display: flex; justify-content: space-between; align-items: baseline; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.3rem; }
 .slider-group .slider-val { font-family: var(--font-mono); font-size: 0.85rem; color: var(--accent); font-weight: 700; background: var(--accent-light); padding: 0.1rem 0.4rem; border-radius: var(--radius-sm); }
 .slider-group input[type="range"] { -webkit-appearance: none; appearance: none; width: 100%; height: 6px; border-radius: 3px; background: var(--surface-3); outline: none; }
-.slider-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 2px 6px rgba(79,70,229,0.3); }
+.slider-group input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 28px; height: 28px; border-radius: 50%; background: var(--accent); cursor: pointer; box-shadow: 0 2px 6px rgba(79,70,229,0.3); }
 
 /* --- Stats Inline --- */
 .stats-inline { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0; }

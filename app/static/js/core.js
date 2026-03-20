@@ -1,6 +1,7 @@
 /**
  * DIP Practical - Core Utilities
  * Shared helper functions used across all pages.
+ * WCAG 2.2 AAA compliant: aria-live announcements, status messages.
  */
 (function () {
     'use strict';
@@ -10,25 +11,31 @@
         if (typeof duration === 'undefined') duration = 3000;
         var toast = document.getElementById('toast');
         if (!toast) return;
-        toast.textContent = message;
-        toast.classList.add('visible');
+        toast.textContent = '';
+        setTimeout(function () {
+            toast.textContent = message;
+            toast.classList.add('visible');
+        }, 0);
         setTimeout(function () { toast.classList.remove('visible'); }, duration);
     }
 
-    // ---- Loading overlay ----
+    // ---- Loading overlay (with aria-busy) ----
     function setLoading(container, loading) {
         if (!container) return;
         var existing = container.querySelector('.loading-overlay');
         if (loading && !existing) {
+            container.setAttribute('aria-busy', 'true');
             var overlay = document.createElement('div');
             overlay.className = 'loading-overlay';
+            overlay.setAttribute('role', 'status');
             var spinner = document.createElement('span');
             spinner.className = 'loading-spinner';
-            spinner.textContent = 'Processing...';
+            spinner.textContent = 'Processing\u2026';
             overlay.appendChild(spinner);
             container.style.position = 'relative';
             container.appendChild(overlay);
         } else if (!loading && existing) {
+            container.removeAttribute('aria-busy');
             existing.remove();
         }
     }
@@ -67,6 +74,11 @@
     function animateValue(element, start, end, duration) {
         if (typeof duration === 'undefined') duration = 800;
         if (start === end) return;
+        // Respect reduced motion
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            element.textContent = String(end).indexOf('.') !== -1 ? end.toFixed(2) : Math.round(end).toLocaleString();
+            return;
+        }
         var isFloat = String(end).indexOf('.') !== -1;
         var startTime = null;
         function step(timestamp) {
