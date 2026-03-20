@@ -18,13 +18,12 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=20260320d">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=20260320d">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}?v=20260320e">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}?v=20260320e">
 
     <!--
         Print Styles — Chicago Manual of Style, 17th Edition
-        Font: Times New Roman | Base: 12pt | Max heading: 16pt
-        Hierarchy: Bold 16pt (title) → Bold 14pt (section) → Bold italic 13pt (subsection) → Bold 12pt (sub-sub)
+        Professional lab report layout optimized for PDF export
     -->
     <style>
         .print-only { display: none; }
@@ -32,29 +31,29 @@
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-            /* === Base Typography: Chicago 17th === */
+            /* === Page Setup === */
+            @page { margin: 0.75in 0.85in 0.75in 0.85in; }
+
             body {
                 background: white !important;
                 color: black !important;
                 font-family: 'Times New Roman', Times, serif !important;
                 font-size: 12pt !important;
-                line-height: 1.5 !important;
+                line-height: 1.45 !important;
                 margin: 0 !important;
             }
 
-            @page { margin: 1in 1in 1in 1in; }
-
-            /* === Hide screen elements === */
+            /* === Hide screen-only elements === */
             .dip-navbar, .theme-toggle, .skip-link, #toast, .btn-run,
-            .image-select, select, .btn-pair, .pair-btn, input[type="range"],
-            .slider-group, .no-print, .site-footer, .card-arrow, .hero-badge,
-            .hero, .practical-grid, .formula-box,
-            label[for] { display: none !important; }
+            .image-select, .chapter-select, select, .btn-pair, .pair-btn,
+            input[type="range"], .slider-group, .no-print, .site-footer,
+            .card-arrow, .hero-badge, .hero, .practical-grid,
+            .picker-bar, .image-picker, .picker-label,
+            label[for], input[type="radio"], .colab-badge { display: none !important; }
 
-            /* === Show print elements === */
             .print-only { display: block !important; }
 
-            /* === Cover Page === */
+            /* === Cover Page — Professional === */
             .print-cover {
                 display: flex !important;
                 flex-direction: column;
@@ -63,21 +62,83 @@
                 min-height: 100vh;
                 page-break-after: always;
                 text-align: center;
-                padding: 0.5in;
+                padding: 0.75in 1in;
                 font-family: 'Times New Roman', Times, serif !important;
+                border: 3pt double black;
+                margin: 0;
             }
-            .print-cover .cover-logo { width: 80px; height: auto; margin-bottom: 14pt; }
-            .print-cover .cover-university { font-size: 16pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4pt; }
-            .print-cover .cover-dept { font-size: 12pt; margin-bottom: 30pt; color: #333; }
-            .print-cover .cover-rule { width: 50%; height: 1.5pt; background: black; margin: 0 auto 18pt; }
-            .print-cover .cover-subject { font-size: 16pt; font-weight: bold; margin-bottom: 6pt; }
-            .print-cover .cover-code { font-size: 12pt; font-weight: bold; margin-bottom: 24pt; color: #444; }
-            .print-cover .cover-practical { font-size: 14pt; font-weight: bold; font-style: italic; margin-bottom: 30pt; }
-            .print-cover .cover-table { border-collapse: collapse; font-size: 12pt; margin: 0 auto; text-align: left; }
-            .print-cover .cover-table td { padding: 3pt 10pt; vertical-align: top; }
-            .print-cover .cover-table td:first-child { font-weight: bold; text-align: right; padding-right: 14pt; }
-            .print-cover .cover-rule-sm { width: 30%; height: 0.75pt; background: #888; margin: 24pt auto 12pt; }
-            .print-cover .cover-session { font-size: 12pt; font-style: italic; color: #555; }
+            .print-cover .cover-logo {
+                width: 140px;
+                height: auto;
+                margin-bottom: 18pt;
+            }
+            .print-cover .cover-university {
+                font-size: 20pt;
+                font-weight: bold;
+                text-transform: uppercase;
+                letter-spacing: 0.08em;
+                margin-bottom: 4pt;
+            }
+            .print-cover .cover-dept {
+                font-size: 12pt;
+                margin-bottom: 28pt;
+                color: #222;
+                line-height: 1.6;
+            }
+            .print-cover .cover-rule {
+                width: 60%;
+                height: 2pt;
+                background: black;
+                margin: 0 auto 20pt;
+            }
+            .print-cover .cover-subject {
+                font-size: 18pt;
+                font-weight: bold;
+                margin-bottom: 4pt;
+                letter-spacing: 0.03em;
+            }
+            .print-cover .cover-code {
+                font-size: 13pt;
+                font-weight: bold;
+                margin-bottom: 20pt;
+                color: #333;
+            }
+            .print-cover .cover-practical {
+                font-size: 15pt;
+                font-weight: bold;
+                font-style: italic;
+                margin-bottom: 32pt;
+                padding: 8pt 24pt;
+                border-top: 1pt solid #666;
+                border-bottom: 1pt solid #666;
+            }
+            .print-cover .cover-table {
+                border-collapse: collapse;
+                font-size: 12pt;
+                margin: 0 auto;
+                text-align: left;
+            }
+            .print-cover .cover-table td {
+                padding: 4pt 12pt;
+                vertical-align: top;
+            }
+            .print-cover .cover-table td:first-child {
+                font-weight: bold;
+                text-align: right;
+                padding-right: 16pt;
+                white-space: nowrap;
+            }
+            .print-cover .cover-rule-sm {
+                width: 25%;
+                height: 0.75pt;
+                background: #888;
+                margin: 28pt auto 10pt;
+            }
+            .print-cover .cover-session {
+                font-size: 12pt;
+                font-style: italic;
+                color: #444;
+            }
 
             /* === Table of Contents === */
             .print-toc {
@@ -103,18 +164,13 @@
             .container { max-width: 100% !important; padding: 0 !important; }
             #main-content { padding: 0 !important; margin: 0 !important; }
 
-            /* === Heading Hierarchy (Chicago 17th) ===
-               Level 1 (h2): Bold, 16pt, centered — practical title
-               Level 2 (h3): Bold, 14pt, flush left — section heading
-               Level 3 (h4): Bold italic, 13pt, flush left — subsection
-               Body: Roman, 12pt
-            */
+            /* === Heading Hierarchy (Chicago 17th) === */
             h2, #main-content h2, .print-practical h2 {
                 font-family: 'Times New Roman', Times, serif !important;
                 font-size: 16pt !important;
                 font-weight: bold !important;
                 text-align: center !important;
-                margin: 18pt 0 12pt !important;
+                margin: 14pt 0 10pt !important;
                 padding: 0 !important;
                 border: none !important;
                 display: block !important;
@@ -123,82 +179,118 @@
 
             h3, .section-card h3 {
                 font-family: 'Times New Roman', Times, serif !important;
-                font-size: 14pt !important;
+                font-size: 13pt !important;
                 font-weight: bold !important;
                 color: black !important;
                 border: none !important;
-                border-bottom: none !important;
-                padding: 0 !important;
-                margin: 14pt 0 8pt !important;
+                border-bottom: 0.5pt solid #ccc !important;
+                padding: 0 0 3pt 0 !important;
+                margin: 10pt 0 6pt !important;
             }
 
             h4, .analysis-box h4 {
                 font-family: 'Times New Roman', Times, serif !important;
-                font-size: 13pt !important;
+                font-size: 12pt !important;
                 font-weight: bold !important;
                 font-style: italic !important;
                 color: black !important;
-                margin: 12pt 0 6pt !important;
+                margin: 8pt 0 4pt !important;
                 padding: 0 !important;
             }
 
-            /* === Section cards: transparent, no decoration === */
+            /* === Section cards — flow naturally, NO page-break-inside: avoid === */
             .section-card {
                 background: transparent !important;
                 border: none !important;
                 box-shadow: none !important;
                 padding: 0 !important;
-                margin-bottom: 10pt !important;
-                page-break-inside: avoid;
+                margin-bottom: 6pt !important;
             }
             .section-card p, p {
                 font-size: 12pt !important;
                 text-align: justify !important;
                 max-width: none !important;
-                margin-bottom: 6pt !important;
-                line-height: 1.5 !important;
+                margin-bottom: 4pt !important;
+                line-height: 1.45 !important;
             }
 
             /* === Theory box === */
             .theory-box {
-                background: transparent !important;
-                border-left: 2pt solid black !important;
+                background: #f7f7f7 !important;
+                border-left: 2.5pt solid #333 !important;
                 border-top: none !important; border-right: none !important; border-bottom: none !important;
-                padding: 4pt 0 4pt 12pt !important;
-                margin: 8pt 0 !important;
-                font-size: 12pt !important;
+                padding: 6pt 10pt !important;
+                margin: 6pt 0 !important;
+                font-size: 11pt !important;
                 color: black !important;
+                page-break-inside: avoid;
             }
             .theory-box strong { font-weight: bold; }
+            .theory-box ul { margin: 4pt 0 2pt 14pt !important; padding: 0 !important; }
+            .theory-box li { font-size: 11pt !important; margin-bottom: 1pt !important; }
+
+            /* === Formula box — show in print === */
+            .formula-box {
+                display: block !important;
+                text-align: center !important;
+                font-size: 13pt !important;
+                padding: 6pt !important;
+                background: transparent !important;
+                border: none !important;
+                margin: 4pt 0 !important;
+            }
 
             /* === Analysis box === */
             .analysis-box {
                 background: transparent !important;
-                border: none !important;
-                padding: 0 !important;
-                margin: 12pt 0 !important;
+                border-top: 1pt solid #ccc !important;
+                border-bottom: none !important; border-left: none !important; border-right: none !important;
+                padding: 6pt 0 0 !important;
+                margin: 10pt 0 !important;
                 page-break-inside: avoid;
             }
-            .analysis-box ol { font-size: 12pt !important; padding-left: 18pt !important; }
-            .analysis-box li { margin-bottom: 4pt !important; text-align: justify !important; line-height: 1.5 !important; }
+            .analysis-box ol { font-size: 11pt !important; padding-left: 18pt !important; }
+            .analysis-box li { margin-bottom: 3pt !important; text-align: justify !important; line-height: 1.45 !important; }
 
-            /* === Images === */
+            /* === Images — compact, allow page breaks === */
             .result-img {
-                max-width: 80% !important;
-                margin: 8pt auto !important;
+                max-width: 95% !important;
+                max-height: 8.5in !important;
+                width: auto !important;
+                height: auto !important;
+                margin: 6pt auto !important;
                 display: block !important;
-                page-break-inside: avoid;
-                border: 0.5pt solid #ccc !important;
+                border: 0.5pt solid #bbb !important;
+                border-radius: 0 !important;
             }
             img { max-width: 100% !important; }
 
             /* === Tables === */
-            .props-table { font-size: 12pt !important; border: 0.5pt solid #999 !important; margin: 6pt 0 !important; }
-            .props-table th, .props-table td { padding: 3pt 6pt !important; border-bottom: 0.5pt solid #ccc !important; font-size: 12pt !important; }
+            .props-table {
+                font-size: 11pt !important;
+                border: 0.5pt solid #999 !important;
+                margin: 4pt 0 !important;
+                page-break-inside: avoid;
+            }
+            .props-table th, .props-table td { padding: 2pt 6pt !important; border-bottom: 0.5pt solid #ccc !important; font-size: 11pt !important; }
             .props-table th { background: #f0f0f0 !important; font-weight: bold !important; color: black !important; text-transform: none !important; letter-spacing: normal !important; }
 
+            /* === Stats inline === */
+            .stats-inline {
+                font-size: 11pt !important;
+                margin: 4pt 0 !important;
+                gap: 4pt !important;
+            }
+            .stats-inline span {
+                background: transparent !important;
+                border: none !important;
+                padding: 0 8pt 0 0 !important;
+                font-size: 11pt !important;
+                color: black !important;
+            }
+
             /* === Code === */
-            code { font-size: 11pt !important; background: #f5f5f5 !important; padding: 1pt 3pt !important; border: 0.5pt solid #ddd !important; font-family: 'Courier New', monospace !important; }
+            code { font-size: 10pt !important; background: #f5f5f5 !important; padding: 1pt 3pt !important; border: 0.5pt solid #ddd !important; font-family: 'Courier New', monospace !important; }
 
             /* === Practical dividers (for index page full print) === */
             .print-practical { page-break-before: always; }
@@ -209,14 +301,28 @@
                 display: block !important;
                 text-align: center;
                 font-family: 'Times New Roman', Times, serif !important;
-                padding-bottom: 6pt;
-                margin-bottom: 12pt;
-                border-bottom: 0.5pt solid #999;
+                padding-bottom: 5pt;
+                margin-bottom: 8pt;
+                border-bottom: 0.75pt solid #999;
             }
             .print-header .ph-line {
-                font-size: 12pt;
+                font-size: 10pt;
                 color: #555;
+                letter-spacing: 0.02em;
             }
+
+            /* === Prevent orphaned headings === */
+            h2, h3, h4 { page-break-after: avoid !important; }
+
+            /* === DS Grid for print === */
+            .ds-grid {
+                display: grid !important;
+                grid-template-columns: repeat(3, 1fr) !important;
+                gap: 4pt !important;
+                margin: 4pt 0 !important;
+            }
+            .ds-item img { border-radius: 0 !important; }
+            .ds-label { font-size: 9pt !important; margin-top: 2pt !important; }
         }
     </style>
 
