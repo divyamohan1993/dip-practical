@@ -39,3 +39,4 @@ app/static/cache/
 
 # Office documents
 *.docx
+.wrangler/
