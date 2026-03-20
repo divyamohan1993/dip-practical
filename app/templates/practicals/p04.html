@@ -179,6 +179,30 @@
     });
 
     loadImages();
+
+    async function autoLoad() {
+        try {
+            const g = await fetch('/static/cache/p4_gamma.json?v=1').then(r=>r.json());
+            document.getElementById('gammaResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${g.plot}" alt="Gamma">`;
+        } catch(e) {}
+        try {
+            const s = await fetch('/static/cache/p4_series.json?v=1').then(r=>r.json());
+            document.getElementById('seriesResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${s.plot}" alt="Series">`;
+        } catch(e) {}
+        try {
+            const c = await fetch('/static/cache/p4_curves.json?v=1').then(r=>r.json());
+            document.getElementById('curvesResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${c.plot}" alt="Curves">`;
+        } catch(e) {}
+        try {
+            const l = await fetch('/static/cache/p4_log.json?v=1').then(r=>r.json());
+            document.getElementById('logResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${l.plot}" alt="Log">`;
+        } catch(e) {}
+        try {
+            const ct = await fetch('/static/cache/p4_contrast.json?v=1').then(r=>r.json());
+            document.getElementById('contrastResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${ct.plot}" alt="Contrast">`;
+        } catch(e) {}
+    }
+    autoLoad();
 })();
 </script>
 {% endblock %}

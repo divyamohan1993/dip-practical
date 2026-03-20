@@ -148,6 +148,27 @@
     });
 
     loadImages();
+
+    async function autoLoad() {
+        try {
+            const r = await fetch('/static/cache/p2_downsample.json?v=1').then(r=>r.json());
+            let html = '<div class="ds-grid">';
+            r.steps.forEach(step => {
+                html += `<div class="ds-item"><img src="data:image/png;base64,${step.image}" alt="${step.label}"><div class="ds-label">${step.label}</div></div>`;
+            });
+            html += '</div>';
+            document.getElementById('dsSteps').innerHTML = html;
+        } catch(e) {}
+        try {
+            const c = await fetch('/static/cache/p2_comparison.json?v=1').then(r=>r.json());
+            document.getElementById('comparePlot').innerHTML = `<img class="result-img" src="data:image/png;base64,${c.plot}" alt="Comparison">`;
+        } catch(e) {}
+        try {
+            const u = await fetch('/static/cache/p2_upscale.json?v=1').then(r=>r.json());
+            document.getElementById('upscalePlot').innerHTML = `<img class="result-img" src="data:image/png;base64,${u.plot}" alt="Upscale comparison">`;
+        } catch(e) {}
+    }
+    autoLoad();
 })();
 </script>
 {% endblock %}

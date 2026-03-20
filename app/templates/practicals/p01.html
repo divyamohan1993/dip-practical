@@ -163,6 +163,35 @@
     });
 
     loadImages();
+
+    // Auto-load cached defaults (instant, no server computation)
+    async function autoLoad() {
+        try {
+            const d = await fetch('/static/cache/p1_display.json?v=1').then(r=>r.json());
+            const p = d.properties;
+            document.getElementById('displayResult').innerHTML = `
+                <img class="result-img" src="data:image/png;base64,${d.image}" alt="${d.filename}">
+                <table class="props-table">
+                    <tr><th>Filename</th><td>${d.filename}</td></tr>
+                    <tr><th>Dimensions</th><td>${p.width} x ${p.height}</td></tr>
+                    <tr><th>Total Pixels</th><td>${p.total_pixels.toLocaleString()}</td></tr>
+                    <tr><th>Data Type</th><td>${p.dtype}</td></tr>
+                    <tr><th>Min Intensity</th><td>${p.min}</td></tr>
+                    <tr><th>Max Intensity</th><td>${p.max}</td></tr>
+                    <tr><th>Mean Intensity</th><td>${p.mean}</td></tr>
+                    <tr><th>Std Deviation</th><td>${p.std}</td></tr>
+                </table>`;
+        } catch(e) {}
+        try {
+            const h = await fetch('/static/cache/p1_histogram.json?v=1').then(r=>r.json());
+            document.getElementById('histogramResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${h.plot}" alt="Histogram">`;
+        } catch(e) {}
+        try {
+            const m = await fetch('/static/cache/p1_multi.json?v=1').then(r=>r.json());
+            document.getElementById('multiResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${m.plot}" alt="Multi-image grid">`;
+        } catch(e) {}
+    }
+    autoLoad();
 })();
 </script>
 {% endblock %}

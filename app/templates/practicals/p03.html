@@ -174,6 +174,24 @@
 
     loadImages();
     loadPairs();
+
+    async function autoLoad() {
+        try {
+            const n = await fetch('/static/cache/p3_negate.json?v=1').then(r=>r.json());
+            document.getElementById('negateResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${n.plot}" alt="Negation">`;
+        } catch(e) {}
+        try {
+            const s = await fetch('/static/cache/p3_subtract.json?v=1').then(r=>r.json());
+            let html = `<img class="result-img" src="data:image/png;base64,${s.plot}" alt="Subtraction">`;
+            if (s.stats) html += `<div class="stats-inline"><span><strong>Mean Diff:</strong> ${s.stats.mean_diff}</span><span><strong>Max Diff:</strong> ${s.stats.max_diff}</span><span><strong>Non-zero:</strong> ${s.stats.nonzero_pct}%</span></div>`;
+            document.getElementById('subtractResult').innerHTML = html;
+        } catch(e) {}
+        try {
+            const p = await fetch('/static/cache/p3_pipeline.json?v=1').then(r=>r.json());
+            document.getElementById('pipelineResult').innerHTML = `<img class="result-img" src="data:image/png;base64,${p.plot}" alt="Pipeline">`;
+        } catch(e) {}
+    }
+    autoLoad();
 })();
 </script>
 {% endblock %}
