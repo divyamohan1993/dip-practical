@@ -1,336 +1,176 @@
 {% extends "base.html" %}
 
-{% block title %}Practical 2: Image Subtraction & Inversion{% endblock %}
-
-{% block description %}Digital Image Processing Practical 2 - Image Subtraction and Inversion. CSU2543, Shoolini University. Interactive labs demonstrating absolute difference and intensity negation on grayscale images (Gonzalez &amp; Woods Ch. 2-3).{% endblock %}
-
-{% block header_title %}Practical 2: Image Subtraction &amp; Inversion{% endblock %}
-
-{% block header_subtitle %}G&amp;W Chapter 2&ndash;3 &mdash; Point Operations on Grayscale Images{% endblock %}
+{% block title %}Practical 2: Downsampling{% endblock %}
+{% block print_title %}Practical 2: Impact of Sampling Rate on Spatial Resolution{% endblock %}
+{% block header_title %}Practical 2{% endblock %}
+{% block header_subtitle %}Impact of Sampling Rate on Spatial Resolution | G&amp;W Ch 2{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/practicals/p02.css') }}">
+<style>
+    .section-card { background: var(--surface-50); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--surface-200); }
+    .section-card h3 { margin-top: 0; color: var(--brand-header); }
+    .result-img { max-width: 100%; border-radius: var(--radius-md); margin: 1rem 0; }
+    .image-select { width: 100%; padding: 0.5rem; border-radius: var(--radius-md); border: 1px solid var(--surface-300); background: var(--surface-50); color: var(--text-800); font-size: 0.9rem; }
+    .btn-run { background: var(--brand-header); color: #fff; border: none; padding: 0.5rem 1.5rem; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; }
+    .btn-run:hover { opacity: 0.9; }
+    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+    .ds-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; margin: 1rem 0; }
+    .ds-item { text-align: center; }
+    .ds-item img { width: 100%; border-radius: var(--radius-md); border: 1px solid var(--surface-200); }
+    .ds-item .ds-label { font-weight: 600; font-size: 0.85rem; margin-top: 0.5rem; }
+    .theory-box { background: var(--surface-100); border-left: 4px solid var(--brand-header); padding: 1rem 1.25rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin: 1rem 0; font-size: 0.95rem; }
+    .analysis-box { background: var(--surface-100); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1.5rem; }
+    .analysis-box h4 { margin-top: 0; color: var(--brand-header); }
+    [data-theme="dark"] .section-card { background: var(--surface-100); border-color: var(--surface-300); }
+    [data-theme="dark"] .theory-box { background: var(--surface-200); }
+    [data-theme="dark"] .analysis-box { background: var(--surface-200); }
+</style>
 {% endblock %}
 
 {% block content %}
+<!-- Objective -->
+<div class="section-card">
+    <h3>Objective</h3>
+    <p>To evaluate the relationship between the sampling rate (N) and spatial resolution in digital images.</p>
+    <div class="theory-box">
+        <strong>Problem Statement:</strong> Spatial resolution represents the size of the smallest perceptible detail in an image and is fundamentally dependent on the sampling rate. A decrease in the number of samples (N) results in a loss of geometric detail. In this experiment, you will simulate progressive spatial resolution reduction and analyze the resulting artifacts.
+    </div>
+</div>
 
-        <!-- ================================================================ -->
-        <!-- SECTION 0: THEORY                                                -->
-        <!-- ================================================================ -->
-        <section id="theory">
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-number">0</span>
-                    <h2>Theory &mdash; Subtraction &amp; Inversion</h2>
-                </div>
-                <div class="panel-body">
+<!-- Image Selector -->
+<div class="section-card">
+    <h3>Select Image from Dataset</h3>
+    <select id="imageSelect" class="image-select">
+        <option value="">Loading images...</option>
+    </select>
+</div>
 
-                    <div class="theory-block">
-                        <h4>Image Subtraction (Absolute Difference)</h4>
-                        <p>
-                            Image subtraction computes the pixel-by-pixel difference between two images.
-                            For two grayscale images \( f(x,y) \) and \( g(x,y) \), the absolute
-                            difference is:
-                        </p>
-                        <div class="math-formula">
-                            \[ d(x,y) = |f(x,y) - g(x,y)| \]
-                        </div>
-                        <p>
-                            The result highlights regions where the two images differ. Bright pixels in
-                            the difference image indicate large intensity changes; dark pixels indicate
-                            similarity. This operation is fundamental to <strong>change detection</strong>,
-                            <strong>motion detection</strong>, and <strong>digital subtraction angiography
-                            (DSA)</strong> in medical imaging.
-                        </p>
-                        <p>
-                            In OpenCV, this is implemented as <code>cv2.absdiff(img1, img2)</code>,
-                            which avoids the underflow problems of direct subtraction on unsigned integers.
-                        </p>
-                    </div>
+<!-- Part 1: Downsampling Steps -->
+<div class="section-card">
+    <h3>Part 1: Progressive Downsampling</h3>
+    <p>The image is resized to a 1024x1024 baseline, then progressively halved 5 times using <code>cv2.INTER_AREA</code> interpolation: 1024 → 512 → 256 → 128 → 64 → 32.</p>
+    <button class="btn-run" id="btnDownsample" disabled>Run Downsampling</button>
+    <div id="dsSteps"></div>
+</div>
 
-                    <div class="theory-block" style="margin-top: 1.5rem;">
-                        <h4>Image Inversion (Negation)</h4>
-                        <p>
-                            Intensity inversion, also called the <em>image negative</em>, reverses the
-                            gray-level scale. For an 8-bit image with \( L = 256 \) levels:
-                        </p>
-                        <div class="math-formula">
-                            \[ s = (L - 1) - r = 255 - r \]
-                        </div>
-                        <p>
-                            Every pixel is mapped to its complement: black becomes white, white becomes
-                            black, and mid-tones mirror around the center (128). This simple point
-                            operation is useful for:
-                        </p>
-                        <ul class="theory-list">
-                            <li>Enhancing white/light detail in predominantly dark images (e.g., mammograms)</li>
-                            <li>Creating photographic negatives for film-based workflows</li>
-                            <li>Pre-processing before thresholding when the object of interest is darker than the background</li>
-                        </ul>
-                        <p>
-                            A key mathematical property: applying inversion twice returns the original
-                            image, i.e., the operation is its own inverse (\( 255 - (255 - r) = r \)).
-                        </p>
-                    </div>
+<!-- Part 2: Side-by-side Comparison -->
+<div class="section-card">
+    <h3>Part 2: Comparison Plot</h3>
+    <p>View all resolution levels in a single comparison figure.</p>
+    <button class="btn-run" id="btnCompare" disabled>Generate Comparison</button>
+    <div id="comparePlot"></div>
+</div>
 
-                </div>
-            </div>
-        </section>
+<!-- Part 3: Upscale Back -->
+<div class="section-card">
+    <h3>Part 3: Quality Loss Visualization</h3>
+    <p>Each downsampled image is resized back to 1024x1024 to reveal the quality degradation at each level.</p>
+    <button class="btn-run" id="btnUpscale" disabled>Show Quality Loss</button>
+    <div id="upscalePlot"></div>
+</div>
 
-        <!-- ================================================================ -->
-        <!-- SECTION 1: TARGET IMAGES                                         -->
-        <!-- ================================================================ -->
-        <section id="target-images">
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-number">1</span>
-                    <h2>Target Images &mdash; First &amp; Last from Dataset</h2>
-                </div>
-                <div class="panel-body">
-
-                    <div class="theory-block">
-                        <p>
-                            This practical operates on the <strong>first</strong> and <strong>last</strong>
-                            images (sorted alphabetically) from the Gonzalez &amp; Woods Chapter 2 dataset.
-                            These images are loaded automatically below.
-                        </p>
-                    </div>
-
-                    <div class="p02-btn-group">
-                        <button id="load-targets-btn" class="btn btn-primary">Load Target Images</button>
-                    </div>
-
-                    <div id="target-results" class="p02-results-area">
-                        <div id="target-display" class="p02-target-images"></div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================================ -->
-        <!-- SECTION 2: IMAGE SUBTRACTION                                     -->
-        <!-- ================================================================ -->
-        <section id="subtraction">
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-number">2</span>
-                    <h2>Image Subtraction &mdash; Absolute Difference</h2>
-                </div>
-                <div class="panel-body">
-
-                    <div class="theory-block">
-                        <p>
-                            Computing \( d(x,y) = |f(x,y) - g(x,y)| \) between the first and last images.
-                            Since these images depict completely different scenes, the difference image will
-                            show significant intensity variation across almost the entire frame.
-                        </p>
-                    </div>
-
-                    <div class="p02-btn-group">
-                        <button id="compute-subtraction-btn" class="btn btn-primary" disabled>Compute Subtraction</button>
-                        <button id="subtraction-plot-btn" class="btn btn-secondary" disabled>Generate Full Comparison Plot</button>
-                    </div>
-
-                    <div id="subtraction-results" class="p02-results-area">
-                        <div id="subtraction-images" class="p02-result-grid"></div>
-                        <div id="subtraction-stats" class="p02-stats-grid"></div>
-                        <div id="subtraction-plot" class="p02-plot-container"></div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================================ -->
-        <!-- SECTION 3: IMAGE INVERSION                                       -->
-        <!-- ================================================================ -->
-        <section id="inversion">
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-number">3</span>
-                    <h2>Image Inversion &mdash; Intensity Negation</h2>
-                </div>
-                <div class="panel-body">
-
-                    <div class="theory-block">
-                        <p>
-                            Applying \( s = 255 - r \) to both the first and last images.
-                            Observe how the histogram mirrors around the center value (127.5)
-                            and how visual details that were hidden in dark regions become
-                            visible after inversion.
-                        </p>
-                    </div>
-
-                    <div class="p02-btn-group">
-                        <button id="invert-first-btn" class="btn btn-primary" disabled>Invert First Image</button>
-                        <button id="invert-last-btn" class="btn btn-primary" disabled>Invert Last Image</button>
-                        <button id="inversion-comparison-btn" class="btn btn-secondary" disabled>Side-by-Side Comparison</button>
-                    </div>
-
-                    <div id="inversion-results" class="p02-results-area">
-                        <div id="inversion-images" class="p02-result-grid"></div>
-                        <div id="inversion-stats" class="p02-stats-grid"></div>
-                        <div id="inversion-histograms" class="p02-plot-container"></div>
-                        <div id="inversion-comparison" class="p02-plot-container"></div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================================ -->
-        <!-- SECTION 4: COMBINED OPERATIONS                                   -->
-        <!-- ================================================================ -->
-        <section id="combined">
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-number">4</span>
-                    <h2>Combined &mdash; Subtraction of Inverted Images</h2>
-                </div>
-                <div class="panel-body">
-
-                    <div class="theory-block">
-                        <h4>Mathematical Proof of Equivalence</h4>
-                        <p>
-                            An interesting property: the absolute difference of two inverted images
-                            equals the absolute difference of the originals.
-                        </p>
-                        <div class="math-formula">
-                            \[
-                            |(255 - f) - (255 - g)| = |g - f| = |f - g|
-                            \]
-                        </div>
-                        <p>
-                            This means inversion commutes with absolute subtraction. We verify
-                            this computationally below by comparing the two difference images
-                            pixel by pixel.
-                        </p>
-                    </div>
-
-                    <div class="p02-btn-group">
-                        <button id="combined-btn" class="btn btn-primary" disabled>Run Combined Operations</button>
-                    </div>
-
-                    <div id="combined-results" class="p02-results-area">
-                        <div id="combined-match"></div>
-                        <div id="combined-images" class="p02-result-grid"></div>
-                        <div id="combined-stats" class="p02-stats-grid"></div>
-                        <div id="combined-plot" class="p02-plot-container"></div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
-        <!-- ================================================================ -->
-        <!-- SECTION 5: QUIZ                                                  -->
-        <!-- ================================================================ -->
-        <section id="quiz">
-            <div class="panel">
-                <div class="panel-header">
-                    <span class="panel-number">5</span>
-                    <h2>Knowledge Check &mdash; Subtraction &amp; Inversion</h2>
-                </div>
-                <div class="panel-body">
-
-                    <div class="quiz-container" id="quiz-p02">
-                        <h3>Test Your Understanding</h3>
-                        <div class="quiz-questions">
-
-                            <!-- Q1 -->
-                            <div class="quiz-question" data-correct="2">
-                                <p class="quiz-question-text">
-                                    <strong>Q1.</strong> Why do we use <code>cv2.absdiff()</code> instead of
-                                    direct subtraction <code>img1 - img2</code> for unsigned 8-bit images?
-                                </p>
-                                <button class="quiz-option" data-index="0">absdiff is faster</button>
-                                <button class="quiz-option" data-index="1">Direct subtraction produces floating-point results</button>
-                                <button class="quiz-option" data-index="2">Direct uint8 subtraction wraps around on underflow (e.g., 10 - 50 = 216, not -40)</button>
-                                <button class="quiz-option" data-index="3">absdiff works on color images only</button>
-                                <div class="quiz-explanation hidden">
-                                    Unsigned 8-bit integers cannot represent negative values. When the result
-                                    would be negative, it wraps around modulo 256. <code>cv2.absdiff()</code>
-                                    computes the true absolute difference without underflow artifacts.
-                                </div>
-                            </div>
-
-                            <!-- Q2 -->
-                            <div class="quiz-question" data-correct="1">
-                                <p class="quiz-question-text">
-                                    <strong>Q2.</strong> Applying image inversion (\( s = 255 - r \)) twice
-                                    to the same image produces:
-                                </p>
-                                <button class="quiz-option" data-index="0">A completely black image</button>
-                                <button class="quiz-option" data-index="1">The original image, unchanged</button>
-                                <button class="quiz-option" data-index="2">An image with half the original intensity</button>
-                                <button class="quiz-option" data-index="3">A binary (black and white) image</button>
-                                <div class="quiz-explanation hidden">
-                                    \( 255 - (255 - r) = r \). Inversion is an involution: applying it twice
-                                    is the identity operation, returning every pixel to its original value.
-                                </div>
-                            </div>
-
-                            <!-- Q3 -->
-                            <div class="quiz-question" data-correct="0">
-                                <p class="quiz-question-text">
-                                    <strong>Q3.</strong> If two images are identical, what does their absolute
-                                    difference look like?
-                                </p>
-                                <button class="quiz-option" data-index="0">A completely black (zero) image</button>
-                                <button class="quiz-option" data-index="1">A completely white (255) image</button>
-                                <button class="quiz-option" data-index="2">A copy of the original image</button>
-                                <button class="quiz-option" data-index="3">A random noise pattern</button>
-                                <div class="quiz-explanation hidden">
-                                    When \( f(x,y) = g(x,y) \) everywhere, \( |f - g| = 0 \) at every pixel.
-                                    The result is a uniformly black image, confirming that the images are
-                                    pixel-identical.
-                                </div>
-                            </div>
-
-                            <!-- Q4 -->
-                            <div class="quiz-question" data-correct="3">
-                                <p class="quiz-question-text">
-                                    <strong>Q4.</strong> What is the relationship between \( |f - g| \)
-                                    and \( |(255 - f) - (255 - g)| \)?
-                                </p>
-                                <button class="quiz-option" data-index="0">They are always different</button>
-                                <button class="quiz-option" data-index="1">The second is the inverse of the first</button>
-                                <button class="quiz-option" data-index="2">The second is always larger</button>
-                                <button class="quiz-option" data-index="3">They are identical (pixel-wise equal)</button>
-                                <div class="quiz-explanation hidden">
-                                    \( |(255 - f) - (255 - g)| = |g - f| = |f - g| \). The 255 terms cancel
-                                    in the subtraction, so inversion does not affect the absolute difference.
-                                </div>
-                            </div>
-
-                            <!-- Q5 -->
-                            <div class="quiz-question" data-correct="2">
-                                <p class="quiz-question-text">
-                                    <strong>Q5.</strong> In medical imaging, the image negative is
-                                    particularly useful for:
-                                </p>
-                                <button class="quiz-option" data-index="0">Reducing image file size</button>
-                                <button class="quiz-option" data-index="1">Adding color to grayscale scans</button>
-                                <button class="quiz-option" data-index="2">Enhancing bright tissue details embedded in dark regions (e.g., mammography)</button>
-                                <button class="quiz-option" data-index="3">Removing noise from MRI scans</button>
-                                <div class="quiz-explanation hidden">
-                                    Gonzalez &amp; Woods cite mammography as a primary application. The negative
-                                    makes bright tissue anomalies (potential concerns) stand out against a
-                                    lighter background, improving radiologist detection accuracy.
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </section>
-
+<!-- Analysis Questions -->
+<div class="analysis-box">
+    <h4>Analysis Questions</h4>
+    <ol>
+        <li><strong>Artifact Identification:</strong> At which resolution (N) do "jagged lines" (aliasing) become visible to the eye? Explain how this correlates to the sampling rate.</li>
+        <li><strong>Sensitivity Analysis:</strong> Theory suggests spatial resolution is more sensitive to shape variations than lighting variations. Compare the detail in textured areas vs. smooth areas; which loses perceptible detail first?</li>
+        <li><strong>DPI Correlation:</strong> If the physical size of the image remains constant while the pixel count is halved, how does this affect the Dots Per Inch (DPI)? Relate this to the "blocky" appearance.</li>
+    </ol>
+</div>
 {% endblock %}
 
 {% block extra_js %}
-<script src="{{ url_for('static', filename='js/quiz.js') }}"></script>
-<script src="{{ url_for('static', filename='js/practicals/p02.js') }}"></script>
+<script>
+(function() {
+    const API = '/api';
+
+    async function loadImages() {
+        try {
+            const resp = await DIP.apiCall(`${API}/images`);
+            const sel = document.getElementById('imageSelect');
+            sel.innerHTML = '<option value="">-- Select an image --</option>';
+            resp.images.forEach(img => {
+                const opt = document.createElement('option');
+                opt.value = img.filename;
+                opt.textContent = `${img.display_name} (${img.width}x${img.height})`;
+                sel.appendChild(opt);
+            });
+            // Default to cameraman
+            const cam = resp.images.find(i => i.filename.includes('cameraman'));
+            if (cam) sel.value = cam.filename;
+            document.querySelectorAll('.btn-run').forEach(b => b.disabled = false);
+        } catch (e) {
+            DIP.showToast('Failed to load image list');
+        }
+    }
+
+    function getSelected() {
+        const v = document.getElementById('imageSelect').value;
+        if (!v) DIP.showToast('Select an image first');
+        return v;
+    }
+
+    document.getElementById('btnDownsample').addEventListener('click', async function() {
+        const filename = getSelected();
+        if (!filename) return;
+        const container = document.getElementById('dsSteps');
+        DIP.setLoading(container, true);
+        try {
+            const resp = await DIP.apiCall(`${API}/p2/downsample`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({filename, steps: 5})
+            });
+            let html = '<div class="ds-grid">';
+            resp.steps.forEach(step => {
+                html += `<div class="ds-item">
+                    <img src="data:image/png;base64,${step.image}" alt="${step.label}">
+                    <div class="ds-label">${step.label}</div>
+                </div>`;
+            });
+            html += '</div>';
+            container.innerHTML = html;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+        }
+        DIP.setLoading(container, false);
+    });
+
+    document.getElementById('btnCompare').addEventListener('click', async function() {
+        const filename = getSelected();
+        if (!filename) return;
+        const container = document.getElementById('comparePlot');
+        DIP.setLoading(container, true);
+        try {
+            const resp = await DIP.apiCall(`${API}/p2/downsample-plot`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({filename})
+            });
+            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Comparison plot">`;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+        }
+        DIP.setLoading(container, false);
+    });
+
+    document.getElementById('btnUpscale').addEventListener('click', async function() {
+        const filename = getSelected();
+        if (!filename) return;
+        const container = document.getElementById('upscalePlot');
+        DIP.setLoading(container, true);
+        try {
+            const resp = await DIP.apiCall(`${API}/p2/upscale-compare`, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({filename})
+            });
+            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Upscale comparison">`;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+        }
+        DIP.setLoading(container, false);
+    });
+
+    loadImages();
+})();
+</script>
 {% endblock %}

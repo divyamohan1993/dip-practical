@@ -27,3 +27,12 @@ Untitled8.ipynb
 # IDE
 .vscode/
 .idea/
+
+# Large binary resources (not needed in repo - auto-downloaded at runtime)
+digital_image_processing_resources/
+
+# Static site derived images (regenerated from TIF dataset)
+docs/images/
+
+# Office documents
+*.docx

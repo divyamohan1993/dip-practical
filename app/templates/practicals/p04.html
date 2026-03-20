@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block title %}Practical 4: Gamma Correction{% endblock %}
+{% block print_title %}Practical 4: Gamma Correction &amp; Power Law Transformations{% endblock %}
+{% block header_title %}Practical 4{% endblock %}
+{% block header_subtitle %}Gamma Correction &amp; Power Law Transformations | G&amp;W Ch 3{% endblock %}
+
+{% block extra_css %}
+<style>
+    .section-card { background: var(--surface-50); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--surface-200); }
+    .section-card h3 { margin-top: 0; color: var(--brand-header); }
+    .result-img { max-width: 100%; border-radius: var(--radius-md); margin: 1rem 0; }
+    .image-select { width: 100%; padding: 0.5rem; border-radius: var(--radius-md); border: 1px solid var(--surface-300); background: var(--surface-50); color: var(--text-800); font-size: 0.9rem; margin-bottom: 0.5rem; }
+    .btn-run { background: var(--brand-header); color: #fff; border: none; padding: 0.5rem 1.5rem; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; }
+    .btn-run:hover { opacity: 0.9; }
+    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
+    .slider-group { display: flex; align-items: center; gap: 1rem; margin: 0.75rem 0; }
+    .slider-group label { font-weight: 600; min-width: 80px; font-size: 0.9rem; }
+    .slider-group input[type="range"] { flex: 1; }
+    .slider-group .slider-val { font-family: 'Hack', monospace; min-width: 50px; text-align: center; background: var(--surface-100); padding: 0.2rem 0.5rem; border-radius: var(--radius-sm); font-size: 0.9rem; }
+    .theory-box { background: var(--surface-100); border-left: 4px solid var(--brand-header); padding: 1rem 1.25rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin: 1rem 0; font-size: 0.95rem; }
+    .formula-box { text-align: center; font-size: 1.2rem; padding: 1rem; background: var(--surface-50); border-radius: var(--radius-md); margin: 1rem 0; }
+    .analysis-box { background: var(--surface-100); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1.5rem; }
+    .analysis-box h4 { margin-top: 0; color: var(--brand-header); }
+    [data-theme="dark"] .section-card { background: var(--surface-100); border-color: var(--surface-300); }
+    [data-theme="dark"] .theory-box { background: var(--surface-200); }
+    [data-theme="dark"] .analysis-box { background: var(--surface-200); }
+    [data-theme="dark"] .formula-box { background: var(--surface-200); }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Objective -->
+<div class="section-card">
+    <h3>Objective</h3>
+    <p>To understand and implement power law (gamma) transformations for image contrast enhancement.</p>
+    <div class="theory-box">
+        <strong>Theory:</strong> The power law transformation \(s = c \cdot r^\gamma\) is one of the most important intensity transformations.
+        <ul style="margin-top:0.5rem;margin-bottom:0">
+            <li>\(\gamma &lt; 1\): Enhances dark regions (brightening)</li>
+            <li>\(\gamma &gt; 1\): Compresses bright regions (darkening)</li>
+            <li>\(\gamma = 1, c = 1\): Identity (no change)</li>
+        </ul>
+    </div>
+    <div class="formula-box">$$s = c \cdot r^\gamma$$</div>
+</div>
+
+<!-- Image Selector -->
+<div class="section-card">
+    <h3>Select Image from Dataset</h3>
+    <select id="imageSelect" class="image-select">
+        <option value="">Loading images...</option>
+    </select>
+</div>
+
+<!-- Part 1: Single Gamma -->
+<div class="section-card">
+    <h3>Part 1: Apply Gamma Correction</h3>
+    <p>Adjust the gamma slider and see the transformation result with histogram comparison.</p>
+    <div class="slider-group">
+        <label>Gamma (γ):</label>
+        <input type="range" id="gammaSlider" min="0.1" max="5.0" step="0.1" value="1.0">
+        <span class="slider-val" id="gammaVal">1.0</span>
+    </div>
+    <div class="slider-group">
+        <label>Constant (c):</label>
+        <input type="range" id="cSlider" min="0.1" max="2.0" step="0.1" value="1.0">
+        <span class="slider-val" id="cVal">1.0</span>
+    </div>
+    <button class="btn-run" id="btnGamma" disabled>Apply Gamma</button>
+    <div id="gammaResult"></div>
+</div>
+
+<!-- Part 2: Gamma Series -->
+<div class="section-card">
+    <h3>Part 2: Gamma Series Comparison</h3>
+    <p>Compare the effect of multiple gamma values (0.3, 0.5, 1.0, 1.5, 2.5, 5.0) on the selected image.</p>
+    <button class="btn-run" id="btnSeries" disabled>Generate Series</button>
+    <div id="seriesResult"></div>
+</div>
+
+<!-- Transformation Curves -->
+<div class="section-card">
+    <h3>Transformation Curves</h3>
+    <p>Visualize how different γ values map input intensities to output intensities.</p>
+    <button class="btn-run" id="btnCurves" disabled>Show Curves</button>
+    <div id="curvesResult"></div>
+</div>
+
+<!-- Part 3: Log Transform -->
+<div class="section-card">
+    <h3>Part 3: Log Transformation</h3>
+    <p>Apply \(s = c \cdot \log(1 + r)\) and compare with gamma correction (γ = 0.4).</p>
+    <button class="btn-run" id="btnLog" disabled>Apply Log Transform</button>
+    <div id="logResult"></div>
+</div>
+
+<!-- Part 4: Contrast Enhancement -->
+<div class="section-card">
+    <h3>Part 4: Contrast Enhancement</h3>
+    <p>Enhance dark images with γ &lt; 1 or compress bright images with γ &gt; 1.</p>
+    <div style="margin-bottom: 0.75rem;">
+        <label><input type="radio" name="contrastMode" value="dark" checked> Dark Image (γ = 0.3, 0.4, 0.6)</label>
+        <label style="margin-left:1rem;"><input type="radio" name="contrastMode" value="bright"> Bright Image (γ = 3.0, 4.0, 5.0)</label>
+    </div>
+    <button class="btn-run" id="btnContrast" disabled>Enhance Contrast</button>
+    <div id="contrastResult"></div>
+</div>
+
+<!-- Analysis Questions -->
+<div class="analysis-box">
+    <h4>Analysis Questions</h4>
+    <ol>
+        <li>For a dark image, which gamma value produces the best visual enhancement? Why does γ &lt; 1 brighten dark regions?</li>
+        <li>Compare log transformation with γ = 0.4 on the same image. Which produces better results and why?</li>
+        <li>How does gamma correction relate to display devices? If a monitor has γ = 2.5, what pre-correction gamma should be applied?</li>
+    </ol>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    const API = '/api';
+
+    // Slider live updates
+    document.getElementById('gammaSlider').addEventListener('input', function() {
+        document.getElementById('gammaVal').textContent = this.value;
+    });
+    document.getElementById('cSlider').addEventListener('input', function() {
+        document.getElementById('cVal').textContent = this.value;
+    });
+
+    async function loadImages() {
+        try {
+            const resp = await DIP.apiCall(`${API}/images`);
+            const sel = document.getElementById('imageSelect');
+            sel.innerHTML = '<option value="">-- Select an image --</option>';
+            resp.images.forEach(img => {
+                const opt = document.createElement('option');
+                opt.value = img.filename;
+                opt.textContent = `${img.display_name} (${img.width}x${img.height})`;
+                sel.appendChild(opt);
+            });
+            // Default: Einstein low contrast
+            const einstein = resp.images.find(i => i.filename.includes('einstein low'));
+            if (einstein) sel.value = einstein.filename;
+            document.querySelectorAll('.btn-run').forEach(b => b.disabled = false);
+        } catch (e) {
+            DIP.showToast('Failed to load image list');
+        }
+    }
+
+    function getSelected() {
+        const v = document.getElementById('imageSelect').value;
+        if (!v) DIP.showToast('Select an image first');
+        return v;
+    }
+
+    async function callAPI(url, body, container) {
+        DIP.setLoading(container, true);
+        try {
+            const resp = await DIP.apiCall(url, {
+                method: body ? 'POST' : 'GET',
+                headers: body ? {'Content-Type': 'application/json'} : {},
+                body: body ? JSON.stringify(body) : undefined
+            });
+            container.innerHTML = `<img class="result-img" src="data:image/png;base64,${resp.plot}" alt="Result">`;
+        } catch (e) {
+            container.innerHTML = `<p style="color:var(--error)">Error: ${e.message}</p>`;
+        }
+        DIP.setLoading(container, false);
+    }
+
+    document.getElementById('btnGamma').addEventListener('click', function() {
+        const filename = getSelected();
+        if (!filename) return;
+        const gamma = parseFloat(document.getElementById('gammaSlider').value);
+        const c = parseFloat(document.getElementById('cSlider').value);
+        callAPI(`${API}/p4/gamma`, {filename, gamma, c}, document.getElementById('gammaResult'));
+    });
+
+    document.getElementById('btnSeries').addEventListener('click', function() {
+        const filename = getSelected();
+        if (!filename) return;
+        callAPI(`${API}/p4/gamma-series`, {filename}, document.getElementById('seriesResult'));
+    });
+
+    document.getElementById('btnCurves').addEventListener('click', function() {
+        callAPI(`${API}/p4/curves`, null, document.getElementById('curvesResult'));
+    });
+
+    document.getElementById('btnLog').addEventListener('click', function() {
+        const filename = getSelected();
+        if (!filename) return;
+        callAPI(`${API}/p4/log-transform`, {filename}, document.getElementById('logResult'));
+    });
+
+    document.getElementById('btnContrast').addEventListener('click', function() {
+        const filename = getSelected();
+        if (!filename) return;
+        const mode = document.querySelector('input[name="contrastMode"]:checked').value;
+        callAPI(`${API}/p4/contrast`, {filename, mode}, document.getElementById('contrastResult'));
+    });
+
+    loadImages();
+})();
+</script>
+{% endblock %}

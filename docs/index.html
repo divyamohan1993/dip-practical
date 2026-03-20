@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DIP Practical Lab | CSU2543 | Shoolini University</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+<style>
+:root{--brand:#1e6c93;--bg:#f8fafc;--card:#fff;--border:#e2e8f0;--text:#1e293b;--muted:#64748b;--theory-bg:#f1f5f9;--success:#15803d}
+[data-theme=dark]{--bg:#0f172a;--card:#1e293b;--border:#334155;--text:#e2e8f0;--muted:#94a3b8;--theory-bg:#1e293b;--brand:#38bdf8}
+body{background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,sans-serif;transition:background .3s,color .3s}
+.navbar{background:var(--brand)}
+.section-card{background:var(--card);border:1px solid var(--border);border-radius:.75rem;padding:1.5rem;margin-bottom:1.5rem}
+.section-card h3{color:var(--brand);margin-top:0}
+.theory-box{background:var(--theory-bg);border-left:4px solid var(--brand);padding:1rem 1.25rem;border-radius:0 .5rem .5rem 0;margin:1rem 0;font-size:.95rem}
+.result-img{max-width:100%;border-radius:.5rem;margin:.75rem 0}
+.image-select{width:100%;padding:.5rem;border-radius:.5rem;border:1px solid var(--border);background:var(--card);color:var(--text);font-size:.9rem;margin-bottom:.5rem}
+.btn-run{background:var(--brand);color:#fff;border:none;padding:.5rem 1.5rem;border-radius:.5rem;cursor:pointer;font-weight:600}
+.btn-run:hover{opacity:.85;color:#fff}
+.btn-run:disabled{opacity:.4;cursor:not-allowed}
+.props-table{width:100%;border-collapse:collapse;margin:1rem 0}
+.props-table td,.props-table th{padding:.4rem .8rem;border-bottom:1px solid var(--border);text-align:left;font-size:.9rem}
+.props-table th{font-weight:600;width:40%}
+.analysis-box{background:var(--theory-bg);border-radius:.75rem;padding:1.25rem;margin-top:1.5rem}
+.analysis-box h4{margin-top:0;color:var(--brand)}
+.slider-group{margin:.75rem 0}
+.slider-group label{display:block;font-weight:600;margin-bottom:.25rem}
+.slider-group input[type=range]{width:100%}
+.slider-val{font-family:monospace;font-weight:700;color:var(--brand)}
+.grid-row{display:flex;flex-wrap:wrap;gap:.5rem;margin:.75rem 0}
+.grid-row canvas{border:1px solid var(--border);border-radius:.25rem}
+.pair-btn{background:var(--theory-bg);border:1px solid var(--border);padding:.35rem .8rem;border-radius:.5rem;cursor:pointer;font-size:.85rem;margin:.25rem}
+.pair-btn:hover{background:var(--border)}
+.tab-nav{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:1.5rem}
+.tab-nav a{padding:.75rem 1.25rem;text-decoration:none;color:var(--muted);font-weight:600;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .2s}
+.tab-nav a.active,.tab-nav a:hover{color:var(--brand);border-bottom-color:var(--brand)}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+canvas.hist-canvas{background:var(--card);border:1px solid var(--border);border-radius:.25rem}
+/* Print */
+.print-cover{display:none}
+@media print{
+.print-cover{display:flex!important;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;page-break-after:always;text-align:center;font-family:serif}
+.print-cover h1{font-size:2rem;border-top:2px solid #333;border-bottom:2px solid #333;padding:.75rem 2rem;margin:1rem 0}
+.print-cover table td{padding:.3rem .8rem;text-align:left}
+.print-cover table td:first-child{font-weight:700}
+.navbar,.btn-run,.image-select,select,input,.pair-btn,.tab-nav,.no-print,#themeToggle{display:none!important}
+body{background:#fff!important;color:#000!important;font-size:11pt}
+.section-card{background:#fff!important;border:1px solid #ccc!important;page-break-inside:avoid}
+.theory-box,.analysis-box{background:#f5f5f5!important;color:#000!important}
+h3{color:#000!important}
+}
+</style>
+</head>
+<body>
+<!-- Print Cover -->
+<div class="print-cover">
+<p style="font-size:1.3rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em">Shoolini University</p>
+<p>Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</p>
+<h1>Digital Image Processing</h1>
+<p style="font-size:1.1rem;font-weight:600;color:#555">Course Code: CSU2543</p>
+<p style="font-size:1.2rem;font-weight:600;margin-bottom:2rem">Practical Lab Report</p>
+<table><tr><td>Student Name:</td><td>Divya Mohan</td></tr><tr><td>Programme:</td><td>BTech CSE (Cybersecurity)</td></tr><tr><td>Semester:</td><td>8th</td></tr><tr><td>Faculty:</td><td>Ishani Sharma</td></tr><tr><td>Textbook:</td><td>Gonzalez &amp; Woods, 3rd Ed.</td></tr></table>
+<p style="margin-top:2rem;color:#555">Academic Session: 2025&ndash;2026</p>
+</div>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark sticky-top">
+<div class="container">
+<a class="navbar-brand fw-bold" href="#">DIP Lab</a>
+<button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#nav"><span class="navbar-toggler-icon"></span></button>
+<div class="collapse navbar-collapse" id="nav">
+<ul class="navbar-nav ms-auto">
+<li class="nav-item"><a class="nav-link" href="#" onclick="showTab('home')">Home</a></li>
+<li class="nav-item"><a class="nav-link" href="#" onclick="showTab('p1')">P1</a></li>
+<li class="nav-item"><a class="nav-link" href="#" onclick="showTab('p2')">P2</a></li>
+<li class="nav-item"><a class="nav-link" href="#" onclick="showTab('p3')">P3</a></li>
+<li class="nav-item"><a class="nav-link" href="#" onclick="showTab('p4')">P4</a></li>
+</ul>
+<button id="themeToggle" class="btn btn-sm btn-outline-light ms-3" onclick="toggleTheme()">Dark</button>
+</div>
+</div>
+</nav>
+
+<!-- Header -->
+<header class="text-center py-4" style="background:var(--brand);color:#fff">
+<div class="container">
+<small>CSU2543</small>
+<h1 class="h3 mb-1">Digital Image Processing</h1>
+<p class="mb-1">4 Interactive Practicals | Gonzalez &amp; Woods 3<sup>rd</sup> Ed.</p>
+<small>Faculty: Ishani Sharma | Student: Divya Mohan</small>
+</div>
+</header>
+
+<main class="container py-4">
+
+<!-- HOME -->
+<div id="tab-home" class="tab-panel active">
+<div class="row g-3">
+<div class="col-md-6"><a href="#" onclick="showTab('p1')" class="section-card d-block text-decoration-none" style="color:var(--text)"><h3>01</h3><strong>Loading &amp; Displaying Images</strong><p class="text-muted small mb-0">Load, inspect properties, histogram, multi-image grid.</p></a></div>
+<div class="col-md-6"><a href="#" onclick="showTab('p2')" class="section-card d-block text-decoration-none" style="color:var(--text)"><h3>02</h3><strong>Impact of Sampling Rate on Spatial Resolution</strong><p class="text-muted small mb-0">Progressive downsampling and quality loss analysis.</p></a></div>
+<div class="col-md-6"><a href="#" onclick="showTab('p3')" class="section-card d-block text-decoration-none" style="color:var(--text)"><h3>03</h3><strong>Negation, Subtraction &amp; Inversion</strong><p class="text-muted small mb-0">Intensity negation, absolute difference, pipeline.</p></a></div>
+<div class="col-md-6"><a href="#" onclick="showTab('p4')" class="section-card d-block text-decoration-none" style="color:var(--text)"><h3>04</h3><strong>Gamma Correction &amp; Power Law</strong><p class="text-muted small mb-0">Power law transforms, log transform, contrast enhancement.</p></a></div>
+</div>
+</div>
+
+<!-- PRACTICAL 1 -->
+<div id="tab-p1" class="tab-panel">
+<h2>Practical 1: Loading &amp; Displaying Images</h2>
+
+<div class="section-card">
+<h3>Objective</h3>
+<p>To learn how to load, display, and inspect digital images using OpenCV and Matplotlib.</p>
+<div class="theory-box"><strong>Theory:</strong> A digital image is a 2D matrix of pixel intensity values. For an 8-bit grayscale image, each pixel holds a value between 0 (black) and 255 (white).</div>
+</div>
+
+<div class="section-card">
+<h3>Select Image from Dataset</h3>
+<select id="p1-img" class="image-select"></select>
+</div>
+
+<div class="section-card">
+<h3>Part 1: Load and Display</h3>
+<button class="btn-run" onclick="p1Display()">Load &amp; Display</button>
+<div id="p1-display"></div>
+</div>
+
+<div class="section-card">
+<h3>Part 2: Pixel Intensity Histogram</h3>
+<button class="btn-run" onclick="p1Histogram()">Generate Histogram</button>
+<div id="p1-hist"></div>
+</div>
+
+<div class="section-card">
+<h3>Part 3: Display Multiple Images</h3>
+<select id="p1-m1" class="image-select"></select>
+<select id="p1-m2" class="image-select"></select>
+<select id="p1-m3" class="image-select"></select>
+<select id="p1-m4" class="image-select"></select>
+<button class="btn-run" onclick="p1Multi()">Display Grid</button>
+<div id="p1-multi" class="grid-row"></div>
+</div>
+
+<div class="analysis-box"><h4>Analysis Questions</h4><ol>
+<li>What does the shape of the image array represent?</li>
+<li>Why do we specify <code>cmap='gray'</code> when displaying grayscale images?</li>
+<li>What does a narrow histogram vs a wide histogram indicate?</li>
+</ol></div>
+</div>
+
+<!-- PRACTICAL 2 -->
+<div id="tab-p2" class="tab-panel">
+<h2>Practical 2: Impact of Sampling Rate on Spatial Resolution</h2>
+
+<div class="section-card">
+<h3>Objective</h3>
+<p>To evaluate how reducing the sampling rate (N) affects spatial resolution and introduces visible artifacts.</p>
+<div class="theory-box"><strong>Theory:</strong> Spatial resolution is the smallest discernible detail in an image. Halving the number of samples halves the resolution, causing aliasing and loss of fine detail. This is governed by the Nyquist sampling theorem.</div>
+</div>
+
+<div class="section-card">
+<h3>Select Image</h3>
+<select id="p2-img" class="image-select"></select>
+</div>
+
+<div class="section-card">
+<h3>Part 1: Progressive Downsampling</h3>
+<p>Halve the resolution 5 times: 1024 &rarr; 512 &rarr; 256 &rarr; 128 &rarr; 64 &rarr; 32</p>
+<button class="btn-run" onclick="p2Downsample()">Run Downsampling</button>
+<div id="p2-down" class="grid-row"></div>
+</div>
+
+<div class="section-card">
+<h3>Part 2: Upscale Back to 1024&times;1024</h3>
+<p>Each downsampled version is resized back to 1024&times;1024 to visualize quality loss.</p>
+<button class="btn-run" onclick="p2Upscale()">Run Upscale Comparison</button>
+<div id="p2-up" class="grid-row"></div>
+</div>
+
+<div class="analysis-box"><h4>Analysis Questions</h4><ol>
+<li>At which resolution do aliasing artifacts (jagged lines) become clearly visible?</li>
+<li>Which loses detail first: textured areas or smooth gradients?</li>
+<li>If physical size stays constant while pixels halve, how does DPI change?</li>
+</ol></div>
+</div>
+
+<!-- PRACTICAL 3 -->
+<div id="tab-p3" class="tab-panel">
+<h2>Practical 3: Negation, Subtraction &amp; Inversion</h2>
+
+<div class="section-card">
+<h3>Objective</h3>
+<p>To implement image negation, subtraction, and inversion as fundamental intensity transformations.</p>
+<div class="theory-box"><strong>Theory:</strong> <strong>Negation:</strong> \(s = 255 - r\) reverses the intensity scale. <strong>Subtraction:</strong> \(g = |f_1 - f_2|\) reveals differences between images (used in Digital Subtraction Angiography).</div>
+</div>
+
+<div class="section-card">
+<h3>Part 1: Image Negation</h3>
+<select id="p3-neg" class="image-select"></select>
+<button class="btn-run" onclick="p3Negate()">Compute Negative</button>
+<div id="p3-neg-result" class="grid-row"></div>
+</div>
+
+<div class="section-card">
+<h3>Part 2: Image Subtraction</h3>
+<p><strong>Quick pairs:</strong>
+<button class="pair-btn" onclick="p3SetPair('Fig0228(a)(angiography_mask_image).png','Fig0228(b)(angiography_live_ image).png')">Angiography</button>
+<button class="pair-btn" onclick="p3SetPair('Fig0230(a)(dental_xray).png','Fig0230(b)(dental_xray_mask).png')">Dental X-ray</button>
+<button class="pair-btn" onclick="p3SetPair('Fig0229(a)(tungsten_filament_shaded).png','Fig0229(b)(tungsten_sensor_shading).png')">Tungsten</button>
+</p>
+<select id="p3-sub1" class="image-select"></select>
+<select id="p3-sub2" class="image-select"></select>
+<button class="btn-run" onclick="p3Subtract()">Compute Subtraction</button>
+<div id="p3-sub-result" class="grid-row"></div>
+</div>
+
+<div class="section-card">
+<h3>Part 3: Pipeline (Subtraction &rarr; Negation &rarr; Enhancement)</h3>
+<button class="btn-run" onclick="p3Pipeline()">Run Pipeline</button>
+<div id="p3-pipe-result" class="grid-row"></div>
+</div>
+
+<div class="analysis-box"><h4>Analysis Questions</h4><ol>
+<li>What structures become visible after angiography subtraction?</li>
+<li>Why use absolute difference instead of simple subtraction?</li>
+<li>What mathematical relationship exists between an image's histogram and its negative's histogram?</li>
+</ol></div>
+</div>
+
+<!-- PRACTICAL 4 -->
+<div id="tab-p4" class="tab-panel">
+<h2>Practical 4: Gamma Correction &amp; Power Law Transformations</h2>
+
+<div class="section-card">
+<h3>Objective</h3>
+<p>To implement power law (gamma) transformations for contrast enhancement.</p>
+<div class="theory-box"><strong>Theory:</strong> The power law transformation \(s = c \cdot r^\gamma\) maps input intensities to output intensities. With \(\gamma &lt; 1\), dark regions are enhanced (brightened). With \(\gamma &gt; 1\), bright regions are compressed (darkened). Setting \(\gamma = 1, c = 1\) gives the identity transform.</div>
+</div>
+
+<div class="section-card">
+<h3>Select Image</h3>
+<select id="p4-img" class="image-select"></select>
+</div>
+
+<div class="section-card">
+<h3>Part 1: Interactive Gamma Correction</h3>
+<div class="slider-group">
+<label>Gamma (&gamma;): <span class="slider-val" id="p4-gamma-val">1.0</span></label>
+<input type="range" id="p4-gamma" min="0.1" max="5.0" step="0.1" value="1.0" oninput="p4UpdateGamma()">
+</div>
+<button class="btn-run" onclick="p4Apply()">Apply Gamma</button>
+<div id="p4-single" class="grid-row"></div>
+</div>
+
+<div class="section-card">
+<h3>Part 2: Gamma Series (&gamma; = 0.3, 0.5, 1.0, 1.5, 2.5, 5.0)</h3>
+<button class="btn-run" onclick="p4Series()">Generate Series</button>
+<div id="p4-series" class="grid-row"></div>
+</div>
+
+<div class="section-card">
+<h3>Part 3: Log Transformation vs Gamma</h3>
+<p>Compare \(s = c \cdot \log(1+r)\) with \(s = r^{0.4}\)</p>
+<button class="btn-run" onclick="p4Log()">Compare</button>
+<div id="p4-log" class="grid-row"></div>
+</div>
+
+<div class="section-card">
+<h3>Part 4: Transformation Curves</h3>
+<button class="btn-run" onclick="p4Curves()">Plot Curves</button>
+<div id="p4-curves"></div>
+</div>
+
+<div class="analysis-box"><h4>Analysis Questions</h4><ol>
+<li>Which gamma value produces the best enhancement for a dark image? Why does &gamma; &lt; 1 brighten?</li>
+<li>Compare log transformation with &gamma; = 0.4. Which is better and why?</li>
+<li>If a monitor has &gamma; = 2.5, what pre-correction gamma should be applied?</li>
+</ol></div>
+</div>
+
+</main>
+
+<footer class="text-center py-3" style="color:var(--muted);font-size:.85rem">
+CSU2543 Digital Image Processing | Shoolini University | Gonzalez &amp; Woods 3<sup>rd</sup> Ed.
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// === IMAGE MANIFEST ===
+const IMAGES=[
+{f:"Fig0207(a)(gray level band).png",n:"Gray Level Band"},
+{f:"Fig0219(rose1024).png",n:"Rose 1024"},
+{f:"Fig0220(a)(chronometer 3692x2812  2pt25 inch 1250 dpi).png",n:"Chronometer"},
+{f:"Fig0221(a)(ctskull-256).png",n:"CT Skull"},
+{f:"Fig0222(a)(face).png",n:"Face"},
+{f:"Fig0222(b)(cameraman).png",n:"Cameraman"},
+{f:"Fig0222(c)(crowd).png",n:"Crowd"},
+{f:"Fig0226(galaxy_pair_original).png",n:"Galaxy Pair"},
+{f:"Fig0227(a)(washington_infrared).png",n:"Washington Infrared"},
+{f:"Fig0228(a)(angiography_mask_image).png",n:"Angiography Mask"},
+{f:"Fig0228(b)(angiography_live_ image).png",n:"Angiography Live"},
+{f:"Fig0229(a)(tungsten_filament_shaded).png",n:"Tungsten Filament"},
+{f:"Fig0229(b)(tungsten_sensor_shading).png",n:"Tungsten Shading"},
+{f:"Fig0230(a)(dental_xray).png",n:"Dental X-ray"},
+{f:"Fig0230(b)(dental_xray_mask).png",n:"Dental X-ray Mask"},
+{f:"Fig0232(a)(partial_body_scan).png",n:"Partial Body Scan"},
+{f:"Fig0235(c)(kidney_original).png",n:"Kidney"},
+{f:"Fig0236(a)(letter_T).png",n:"Letter T"},
+{f:"Fig0237(a)(characters test pattern)_POST.png",n:"Characters Test"},
+{f:"Fig0240(a)(apollo 17_boulder_noisy).png",n:"Apollo 17 Boulder"},
+{f:"Fig0241(a)(einstein low contrast).png",n:"Einstein Low Contrast"},
+{f:"Fig0241(b)(einstein med contrast).png",n:"Einstein Med Contrast"},
+{f:"Fig0241(c)(einstein high contrast).png",n:"Einstein High Contrast"}
+];
+
+// === THEME ===
+function toggleTheme(){
+  const d=document.documentElement,t=d.getAttribute('data-theme')==='dark'?'light':'dark';
+  d.setAttribute('data-theme',t);localStorage.setItem('dip-theme',t);
+  document.getElementById('themeToggle').textContent=t==='dark'?'Light':'Dark';
+}
+(function(){const t=localStorage.getItem('dip-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+document.documentElement.setAttribute('data-theme',t);
+document.addEventListener('DOMContentLoaded',()=>{document.getElementById('themeToggle').textContent=t==='dark'?'Light':'Dark'})})();
+
+// === TABS ===
+function showTab(id){
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+// === POPULATE SELECTS ===
+function populateSelect(sel,defaultIdx){
+  sel.innerHTML='<option value="">-- Select --</option>';
+  IMAGES.forEach((im,i)=>{const o=document.createElement('option');o.value=im.f;o.textContent=im.n;sel.appendChild(o)});
+  if(defaultIdx!=null&&IMAGES[defaultIdx])sel.value=IMAGES[defaultIdx].f;
+}
+document.addEventListener('DOMContentLoaded',()=>{
+  populateSelect(document.getElementById('p1-img'),5);
+  populateSelect(document.getElementById('p1-m1'),5);
+  populateSelect(document.getElementById('p1-m2'),3);
+  populateSelect(document.getElementById('p1-m3'),7);
+  populateSelect(document.getElementById('p1-m4'),15);
+  populateSelect(document.getElementById('p2-img'),5);
+  populateSelect(document.getElementById('p3-neg'),15);
+  populateSelect(document.getElementById('p3-sub1'),9);
+  populateSelect(document.getElementById('p3-sub2'),10);
+  populateSelect(document.getElementById('p4-img'),20);
+});
+
+// === IMAGE LOADING ===
+function loadImg(filename){
+  return new Promise((res,rej)=>{
+    const img=new Image();img.crossOrigin='anonymous';
+    img.onload=()=>res(img);img.onerror=()=>rej(new Error('Failed: '+filename));
+    img.src='images/'+encodeURIComponent(filename);
+  });
+}
+function imgToGray(img){
+  const c=document.createElement('canvas');c.width=img.width;c.height=img.height;
+  const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+  const d=ctx.getImageData(0,0,c.width,c.height);
+  const gray=new Uint8Array(c.width*c.height);
+  for(let i=0;i<gray.length;i++)gray[i]=d.data[i*4]; // already grayscale, R=G=B
+  return{data:gray,w:c.width,h:c.height};
+}
+function grayToCanvas(gray,w,h,maxW){
+  const c=document.createElement('canvas');
+  const scale=maxW?Math.min(1,maxW/w):1;
+  c.width=Math.round(w*scale);c.height=Math.round(h*scale);
+  const ctx=c.getContext('2d');
+  // Build full-size imagedata then draw scaled
+  const tmp=document.createElement('canvas');tmp.width=w;tmp.height=h;
+  const tctx=tmp.getContext('2d');
+  const id=tctx.createImageData(w,h);
+  for(let i=0;i<gray.length;i++){id.data[i*4]=id.data[i*4+1]=id.data[i*4+2]=gray[i];id.data[i*4+3]=255}
+  tctx.putImageData(id,0,0);
+  ctx.drawImage(tmp,0,0,c.width,c.height);
+  return c;
+}
+function makeLabel(text){const d=document.createElement('div');d.style.cssText='text-align:center;font-size:.8rem;font-weight:600;width:100%';d.textContent=text;return d}
+
+// === HISTOGRAM ===
+function computeHist(gray){const h=new Uint32Array(256);for(let i=0;i<gray.length;i++)h[gray[i]]++;return h}
+function drawHistCanvas(hist,title,w,h){
+  const c=document.createElement('canvas');c.width=w||512;c.height=h||200;c.className='hist-canvas';
+  const ctx=c.getContext('2d');
+  const max=Math.max(...hist);
+  ctx.fillStyle=getComputedStyle(document.body).color||'#000';
+  const bw=c.width/256;
+  for(let i=0;i<256;i++){const bh=(hist[i]/max)*(c.height-20);ctx.fillRect(i*bw,c.height-20-bh,Math.max(bw-0.5,1),bh)}
+  ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--muted')||'#666';
+  ctx.font='11px system-ui';ctx.textAlign='center';
+  ctx.fillText('0',10,c.height-4);ctx.fillText('128',c.width/2,c.height-4);ctx.fillText('255',c.width-10,c.height-4);
+  if(title){ctx.fillText(title,c.width/2,14)}
+  return c;
+}
+
+// === P1 ===
+async function p1Display(){
+  const f=document.getElementById('p1-img').value;if(!f)return alert('Select an image');
+  const el=document.getElementById('p1-display');el.innerHTML='Loading...';
+  const img=await loadImg(f);const g=imgToGray(img);
+  const min=Math.min(...g.data),max=Math.max(...g.data);
+  let sum=0,sq=0;for(let i=0;i<g.data.length;i++){sum+=g.data[i];sq+=g.data[i]*g.data[i]}
+  const mean=(sum/g.data.length).toFixed(2),std=Math.sqrt(sq/g.data.length-mean*mean).toFixed(2);
+  el.innerHTML='';
+  el.appendChild(grayToCanvas(g.data,g.w,g.h,500));
+  el.innerHTML+=`<table class="props-table"><tr><th>Dimensions</th><td>${g.w} x ${g.h}</td></tr><tr><th>Total Pixels</th><td>${g.data.length.toLocaleString()}</td></tr><tr><th>Data Type</th><td>uint8</td></tr><tr><th>Min</th><td>${min}</td></tr><tr><th>Max</th><td>${max}</td></tr><tr><th>Mean</th><td>${mean}</td></tr><tr><th>Std Dev</th><td>${std}</td></tr></table>`;
+}
+async function p1Histogram(){
+  const f=document.getElementById('p1-img').value;if(!f)return alert('Select an image');
+  const el=document.getElementById('p1-hist');el.innerHTML='Loading...';
+  const img=await loadImg(f);const g=imgToGray(img);
+  const hist=computeHist(g.data);
+  el.innerHTML='';el.appendChild(drawHistCanvas(hist,'Pixel Intensity Histogram',512,200));
+}
+async function p1Multi(){
+  const files=['p1-m1','p1-m2','p1-m3','p1-m4'].map(id=>document.getElementById(id).value).filter(Boolean);
+  if(!files.length)return alert('Select at least one image');
+  const el=document.getElementById('p1-multi');el.innerHTML='Loading...';
+  el.innerHTML='';
+  for(const f of files){
+    const img=await loadImg(f);const g=imgToGray(img);
+    const wrap=document.createElement('div');wrap.style.textAlign='center';
+    wrap.appendChild(grayToCanvas(g.data,g.w,g.h,240));
+    const lbl=document.createElement('div');lbl.style.cssText='font-size:.75rem;font-weight:600';
+    lbl.textContent=`${g.w}x${g.h}`;wrap.appendChild(lbl);
+    el.appendChild(wrap);
+  }
+}
+
+// === P2 ===
+async function p2Downsample(){
+  const f=document.getElementById('p2-img').value;if(!f)return alert('Select an image');
+  const el=document.getElementById('p2-down');el.innerHTML='Loading...';
+  const img=await loadImg(f);
+  // Resize to 1024x1024 baseline
+  const bc=document.createElement('canvas');bc.width=bc.height=1024;
+  bc.getContext('2d').drawImage(img,0,0,1024,1024);
+  el.innerHTML='';
+  let cur=bc;const sizes=[1024];
+  for(let i=0;i<5;i++){sizes.push(sizes[sizes.length-1]/2)}
+  for(const sz of sizes){
+    const sc=document.createElement('canvas');sc.width=sc.height=sz;
+    sc.getContext('2d').drawImage(cur,0,0,sz,sz);
+    cur=sc;
+    const display=grayToCanvas(imgToGray(sc).data,sz,sz,160);
+    const wrap=document.createElement('div');wrap.style.textAlign='center';
+    wrap.appendChild(display);
+    wrap.appendChild(makeLabel(sz+'x'+sz));
+    el.appendChild(wrap);
+  }
+}
+async function p2Upscale(){
+  const f=document.getElementById('p2-img').value;if(!f)return alert('Select an image');
+  const el=document.getElementById('p2-up');el.innerHTML='Loading...';
+  const img=await loadImg(f);
+  const base=document.createElement('canvas');base.width=base.height=1024;
+  base.getContext('2d').drawImage(img,0,0,1024,1024);
+  el.innerHTML='';
+  let cur=base;const sizes=[1024,512,256,128,64,32];
+  for(const sz of sizes){
+    // Progressive downsample from current
+    const sc=document.createElement('canvas');sc.width=sc.height=sz;
+    sc.getContext('2d').drawImage(cur,0,0,sz,sz);
+    // Upscale back to 1024 to show quality loss
+    const up=document.createElement('canvas');up.width=up.height=1024;
+    up.getContext('2d').drawImage(sc,0,0,1024,1024);
+    const display=grayToCanvas(imgToGray(up).data,1024,1024,160);
+    const wrap=document.createElement('div');wrap.style.textAlign='center';
+    wrap.appendChild(display);
+    wrap.appendChild(makeLabel('From '+sz+'x'+sz));
+    el.appendChild(wrap);
+    cur=sc; // next iteration downsamples from this
+  }
+}
+
+// === P3 ===
+function p3SetPair(a,b){document.getElementById('p3-sub1').value=a;document.getElementById('p3-sub2').value=b}
+async function p3Negate(){
+  const f=document.getElementById('p3-neg').value;if(!f)return alert('Select an image');
+  const el=document.getElementById('p3-neg-result');el.innerHTML='Loading...';
+  const img=await loadImg(f);const g=imgToGray(img);
+  const neg=new Uint8Array(g.data.length);
+  for(let i=0;i<g.data.length;i++)neg[i]=255-g.data[i];
+  el.innerHTML='';
+  const w1=document.createElement('div');w1.style.textAlign='center';
+  w1.appendChild(grayToCanvas(g.data,g.w,g.h,300));w1.appendChild(makeLabel('Original'));el.appendChild(w1);
+  const w2=document.createElement('div');w2.style.textAlign='center';
+  w2.appendChild(grayToCanvas(neg,g.w,g.h,300));w2.appendChild(makeLabel('Negative (255-r)'));el.appendChild(w2);
+  // Histograms
+  el.appendChild(drawHistCanvas(computeHist(g.data),'Original Histogram',300,150));
+  el.appendChild(drawHistCanvas(computeHist(neg),'Negative Histogram',300,150));
+}
+async function p3Subtract(){
+  const f1=document.getElementById('p3-sub1').value,f2=document.getElementById('p3-sub2').value;
+  if(!f1||!f2)return alert('Select both images');
+  const el=document.getElementById('p3-sub-result');el.innerHTML='Loading...';
+  const[img1,img2]=await Promise.all([loadImg(f1),loadImg(f2)]);
+  const g1=imgToGray(img1),g2=imgToGray(img2);
+  // Resize g2 to match g1 if needed
+  let d2=g2.data,w2=g2.w,h2=g2.h;
+  if(g1.w!==g2.w||g1.h!==g2.h){
+    const rc=document.createElement('canvas');rc.width=g1.w;rc.height=g1.h;
+    const ri=await loadImg(f2);rc.getContext('2d').drawImage(ri,0,0,g1.w,g1.h);
+    const rg=imgToGray(rc);d2=rg.data;w2=rg.w;h2=rg.h;
+  }
+  const diff=new Uint8Array(g1.data.length);
+  for(let i=0;i<g1.data.length;i++)diff[i]=Math.abs(g1.data[i]-d2[i]);
+  el.innerHTML='';
+  [{d:g1.data,l:'Image 1'},{d:d2,l:'Image 2'},{d:diff,l:'|Img1 - Img2|'}].forEach(({d,l})=>{
+    const w=document.createElement('div');w.style.textAlign='center';
+    w.appendChild(grayToCanvas(d,g1.w,g1.h,250));w.appendChild(makeLabel(l));el.appendChild(w);
+  });
+}
+async function p3Pipeline(){
+  const f1=document.getElementById('p3-sub1').value,f2=document.getElementById('p3-sub2').value;
+  if(!f1||!f2)return alert('Select images in Part 2 first');
+  const el=document.getElementById('p3-pipe-result');el.innerHTML='Loading...';
+  const[img1,img2]=await Promise.all([loadImg(f1),loadImg(f2)]);
+  const g1=imgToGray(img1);let g2=imgToGray(img2);
+  if(g1.w!==g2.w||g1.h!==g2.h){const rc=document.createElement('canvas');rc.width=g1.w;rc.height=g1.h;rc.getContext('2d').drawImage(img2,0,0,g1.w,g1.h);g2=imgToGray(rc)}
+  const diff=new Uint8Array(g1.data.length);
+  const neg=new Uint8Array(g1.data.length);
+  const enh=new Uint8Array(g1.data.length);
+  let dmin=255,dmax=0;
+  for(let i=0;i<g1.data.length;i++){diff[i]=Math.abs(g1.data[i]-g2.data[i]);if(diff[i]<dmin)dmin=diff[i];if(diff[i]>dmax)dmax=diff[i]}
+  for(let i=0;i<diff.length;i++){neg[i]=255-diff[i];enh[i]=dmax>dmin?Math.round((diff[i]-dmin)/(dmax-dmin)*255):0}
+  el.innerHTML='';
+  [{d:g1.data,l:'1. Image 1'},{d:g2.data,l:'2. Image 2'},{d:diff,l:'3. |Img1-Img2|'},
+   {d:neg,l:'4. Negation of Diff'},{d:enh,l:'5. Enhanced'}].forEach(({d,l})=>{
+    const w=document.createElement('div');w.style.textAlign='center';
+    w.appendChild(grayToCanvas(d,g1.w,g1.h,180));w.appendChild(makeLabel(l));el.appendChild(w);
+  });
+}
+
+// === P4 ===
+function p4UpdateGamma(){document.getElementById('p4-gamma-val').textContent=document.getElementById('p4-gamma').value}
+async function p4Apply(){
+  const f=document.getElementById('p4-img').value;if(!f)return alert('Select an image');
+  const gamma=parseFloat(document.getElementById('p4-gamma').value);
+  const el=document.getElementById('p4-single');el.innerHTML='Loading...';
+  const img=await loadImg(f);const g=imgToGray(img);
+  const out=new Uint8Array(g.data.length);
+  for(let i=0;i<g.data.length;i++)out[i]=Math.min(255,Math.round(Math.pow(g.data[i]/255,gamma)*255));
+  el.innerHTML='';
+  [{d:g.data,l:'Original'},{d:out,l:'Gamma='+gamma}].forEach(({d,l})=>{
+    const w=document.createElement('div');w.style.textAlign='center';
+    w.appendChild(grayToCanvas(d,g.w,g.h,300));w.appendChild(makeLabel(l));el.appendChild(w);
+  });
+  el.appendChild(drawHistCanvas(computeHist(g.data),'Original',300,150));
+  el.appendChild(drawHistCanvas(computeHist(out),'Gamma='+gamma,300,150));
+}
+async function p4Series(){
+  const f=document.getElementById('p4-img').value;if(!f)return alert('Select an image');
+  const el=document.getElementById('p4-series');el.innerHTML='Loading...';
+  const img=await loadImg(f);const g=imgToGray(img);
+  el.innerHTML='';
+  [0.3,0.5,1.0,1.5,2.5,5.0].forEach(gamma=>{
+    const out=new Uint8Array(g.data.length);
+    for(let i=0;i<g.data.length;i++)out[i]=Math.min(255,Math.round(Math.pow(g.data[i]/255,gamma)*255));
+    const w=document.createElement('div');w.style.textAlign='center';
+    w.appendChild(grayToCanvas(out,g.w,g.h,200));w.appendChild(makeLabel('γ='+gamma));el.appendChild(w);
+  });
+}
+async function p4Log(){
+  const f=document.getElementById('p4-img').value;if(!f)return alert('Select an image');
+  const el=document.getElementById('p4-log');el.innerHTML='Loading...';
+  const img=await loadImg(f);const g=imgToGray(img);
+  const logOut=new Uint8Array(g.data.length);
+  const gamOut=new Uint8Array(g.data.length);
+  const logMax=Math.log(1+1); // log(2)
+  for(let i=0;i<g.data.length;i++){
+    logOut[i]=Math.min(255,Math.round(Math.log(1+g.data[i]/255)/logMax*255));
+    gamOut[i]=Math.min(255,Math.round(Math.pow(g.data[i]/255,0.4)*255));
+  }
+  el.innerHTML='';
+  [{d:g.data,l:'Original'},{d:logOut,l:'Log: c·log(1+r)'},{d:gamOut,l:'Gamma: r^0.4'}].forEach(({d,l})=>{
+    const w=document.createElement('div');w.style.textAlign='center';
+    w.appendChild(grayToCanvas(d,g.w,g.h,250));w.appendChild(makeLabel(l));el.appendChild(w);
+  });
+}
+function p4Curves(){
+  const el=document.getElementById('p4-curves');
+  const c=document.createElement('canvas');c.width=400;c.height=400;c.style.background=getComputedStyle(document.body).getPropertyValue('--card');
+  c.style.border='1px solid '+getComputedStyle(document.body).getPropertyValue('--border');
+  c.style.borderRadius='.5rem';
+  const ctx=c.getContext('2d');const m=40,sz=c.width-2*m;
+  // Axes
+  ctx.strokeStyle=getComputedStyle(document.body).color||'#000';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(m,m);ctx.lineTo(m,m+sz);ctx.lineTo(m+sz,m+sz);ctx.stroke();
+  ctx.fillStyle=getComputedStyle(document.body).color||'#000';ctx.font='11px system-ui';
+  ctx.fillText('0',m-5,m+sz+15);ctx.fillText('1',m+sz-5,m+sz+15);
+  ctx.fillText('1',m-15,m+5);ctx.textAlign='center';
+  ctx.fillText('Input (r)',m+sz/2,m+sz+30);
+  ctx.save();ctx.translate(12,m+sz/2);ctx.rotate(-Math.PI/2);ctx.fillText('Output (s)',0,0);ctx.restore();
+  // Curves
+  const colors=['#e11d48','#f97316','#eab308','#22c55e','#06b6d4','#333','#8b5cf6','#ec4899','#0ea5e9','#64748b','#475569'];
+  const gammas=[0.04,0.1,0.2,0.4,0.67,1.0,1.5,2.5,5.0,10.0,25.0];
+  gammas.forEach((g,gi)=>{
+    ctx.strokeStyle=colors[gi%colors.length];ctx.lineWidth=1.5;ctx.beginPath();
+    for(let x=0;x<=256;x++){
+      const r=x/256,s=Math.pow(r,g);
+      const px=m+r*sz,py=m+sz-s*sz;
+      x===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+    // Label
+    const lx=m+sz+5,ly=m+gi*16+10;
+    ctx.fillStyle=colors[gi%colors.length];ctx.font='10px system-ui';ctx.textAlign='left';
+    ctx.fillText('γ='+g,lx,ly);
+  });
+  ctx.fillStyle=getComputedStyle(document.body).color;ctx.font='bold 13px system-ui';ctx.textAlign='center';
+  ctx.fillText('Power Law: s = r^γ',m+sz/2,m-10);
+  el.innerHTML='';el.appendChild(c);
+}
+</script>
+</body>
+</html>
