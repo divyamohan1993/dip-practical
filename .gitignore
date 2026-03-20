@@ -36,3 +36,4 @@ docs/
 *.docx
 .wrangler/
 .playwright-mcp/
+*.pdf
