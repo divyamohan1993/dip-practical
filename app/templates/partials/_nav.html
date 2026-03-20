@@ -1,14 +1,13 @@
-<!-- Bootstrap 5 Navbar: Sticky, Glassmorphic -->
-<nav class="navbar navbar-expand-lg navbar-dark sticky-top dip-navbar" id="mainNav" aria-label="Main navigation">
+<nav class="navbar navbar-expand-lg sticky-top dip-navbar" id="mainNav" aria-label="Main navigation">
     <div class="container">
-        <a class="navbar-brand fw-bold" href="/">DIP Lab</a>
+        <a class="navbar-brand fw-semibold" href="/">DIP Lab</a>
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
                 aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
         </button>
         <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
+            <ul class="navbar-nav ms-auto gap-1">
                 <li class="nav-item">
                     <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="/">Home</a>
                 </li>
@@ -25,14 +24,8 @@
                     <a class="nav-link {% if request.path == '/practical/4' %}active{% endif %}" href="/practical/4">P4</a>
                 </li>
             </ul>
-            <!-- Skeuomorphic theme toggle switch -->
-            <button id="themeToggle" class="theme-toggle" type="button"
-                    aria-label="Switch to dark mode" title="Switch to dark mode">
-                <span class="toggle-track">
-                    <span class="toggle-icon toggle-icon--sun" aria-hidden="true"></span>
-                    <span class="toggle-icon toggle-icon--moon" aria-hidden="true"></span>
-                    <span class="toggle-thumb"></span>
-                </span>
+            <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme">
+                <span class="theme-toggle-label">Dark</span>
             </button>
         </div>
     </div>

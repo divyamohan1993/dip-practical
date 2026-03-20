@@ -68,6 +68,9 @@
         var isDark = theme === 'dark';
         btn.setAttribute('aria-label', isDark ? 'Switch to light mode' : 'Switch to dark mode');
         btn.setAttribute('title', isDark ? 'Switch to light mode' : 'Switch to dark mode');
+        // Update label text if present
+        var label = btn.querySelector('.theme-toggle-label');
+        if (label) label.textContent = isDark ? 'Light' : 'Dark';
     }
 
     // Listen for OS theme changes (only if no user override)

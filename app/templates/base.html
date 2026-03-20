@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}Digital Image Processing Lab{% endblock %} | CSU2543 | Shoolini University</title>
-    <meta name="description" content="{% block description %}Digital Image Processing Practical Lab - CSU2543. Shoolini University, BTech CSE Cybersecurity.{% endblock %}">
+    <title>{% block title %}Digital Image Processing Lab{% endblock %} | CSU2543</title>
+    <meta name="description" content="{% block description %}Digital Image Processing Practical Lab - CSU2543. Shoolini University.{% endblock %}">
     <meta name="author" content="Divya Mohan">
 
     <!-- FOUC prevention: apply theme before any CSS loads -->
@@ -12,10 +12,10 @@
         (function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();
     </script>
 
-    <!-- Google Fonts: Maven Pro (headings), Lato (body), Hack (monospace) -->
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Maven+Pro:wght@400;500;600;700&family=Lato:wght@300;400;700&family=Hack&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Bootstrap 5.3.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
@@ -27,15 +27,12 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
 
-    <!-- Print Stylesheet -->
+    <!-- Print Styles -->
     <style>
-        /* ---- Print Front Page (shown only when printing) ---- */
-        .print-front-page {
-            display: none;
-        }
+        .print-front-page { display: none; }
+        .print-header { display: none; }
 
         @media print {
-            /* Show front page */
             .print-front-page {
                 display: flex !important;
                 flex-direction: column;
@@ -44,7 +41,7 @@
                 min-height: 100vh;
                 page-break-after: always;
                 text-align: center;
-                font-family: 'Lato', 'Times New Roman', serif;
+                font-family: 'Inter', sans-serif;
                 padding: 3rem 2rem;
                 background: white !important;
                 color: black !important;
@@ -100,7 +97,7 @@
                 color: #555;
             }
 
-            /* Hide interactive elements */
+            /* Hide interactive/screen-only elements */
             .dip-navbar,
             .theme-toggle,
             .skip-link,
@@ -112,21 +109,15 @@
             input[type="range"],
             .slider-group,
             .no-print,
-            footer,
-            .main-header {
+            footer {
                 display: none !important;
             }
 
-            /* Clean print layout */
             body {
                 background: white !important;
                 color: black !important;
                 font-size: 11pt;
                 line-height: 1.5;
-            }
-            .main-content {
-                padding: 0 !important;
-                margin: 0 !important;
             }
             .container {
                 max-width: 100% !important;
@@ -157,11 +148,8 @@
                 color: black !important;
                 page-break-after: avoid;
             }
-            img {
-                max-width: 100% !important;
-            }
+            img { max-width: 100% !important; }
 
-            /* Print header for practical pages */
             .print-header {
                 display: block !important;
                 text-align: center;
@@ -174,18 +162,12 @@
             .print-header .ph-subject { font-size: 1.1rem; font-weight: 700; margin: 0.25rem 0; }
             .print-header .ph-meta { font-size: 0.8rem; color: #555; }
         }
-
-        /* Print header hidden on screen */
-        .print-header {
-            display: none;
-        }
     </style>
 
     {% block extra_css %}{% endblock %}
 </head>
 <body>
 
-    <!-- Skip link for keyboard/screen reader users (WCAG 2.2 AAA) -->
     <a href="#main-content" class="skip-link">Skip to main content</a>
 
     {% include 'partials/_nav.html' %}
@@ -193,7 +175,7 @@
     <!-- Print-only front page -->
     <div class="print-front-page">
         <div class="university-name">Shoolini University</div>
-        <div class="department">Faculty of Engineering & Technology<br>Department of Computer Science & Engineering</div>
+        <div class="department">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
         <div class="subject-title">Digital Image Processing</div>
         <div class="subject-code">Course Code: CSU2543</div>
         <div class="practical-title">{% block print_title %}Practical Lab Report{% endblock %}</div>
@@ -202,34 +184,19 @@
             <tr><td>Programme:</td><td>BTech CSE (Cybersecurity)</td></tr>
             <tr><td>Semester:</td><td>8th</td></tr>
             <tr><td>Faculty:</td><td>Ishani Sharma</td></tr>
-            <tr><td>Textbook:</td><td>Gonzalez & Woods, 3rd Edition</td></tr>
+            <tr><td>Textbook:</td><td>Gonzalez &amp; Woods, 3rd Edition</td></tr>
         </table>
         <div class="session">Academic Session: 2025&ndash;2026</div>
     </div>
 
-    <!-- Main Header (screen only) -->
-    <header class="main-header" aria-label="Course information">
-        <div class="header-content container">
-            <div class="course-code">CSU2543</div>
-            <h1>{% block header_title %}Digital Image Processing{% endblock %}</h1>
-            <p class="header-subtitle">{% block header_subtitle %}Practical Laboratory{% endblock %}</p>
-            <div class="header-meta">
-                <span class="meta-item"><strong>Faculty:</strong> Ishani Sharma</span>
-                <span class="meta-item"><strong>Student:</strong> Divya Mohan</span>
-                <span class="meta-item"><strong>Textbook:</strong> Gonzalez &amp; Woods, 3<sup>rd</sup> Ed.</span>
-            </div>
-        </div>
-    </header>
-
-    <!-- Print header (repeated on each page) -->
+    <!-- Print header (repeated on each printed page) -->
     <div class="print-header">
         <div class="ph-university">Shoolini University | CSU2543</div>
         <div class="ph-subject">Digital Image Processing &mdash; Practical Lab</div>
         <div class="ph-meta">Student: Divya Mohan | Faculty: Ishani Sharma | Semester 8</div>
     </div>
 
-    <!-- Main Content -->
-    <main class="main-content" id="main-content">
+    <main id="main-content">
         <div class="container">
             {% block content %}{% endblock %}
         </div>

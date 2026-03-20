@@ -2,32 +2,9 @@
 
 {% block title %}Practical 1: Loading & Displaying Images{% endblock %}
 {% block print_title %}Practical 1: Loading &amp; Displaying Digital Images{% endblock %}
-{% block header_title %}Practical 1{% endblock %}
-{% block header_subtitle %}Loading &amp; Displaying Digital Images | G&amp;W Ch 2{% endblock %}
-
-{% block extra_css %}
-<style>
-    .section-card { background: var(--surface-50); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 1.5rem; border: 1px solid var(--surface-200); }
-    .section-card h3 { margin-top: 0; color: var(--brand-header); }
-    .result-img { max-width: 100%; border-radius: var(--radius-md); margin: 1rem 0; }
-    .image-select { width: 100%; padding: 0.5rem; border-radius: var(--radius-md); border: 1px solid var(--surface-300); background: var(--surface-50); color: var(--text-800); font-size: 0.9rem; }
-    .btn-run { background: var(--brand-header); color: #fff; border: none; padding: 0.5rem 1.5rem; border-radius: var(--radius-md); cursor: pointer; font-weight: 600; }
-    .btn-run:hover { opacity: 0.9; }
-    .btn-run:disabled { opacity: 0.5; cursor: not-allowed; }
-    .props-table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
-    .props-table td, .props-table th { padding: 0.4rem 0.8rem; border-bottom: 1px solid var(--surface-200); text-align: left; font-size: 0.9rem; }
-    .props-table th { font-weight: 600; width: 40%; }
-    .theory-box { background: var(--surface-100); border-left: 4px solid var(--brand-header); padding: 1rem 1.25rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; margin: 1rem 0; font-size: 0.95rem; }
-    .analysis-box { background: var(--surface-100); border-radius: var(--radius-md); padding: 1.25rem; margin-top: 1.5rem; }
-    .analysis-box h4 { margin-top: 0; color: var(--brand-header); }
-    .analysis-box ol { margin-bottom: 0; }
-    [data-theme="dark"] .section-card { background: var(--surface-100); border-color: var(--surface-300); }
-    [data-theme="dark"] .theory-box { background: var(--surface-200); }
-    [data-theme="dark"] .analysis-box { background: var(--surface-200); }
-</style>
-{% endblock %}
 
 {% block content %}
+<h2>Practical 1: Loading &amp; Displaying Images</h2>
 <!-- Objective -->
 <div class="section-card">
     <h3>Objective</h3>
