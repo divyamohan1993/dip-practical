@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practical 4: Gamma Correction | CSU2543</title>
+    <meta name="description" content="Practical 4: Power law (gamma) transformations, log transforms, and contrast enhancement for digital images.">
+    <meta name="author" content="Divya Mohan">
+    <script>(function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar navbar-expand-lg sticky-top dip-navbar" id="mainNav" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand fw-semibold" href="./index.html">DIP Lab</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="./index.html" data-page="index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p1.html" data-page="p1">P1</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p2.html" data-page="p2">P2</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p3.html" data-page="p3">P3</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p4.html" data-page="p4">P4</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p5.html" data-page="p5">P5</a></li>
+                </ul>
+                <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme"><span class="theme-toggle-label">Dark</span></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Print cover page -->
+    <div class="print-only print-cover" aria-hidden="true">
+        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
+        <div class="cover-university">Shoolini University</div>
+        <div class="cover-dept">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
+        <div class="cover-rule"></div>
+        <div class="cover-subject">Digital Image Processing</div>
+        <div class="cover-code">Course Code: CSU2543</div>
+        <div class="cover-practical">Practical 4: Gamma Correction &amp; Power Law Transformations</div>
+        <table class="cover-table">
+            <tr><td>Submitted by:</td><td>Divya Mohan</td></tr>
+            <tr><td>Programme:</td><td>B.Tech CSE (Cybersecurity)</td></tr>
+            <tr><td>Semester:</td><td>8th</td></tr>
+            <tr><td>Faculty Guide:</td><td>Ishani Sharma</td></tr>
+            <tr><td>Reference Text:</td><td>Gonzalez &amp; Woods, <em>Digital Image Processing</em>, 3rd Ed.</td></tr>
+        </table>
+        <div class="cover-rule-sm"></div>
+        <div class="cover-session">Academic Session 2025&ndash;2026</div>
+    </div>
+    <div class="print-only print-header" aria-hidden="true">
+        <div class="ph-line">Shoolini University &middot; CSU2543 &middot; Digital Image Processing &middot; Divya Mohan</div>
+    </div>
+
+    <main id="main-content">
+        <div class="container py-4">
+
+            <!-- Title & Colab Badge -->
+            <h1 class="mb-2">Practical 4: Gamma Correction &amp; Power Law Transformations</h1>
+            <p class="mb-3">
+                <a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_4.ipynb" target="_blank" rel="noopener noreferrer">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab">
+                </a>
+                <span class="text-muted small ms-2">Run in Google Colab for Python version</span>
+            </p>
+
+            <!-- Theory -->
+            <section class="mb-5">
+                <h2>Theory</h2>
+                <p>The <strong>power law (gamma) transformation</strong> is a fundamental intensity mapping defined as:</p>
+                <p class="text-center">$$s = c \cdot r^\gamma$$</p>
+                <p>where <em>r</em> is the input intensity (normalized to [0, 1]), <em>s</em> is the output intensity, <em>c</em> is a constant, and <em>&gamma;</em> (gamma) controls the shape of the curve:</p>
+                <ul>
+                    <li><strong>&gamma; &lt; 1</strong> &mdash; Expands dark intensities, compresses bright ones (brightening effect)</li>
+                    <li><strong>&gamma; &gt; 1</strong> &mdash; Compresses dark intensities, expands bright ones (darkening effect)</li>
+                    <li><strong>&gamma; = 1</strong> &mdash; Identity transformation (no change when c = 1)</li>
+                </ul>
+                <p>The <strong>log transformation</strong> \(s = c \cdot \log(1 + r)\) compresses dynamic range and is useful for displaying Fourier spectra and enhancing dark regions.</p>
+            </section>
+
+            <!-- Part 1: Apply Gamma Correction -->
+            <section class="mb-5">
+                <h2>Part 1: Apply Gamma Correction</h2>
+                <div id="mainPicker" class="mb-3"></div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-md-6">
+                        <label for="gammaSlider" class="form-label fw-semibold">Gamma (&gamma;): <span id="gammaValue">1.0</span></label>
+                        <input type="range" class="form-range" id="gammaSlider" min="0.1" max="5.0" step="0.1" value="1.0">
+                    </div>
+                    <div class="col-md-6">
+                        <label for="cSlider" class="form-label fw-semibold">Constant (c): <span id="cValue">1.0</span></label>
+                        <input type="range" class="form-range" id="cSlider" min="0.1" max="2.0" step="0.1" value="1.0">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="btnGamma" type="button">Apply Gamma</button>
+                <div id="gammaResult" class="mt-3"></div>
+            </section>
+
+            <!-- Part 2: Gamma Series Comparison -->
+            <section class="mb-5">
+                <h2>Part 2: Gamma Series Comparison</h2>
+                <p>Apply a range of gamma values to see how the image changes from bright to dark.</p>
+                <button class="btn btn-primary" id="btnSeries" type="button">Generate Series</button>
+                <div id="seriesResult" class="mt-3"></div>
+            </section>
+
+            <!-- Transformation Curves -->
+            <section class="mb-5">
+                <h2>Transformation Curves</h2>
+                <p>Plot \(s = r^\gamma\) for various gamma values to visualize how intensity mapping changes.</p>
+                <button class="btn btn-primary" id="btnCurves" type="button">Show Curves</button>
+                <div id="curvesResult" class="mt-3"></div>
+            </section>
+
+            <!-- Part 3: Log Transformation -->
+            <section class="mb-5">
+                <h2>Part 3: Log Transformation</h2>
+                <p>Compare the log transform \(s = c \cdot \log(1 + r)\) with a gamma correction of &gamma; = 0.4.</p>
+                <button class="btn btn-primary" id="btnLog" type="button">Apply Log Transform</button>
+                <div id="logResult" class="mt-3"></div>
+            </section>
+
+            <!-- Part 4: Contrast Enhancement -->
+            <section class="mb-5">
+                <h2>Part 4: Contrast Enhancement</h2>
+                <p>Select an image type and apply targeted gamma corrections for contrast enhancement.</p>
+
+                <div class="mb-3">
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="contrastType" id="contrastDark" value="dark" checked>
+                        <label class="form-check-label" for="contrastDark">Dark Image (&gamma; = 0.3, 0.4, 0.6)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="contrastType" id="contrastBright" value="bright">
+                        <label class="form-check-label" for="contrastBright">Bright Image (&gamma; = 3.0, 4.0, 5.0)</label>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" id="btnContrast" type="button">Enhance Contrast</button>
+                <div id="contrastResult" class="mt-3"></div>
+            </section>
+
+            <!-- Analysis Questions -->
+            <section class="mb-5">
+                <h2>Analysis Questions</h2>
+                <ol>
+                    <li>What gamma value produces the best enhancement for a dark, underexposed image? Why does a gamma less than 1 brighten dark regions more than bright regions?</li>
+                    <li>Compare the log transform with gamma = 0.4 correction. In what situations would you prefer one over the other?</li>
+                    <li>CRT monitors have an inherent gamma of approximately 2.2. How does this relate to gamma correction applied to images before display? What would an image look like on a CRT without correction?</li>
+                    <li>Why does the power law transformation with &gamma; &gt; 1 improve contrast in bright, washed-out images?</li>
+                </ol>
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="site-footer" aria-label="Site footer">
+        <div class="container">
+            <p>CSU2543 Digital Image Processing &middot; Shoolini University &middot; Divya Mohan &middot; Ishani Sharma</p>
+        </div>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./js/core.js"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/nav.js"></script>
+    <script src="./js/interactive.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="./js/dip.js"></script>
+    <script src="./js/plot.js"></script>
+    <script src="./js/picker.js"></script>
+
+    <script>
+    (function() {
+        'use strict';
+
+        var picker;
+        var currentImage = null;
+
+        // ---- Slider display updates ----
+        var gammaSlider = document.getElementById('gammaSlider');
+        var gammaDisplay = document.getElementById('gammaValue');
+        var cSlider = document.getElementById('cSlider');
+        var cDisplay = document.getElementById('cValue');
+
+        gammaSlider.addEventListener('input', function() {
+            gammaDisplay.textContent = parseFloat(this.value).toFixed(1);
+        });
+        cSlider.addEventListener('input', function() {
+            cDisplay.textContent = parseFloat(this.value).toFixed(1);
+        });
+
+        // ---- Initialize picker ----
+        DIP.createPicker('mainPicker', {
+            defaultImage: 'einstein low',
+            label: 'Select Image',
+            onSelect: function() { currentImage = null; }
+        }).then(function(p) {
+            picker = p;
+        });
+
+        // ---- Load selected image (cached) ----
+        function loadSelected() {
+            if (currentImage) return Promise.resolve(currentImage);
+            var sel = picker.getSelection();
+            return DIP.loadImage(sel.url).then(function(img) {
+                currentImage = img;
+                return img;
+            });
+        }
+
+        // ---- Part 1: Apply Gamma Correction ----
+        document.getElementById('btnGamma').addEventListener('click', function() {
+            var btn = this;
+            var container = document.getElementById('gammaResult');
+            var g = parseFloat(gammaSlider.value);
+            var c = parseFloat(cSlider.value);
+
+            DIP.setLoading(container, true);
+            DIP.setLoading(btn, true);
+
+            loadSelected().then(function(img) {
+                var corrected = DIP.gamma(img.gray, g, c);
+
+                var panels = DIP.figure(container, 'Gamma Correction (\u03B3 = ' + g.toFixed(1) + ', c = ' + c.toFixed(1) + ')', 2, [
+                    { type: 'image', title: 'Original' },
+                    { type: 'image', title: 'Corrected' },
+                    { type: 'chart', title: 'Original Histogram' },
+                    { type: 'chart', title: 'Corrected Histogram' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                DIP.draw.gray(panels[1].canvas, corrected, img.width, img.height);
+                DIP.chart.histogram(panels[2].canvas, img.gray, { title: 'Original Histogram', color: 'rgba(70,130,180,0.85)' });
+                DIP.chart.histogram(panels[3].canvas, corrected, { title: 'Corrected Histogram', color: 'rgba(220,120,60,0.85)' });
+
+                DIP.setLoading(container, false);
+                DIP.setLoading(btn, false);
+                DIP.showToast('Gamma correction applied (\u03B3 = ' + g.toFixed(1) + ')');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.setLoading(btn, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 2: Gamma Series Comparison ----
+        document.getElementById('btnSeries').addEventListener('click', function() {
+            var btn = this;
+            var container = document.getElementById('seriesResult');
+            var gammas = [0.3, 0.5, 1.0, 1.5, 2.5, 5.0];
+
+            DIP.setLoading(container, true);
+            DIP.setLoading(btn, true);
+
+            loadSelected().then(function(img) {
+                var panelDefs = gammas.map(function(g) {
+                    return { type: 'image', title: '\u03B3 = ' + g };
+                });
+
+                var panels = DIP.figure(container, 'Gamma Series Comparison', 3, panelDefs);
+
+                for (var i = 0; i < gammas.length; i++) {
+                    var corrected = DIP.gamma(img.gray, gammas[i], 1.0);
+                    DIP.draw.gray(panels[i].canvas, corrected, img.width, img.height);
+                }
+
+                DIP.setLoading(container, false);
+                DIP.setLoading(btn, false);
+                DIP.showToast('Gamma series generated');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.setLoading(btn, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Transformation Curves ----
+        document.getElementById('btnCurves').addEventListener('click', function() {
+            var btn = this;
+            var container = document.getElementById('curvesResult');
+            var gammas = [0.04, 0.1, 0.2, 0.4, 0.67, 1.0, 1.5, 2.5, 5.0, 10.0, 25.0];
+            var curveColors = [
+                '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
+                '#911eb4', '#42d4f4', '#f032e6', '#bfef45', '#fabed4', '#469990'
+            ];
+
+            DIP.setLoading(container, true);
+            DIP.setLoading(btn, true);
+
+            var datasets = gammas.map(function(g, idx) {
+                var y = new Float64Array(256);
+                for (var i = 0; i < 256; i++) {
+                    y[i] = Math.pow(i / 255, g) * 255;
+                }
+                return {
+                    y: y,
+                    color: curveColors[idx],
+                    label: '\u03B3 = ' + g,
+                    dash: false,
+                    lineWidth: 2
+                };
+            });
+
+            // Identity line (dashed)
+            var identity = new Float64Array(256);
+            for (var i = 0; i < 256; i++) identity[i] = i;
+            datasets.push({
+                y: identity,
+                color: '#888888',
+                label: 'Identity (\u03B3 = 1)',
+                dash: true,
+                lineWidth: 1.5
+            });
+
+            var panels = DIP.figure(container, 'Power Law Transformation Curves', 1, [
+                { type: 'chart', title: '' }
+            ]);
+
+            DIP.chart.line(panels[0].canvas, datasets, {
+                title: 'Transformation Curves: s = r^\u03B3',
+                xlabel: 'Input Intensity (r)',
+                ylabel: 'Output Intensity (s)',
+                xlim: [0, 255],
+                ylim: [0, 255],
+                grid: true
+            });
+
+            DIP.setLoading(container, false);
+            DIP.setLoading(btn, false);
+            DIP.showToast('Transformation curves plotted');
+        });
+
+        // ---- Part 3: Log Transformation ----
+        document.getElementById('btnLog').addEventListener('click', function() {
+            var btn = this;
+            var container = document.getElementById('logResult');
+
+            DIP.setLoading(container, true);
+            DIP.setLoading(btn, true);
+
+            loadSelected().then(function(img) {
+                var logImg = DIP.logTransform(img.gray);
+                var gammaImg = DIP.gamma(img.gray, 0.4, 1.0);
+
+                var panels = DIP.figure(container, 'Log Transform vs Gamma Correction', 3, [
+                    { type: 'image', title: 'Original' },
+                    { type: 'image', title: 'Log Transform' },
+                    { type: 'image', title: 'Gamma (\u03B3 = 0.4)' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                DIP.draw.gray(panels[1].canvas, logImg, img.width, img.height);
+                DIP.draw.gray(panels[2].canvas, gammaImg, img.width, img.height);
+
+                DIP.setLoading(container, false);
+                DIP.setLoading(btn, false);
+                DIP.showToast('Log transform and gamma comparison applied');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.setLoading(btn, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 4: Contrast Enhancement ----
+        document.getElementById('btnContrast').addEventListener('click', function() {
+            var btn = this;
+            var container = document.getElementById('contrastResult');
+            var isDark = document.querySelector('input[name="contrastType"]:checked').value === 'dark';
+            var gammas = isDark ? [0.3, 0.4, 0.6] : [3.0, 4.0, 5.0];
+            var typeLabel = isDark ? 'Dark Image Enhancement' : 'Bright Image Enhancement';
+
+            DIP.setLoading(container, true);
+            DIP.setLoading(btn, true);
+
+            loadSelected().then(function(img) {
+                var panelDefs = [{ type: 'image', title: 'Original' }];
+                for (var i = 0; i < gammas.length; i++) {
+                    panelDefs.push({ type: 'image', title: '\u03B3 = ' + gammas[i] });
+                }
+
+                var panels = DIP.figure(container, typeLabel, 4, panelDefs);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                for (var i = 0; i < gammas.length; i++) {
+                    var enhanced = DIP.gamma(img.gray, gammas[i], 1.0);
+                    DIP.draw.gray(panels[i + 1].canvas, enhanced, img.width, img.height);
+                }
+
+                DIP.setLoading(container, false);
+                DIP.setLoading(btn, false);
+                DIP.showToast(typeLabel + ' applied');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.setLoading(btn, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+    })();
+    </script>
+</body>
+</html>

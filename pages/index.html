@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Image Processing Lab | CSU2543</title>
+    <meta name="description" content="Digital Image Processing Practical Lab - CSU2543. 5 interactive practicals. Shoolini University.">
+    <meta name="author" content="Divya Mohan">
+    <script>(function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+    <style>
+        .hero { text-align: center; padding: clamp(2rem, 1rem + 4vw, 4rem) 0 clamp(1rem, 0.5rem + 2vw, 2rem); }
+        .hero h1 { font-size: clamp(2rem, 1.2rem + 3vw, 3.25rem); font-weight: 700; letter-spacing: -0.04em; color: var(--text); margin-bottom: 0.75rem; }
+        .hero p { color: var(--text-muted); font-size: clamp(0.95rem, 0.85rem + 0.5vw, 1.15rem); max-width: 540px; margin: 0 auto; line-height: 1.6; }
+        .hero .hero-badge { display: inline-block; padding: 0.3rem 1rem; border-radius: var(--radius-full); background: var(--accent-light); color: var(--accent); font-size: 0.8rem; font-weight: 600; letter-spacing: 0.05em; margin-bottom: 1rem; }
+        .practical-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.25rem; padding: 1rem 0 3rem; }
+        @media (max-width: 640px) { .practical-grid { grid-template-columns: 1fr; } }
+        .practical-card { display: flex; flex-direction: column; gap: 0.5rem; padding: 2rem; background: var(--surface-1); border: 1px solid var(--border); border-radius: var(--radius-lg); text-decoration: none; color: var(--text); position: relative; overflow: hidden; transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.25s var(--ease-spring); }
+        .practical-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--accent); opacity: 0; transition: opacity 0.2s ease; }
+        .practical-card:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-4px); color: var(--text); text-decoration: none; }
+        .practical-card:hover::before { opacity: 1; }
+        .practical-card:active { transform: translateY(-1px); box-shadow: var(--shadow-md); }
+        .card-number { font-size: 2.5rem; font-weight: 800; letter-spacing: -0.04em; color: var(--accent); opacity: 0.2; line-height: 1; }
+        .card-chapter { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); }
+        .card-title { font-size: 1.15rem; font-weight: 700; line-height: 1.3; letter-spacing: -0.02em; }
+        .card-desc { font-size: 0.875rem; line-height: 1.6; color: var(--text-muted); }
+        .card-arrow { margin-top: auto; color: var(--accent); font-size: 0.85rem; font-weight: 600; opacity: 0; transform: translateX(-8px); transition: opacity 0.2s, transform 0.2s var(--ease-spring); }
+        .practical-card:hover .card-arrow { opacity: 1; transform: translateX(0); }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar navbar-expand-lg sticky-top dip-navbar" id="mainNav" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand fw-semibold" href="./index.html">DIP Lab</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="./index.html" data-page="index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p1.html" data-page="p1">P1</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p2.html" data-page="p2">P2</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p3.html" data-page="p3">P3</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p4.html" data-page="p4">P4</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p5.html" data-page="p5">P5</a></li>
+                </ul>
+                <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme">
+                    <span class="theme-toggle-label">Dark</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Print cover page -->
+    <div class="print-only print-cover" aria-hidden="true">
+        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
+        <div class="cover-university">Shoolini University</div>
+        <div class="cover-dept">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
+        <div class="cover-rule"></div>
+        <div class="cover-subject">Digital Image Processing</div>
+        <div class="cover-code">Course Code: CSU2543</div>
+        <div class="cover-practical">Practical Lab Report &mdash; Complete</div>
+        <table class="cover-table">
+            <tr><td>Submitted by:</td><td>Divya Mohan</td></tr>
+            <tr><td>Programme:</td><td>B.Tech CSE (Cybersecurity)</td></tr>
+            <tr><td>Semester:</td><td>8th</td></tr>
+            <tr><td>Faculty Guide:</td><td>Ishani Sharma</td></tr>
+            <tr><td>Reference Text:</td><td>Gonzalez &amp; Woods, <em>Digital Image Processing</em>, 3rd Ed.</td></tr>
+        </table>
+        <div class="cover-rule-sm"></div>
+        <div class="cover-session">Academic Session 2025&ndash;2026</div>
+    </div>
+    <div class="print-only print-header" aria-hidden="true">
+        <div class="ph-line">Shoolini University &middot; CSU2543 &middot; Digital Image Processing &middot; Divya Mohan</div>
+    </div>
+
+    <main id="main-content">
+        <div class="container">
+
+            <!-- Hero Section -->
+            <section class="hero">
+                <span class="hero-badge">CSU2543</span>
+                <h1>Digital Image Processing Lab</h1>
+                <p>5 interactive practicals covering Gonzalez &amp; Woods 3rd Edition. Shoolini University.</p>
+            </section>
+
+            <!-- Practical Cards -->
+            <div class="practical-grid" role="list">
+                <a href="./p1.html" class="practical-card" role="listitem">
+                    <span class="card-number">01</span>
+                    <span class="card-chapter">G&amp;W Ch 2</span>
+                    <span class="card-title">Loading &amp; Displaying Images</span>
+                    <span class="card-desc">Load digital images, inspect properties, display histograms, and compare multiple images.</span>
+                    <span class="card-arrow">Explore &rarr;</span>
+                </a>
+                <a href="./p2.html" class="practical-card" role="listitem">
+                    <span class="card-number">02</span>
+                    <span class="card-chapter">G&amp;W Ch 2</span>
+                    <span class="card-title">Impact of Sampling Rate on Spatial Resolution</span>
+                    <span class="card-desc">Progressive downsampling to analyze sampling rate and spatial resolution.</span>
+                    <span class="card-arrow">Explore &rarr;</span>
+                </a>
+                <a href="./p3.html" class="practical-card" role="listitem">
+                    <span class="card-number">03</span>
+                    <span class="card-chapter">G&amp;W Ch 2&ndash;3</span>
+                    <span class="card-title">Negation, Subtraction &amp; Inversion</span>
+                    <span class="card-desc">Image negation, absolute difference subtraction, and intensity inversion with medical imaging.</span>
+                    <span class="card-arrow">Explore &rarr;</span>
+                </a>
+                <a href="./p4.html" class="practical-card" role="listitem">
+                    <span class="card-number">04</span>
+                    <span class="card-chapter">G&amp;W Ch 3</span>
+                    <span class="card-title">Gamma Correction &amp; Power Law Transformations</span>
+                    <span class="card-desc">Power law transformations, log transforms, and contrast enhancement for dark and bright images.</span>
+                    <span class="card-arrow">Explore &rarr;</span>
+                </a>
+                <a href="./p5.html" class="practical-card" role="listitem">
+                    <span class="card-number">05</span>
+                    <span class="card-chapter">G&amp;W Ch 3</span>
+                    <span class="card-title">Histogram Equalization</span>
+                    <span class="card-desc">Enhance contrast via CDF-based intensity redistribution, transfer functions, and PDF/CDF analysis.</span>
+                    <span class="card-arrow">Explore &rarr;</span>
+                </a>
+            </div>
+
+            <!-- Print-only Table of Contents -->
+            <section class="print-only print-toc" aria-hidden="true">
+                <h2>Table of Contents</h2>
+                <ol>
+                    <li><a href="#print-p1">Practical 1 &mdash; Loading &amp; Displaying Images</a></li>
+                    <li><a href="#print-p2">Practical 2 &mdash; Impact of Sampling Rate on Spatial Resolution</a></li>
+                    <li><a href="#print-p3">Practical 3 &mdash; Negation, Subtraction &amp; Inversion</a></li>
+                    <li><a href="#print-p4">Practical 4 &mdash; Gamma Correction &amp; Power Law Transformations</a></li>
+                    <li><a href="#print-p5">Practical 5 &mdash; Histogram Equalization</a></li>
+                </ol>
+            </section>
+
+            <!-- Print-only Practical Summaries -->
+            <section class="print-only print-summary" id="print-p1" aria-hidden="true">
+                <h2>Practical 1 &mdash; Loading &amp; Displaying Images</h2>
+                <p><strong>Reference:</strong> Gonzalez &amp; Woods, Ch 2</p>
+                <h3>Objective</h3>
+                <p>Load digital images, inspect properties such as dimensions, data type, and colour channels, display histograms, and compare multiple images side by side.</p>
+                <h3>Theory</h3>
+                <p>A digital image is a two-dimensional function <em>f(x, y)</em> where <em>x</em> and <em>y</em> are spatial coordinates and the amplitude of <em>f</em> at any pair of coordinates is the intensity or grey level. Loading and displaying images is the foundational step in any image processing pipeline. The histogram of an image shows the distribution of pixel intensities, providing insight into contrast, brightness, and dynamic range.</p>
+                <h3>Key Concepts</h3>
+                <ul>
+                    <li>Image representation as NumPy arrays (height &times; width &times; channels)</li>
+                    <li>Colour spaces: RGB, BGR (OpenCV default), Grayscale</li>
+                    <li>Image properties: shape, dtype, size, min/max intensity</li>
+                    <li>Histogram computation and visualization</li>
+                </ul>
+            </section>
+
+            <section class="print-only print-summary" id="print-p2" aria-hidden="true">
+                <h2>Practical 2 &mdash; Impact of Sampling Rate on Spatial Resolution</h2>
+                <p><strong>Reference:</strong> Gonzalez &amp; Woods, Ch 2</p>
+                <h3>Objective</h3>
+                <p>Demonstrate how reducing the sampling rate (downsampling) degrades spatial resolution, and observe aliasing artefacts that emerge at lower resolutions.</p>
+                <h3>Theory</h3>
+                <p>Spatial resolution is determined by the sampling rate applied during digitization. According to the Nyquist&ndash;Shannon sampling theorem, the sampling rate must be at least twice the highest frequency present in the image to avoid aliasing. Progressive downsampling by factors of 2 reveals how detail is lost and artefacts are introduced.</p>
+                <h3>Key Concepts</h3>
+                <ul>
+                    <li>Sampling and quantization</li>
+                    <li>Nyquist&ndash;Shannon sampling theorem</li>
+                    <li>Spatial resolution vs pixel dimensions</li>
+                    <li>Aliasing artefacts at low sampling rates</li>
+                    <li>Nearest-neighbour vs bilinear interpolation for resizing</li>
+                </ul>
+            </section>
+
+            <section class="print-only print-summary" id="print-p3" aria-hidden="true">
+                <h2>Practical 3 &mdash; Negation, Subtraction &amp; Inversion</h2>
+                <p><strong>Reference:</strong> Gonzalez &amp; Woods, Ch 2&ndash;3</p>
+                <h3>Objective</h3>
+                <p>Apply image negation, absolute difference subtraction between image pairs, and intensity inversion, with applications in medical imaging such as enhancing features in X-ray and mammography images.</p>
+                <h3>Theory</h3>
+                <p>Image negation applies the transform <em>s = L &minus; 1 &minus; r</em> where <em>L</em> is the number of intensity levels. This is useful for enhancing white or grey detail in dark regions. Image subtraction computes the absolute difference between two images, useful for change detection and background removal. These point-processing operations form the basis of intensity transformations.</p>
+                <h3>Key Concepts</h3>
+                <ul>
+                    <li>Image negative: <em>s = (L &minus; 1) &minus; r</em></li>
+                    <li>Absolute difference: |<em>f</em>(x,y) &minus; <em>g</em>(x,y)|</li>
+                    <li>Applications in medical imaging (mammograms, X-rays)</li>
+                    <li>Bitwise NOT operation for inversion</li>
+                </ul>
+            </section>
+
+            <section class="print-only print-summary" id="print-p4" aria-hidden="true">
+                <h2>Practical 4 &mdash; Gamma Correction &amp; Power Law Transformations</h2>
+                <p><strong>Reference:</strong> Gonzalez &amp; Woods, Ch 3</p>
+                <h3>Objective</h3>
+                <p>Apply power law (gamma) transformations and logarithmic transforms to adjust image contrast, enhancing detail in dark and bright images.</p>
+                <h3>Theory</h3>
+                <p>The power law transformation is defined as <em>s = c &middot; r<sup>&gamma;</sup></em> where <em>c</em> and <em>&gamma;</em> are positive constants. When &gamma; &lt; 1, the mapping expands dark intensities and compresses bright ones (brightening). When &gamma; &gt; 1, the opposite occurs (darkening). The log transform <em>s = c &middot; log(1 + r)</em> compresses the dynamic range, useful for displaying Fourier spectra.</p>
+                <h3>Key Concepts</h3>
+                <ul>
+                    <li>Power law: <em>s = c &middot; r<sup>&gamma;</sup></em></li>
+                    <li>Log transform: <em>s = c &middot; log(1 + r)</em></li>
+                    <li>Gamma &lt; 1 for brightening, &gamma; &gt; 1 for darkening</li>
+                    <li>CRT/display gamma correction</li>
+                    <li>Contrast enhancement for under/overexposed images</li>
+                </ul>
+            </section>
+
+            <section class="print-only print-summary" id="print-p5" aria-hidden="true">
+                <h2>Practical 5 &mdash; Histogram Equalization</h2>
+                <p><strong>Reference:</strong> Gonzalez &amp; Woods, Ch 3</p>
+                <h3>Objective</h3>
+                <p>Enhance image contrast using histogram equalization, analysing the transfer function, and comparing PDF and CDF before and after equalization.</p>
+                <h3>Theory</h3>
+                <p>Histogram equalization is a technique that adjusts intensities to produce a more uniform histogram, thereby enhancing global contrast. The transformation function is derived from the cumulative distribution function (CDF) of the original histogram: <em>s<sub>k</sub> = (L &minus; 1) &middot; CDF(r<sub>k</sub>)</em>. The result spreads out the most frequent intensity values, improving contrast in images with narrow histograms.</p>
+                <h3>Key Concepts</h3>
+                <ul>
+                    <li>Probability density function (PDF) of intensities</li>
+                    <li>Cumulative distribution function (CDF)</li>
+                    <li>Transfer function: <em>s<sub>k</sub> = (L &minus; 1) &middot; CDF(r<sub>k</sub>)</em></li>
+                    <li>Global vs local (CLAHE) histogram equalization</li>
+                    <li>Contrast-limited adaptive histogram equalization</li>
+                </ul>
+            </section>
+
+        </div>
+    </main>
+
+    <footer class="site-footer" aria-label="Site footer">
+        <div class="container">
+            <p>CSU2543 Digital Image Processing &middot; Shoolini University &middot; Divya Mohan &middot; Ishani Sharma</p>
+        </div>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./js/core.js"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/nav.js"></script>
+    <script src="./js/interactive.js"></script>
+</body>
+</html>

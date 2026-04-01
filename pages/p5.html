@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practical 5: Histogram Equalization | CSU2543</title>
+    <meta name="description" content="Practical 5: Histogram Equalization - Enhance contrast via CDF-based intensity redistribution. CSU2543 Digital Image Processing.">
+    <meta name="author" content="Divya Mohan">
+    <script>(function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar navbar-expand-lg sticky-top dip-navbar" id="mainNav" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand fw-semibold" href="./index.html">DIP Lab</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="./index.html" data-page="index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p1.html" data-page="p1">P1</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p2.html" data-page="p2">P2</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p3.html" data-page="p3">P3</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p4.html" data-page="p4">P4</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p5.html" data-page="p5">P5</a></li>
+                </ul>
+                <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme"><span class="theme-toggle-label">Dark</span></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Print cover page -->
+    <div class="print-only print-cover" aria-hidden="true">
+        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
+        <div class="cover-university">Shoolini University</div>
+        <div class="cover-dept">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
+        <div class="cover-rule"></div>
+        <div class="cover-subject">Digital Image Processing</div>
+        <div class="cover-code">Course Code: CSU2543</div>
+        <div class="cover-practical">Practical 5: Histogram Equalization</div>
+        <table class="cover-table">
+            <tr><td>Submitted by:</td><td>Divya Mohan</td></tr>
+            <tr><td>Programme:</td><td>B.Tech CSE (Cybersecurity)</td></tr>
+            <tr><td>Semester:</td><td>8th</td></tr>
+            <tr><td>Faculty Guide:</td><td>Ishani Sharma</td></tr>
+            <tr><td>Reference Text:</td><td>Gonzalez &amp; Woods, <em>Digital Image Processing</em>, 3rd Ed.</td></tr>
+        </table>
+        <div class="cover-rule-sm"></div>
+        <div class="cover-session">Academic Session 2025&ndash;2026</div>
+    </div>
+    <div class="print-only print-header" aria-hidden="true">
+        <div class="ph-line">Shoolini University &middot; CSU2543 &middot; Digital Image Processing &middot; Divya Mohan</div>
+    </div>
+
+    <main id="main-content">
+        <div class="container" style="max-width: 960px;">
+
+            <h1 style="margin: 2rem 0 0.5rem; font-size: clamp(1.6rem,1rem+2.5vw,2.5rem); font-weight: 800; letter-spacing: -0.04em;">Practical 5: Histogram Equalization</h1>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                <a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_5.ipynb" target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open Practical 5 in Colab" style="vertical-align: middle;">
+                </a>
+                <span style="font-size: 0.82rem; margin-left: 0.4rem;">Open the Python notebook version</span>
+            </p>
+
+            <!-- Objective -->
+            <section id="objective" class="section-card">
+                <h3>Objective</h3>
+                <p>Understand and implement histogram equalization &mdash; a technique that enhances contrast by redistributing pixel intensities to approximate a uniform distribution.</p>
+
+                <div class="theory-box">
+                    <strong>Theory:</strong> Histogram equalization uses the cumulative distribution function (CDF) as a transfer function. For an image with <em>L</em> intensity levels (0 to <em>L</em>&minus;1) and <em>n</em> total pixels:
+                    <ul style="margin: 0.5rem 0 0.25rem; padding-left: 1.25rem;">
+                        <li><strong>PDF:</strong> \( p(r_k) = \frac{n_k}{n} \)</li>
+                        <li><strong>CDF:</strong> \( T(r_k) = \sum_{j=0}^{k} p(r_j) \)</li>
+                        <li><strong>Output:</strong> \( s_k = (L - 1) \cdot T(r_k) \)</li>
+                    </ul>
+                </div>
+
+                <div class="formula-box">
+                    $$s_k = (L - 1) \cdot \sum_{j=0}^{k} \frac{n_j}{n}$$
+                </div>
+            </section>
+
+            <!-- Part 1: Original Image & Histogram -->
+            <section id="part1" class="section-card">
+                <h3>Part 1: Original Image &amp; Histogram</h3>
+                <div class="picker-bar" id="mainPicker"></div>
+                <button class="btn-run" id="btnOrigHist" disabled>Plot Original Histogram</button>
+                <div id="part1Result"></div>
+            </section>
+
+            <!-- Part 2: Histogram Equalization -->
+            <section id="part2" class="section-card">
+                <h3>Part 2: Histogram Equalization</h3>
+                <button class="btn-run" id="btnEqualize" disabled>Equalize Histogram</button>
+                <div id="part2Result"></div>
+            </section>
+
+            <!-- Part 3: Transfer Function & CDF Analysis -->
+            <section id="part3" class="section-card">
+                <h3>Part 3: Transfer Function &amp; CDF Analysis</h3>
+                <button class="btn-run" id="btnTransfer" disabled>Show Transfer Function</button>
+                <div id="part3Result"></div>
+            </section>
+
+            <!-- Part 4: Multi-Image Comparison -->
+            <section id="part4" class="section-card">
+                <h3>Part 4: Multi-Image Comparison</h3>
+                <button class="btn-run" id="btnMulti" disabled>Compare Multiple Images</button>
+                <div id="part4Result"></div>
+            </section>
+
+            <!-- Analysis Questions -->
+            <div class="analysis-box">
+                <h4>Analysis Questions</h4>
+                <ol>
+                    <li>Does histogram equalization always produce a perfectly uniform histogram? Why or why not?</li>
+                    <li>Why is the CDF used as the transfer function for histogram equalization? What property of the CDF makes it suitable?</li>
+                    <li>Does histogram equalization always improve image quality? Can you think of cases where it might degrade the result?</li>
+                    <li>Why must the transfer function \( T(r) \) be monotonically non-decreasing? What would happen if it were not?</li>
+                </ol>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="site-footer" aria-label="Site footer">
+        <div class="container">
+            <p>CSU2543 Digital Image Processing &middot; Shoolini University &middot; Divya Mohan &middot; Ishani Sharma</p>
+        </div>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./js/core.js"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/nav.js"></script>
+    <script src="./js/interactive.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="./js/dip.js"></script>
+    <script src="./js/plot.js"></script>
+    <script src="./js/picker.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var picker, currentImage;
+
+        function buildStatsEl(label, st) {
+            var wrap = DIP.createEl('div', 'stats-inline');
+            var items = [
+                [label, ''],
+                ['Min', st.min],
+                ['Max', st.max],
+                ['Mean', st.mean],
+                ['Std', st.std]
+            ];
+            items.forEach(function(pair) {
+                var span = document.createElement('span');
+                if (pair[1] === '') {
+                    span.textContent = pair[0];
+                } else {
+                    span.textContent = pair[0] + ': ';
+                    var strong = document.createElement('strong');
+                    strong.textContent = pair[1];
+                    span.appendChild(strong);
+                }
+                wrap.appendChild(span);
+            });
+            return wrap;
+        }
+
+        // Initialize picker
+        DIP.createPicker('mainPicker', {
+            label: 'Image',
+            defaultImage: 'einstein low',
+            onReady: function() {
+                document.getElementById('btnOrigHist').disabled = false;
+                document.getElementById('btnEqualize').disabled = false;
+                document.getElementById('btnTransfer').disabled = false;
+                document.getElementById('btnMulti').disabled = false;
+            }
+        }).then(function(p) { picker = p; });
+
+        // ---- Part 1: Original Image & Histogram ----
+        document.getElementById('btnOrigHist').addEventListener('click', function() {
+            var sel = picker.getSelection();
+            var container = document.getElementById('part1Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Loading image...');
+
+            DIP.loadImage(sel.url).then(function(img) {
+                currentImage = img;
+                var panels = DIP.figure(container, 'Original Image & Histogram', 2, [
+                    { type: 'image', title: sel.filename },
+                    { type: 'chart', title: 'Histogram' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                DIP.chart.histogram(panels[1].canvas, img.gray, {
+                    color: 'steelblue',
+                    title: 'Original Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+
+                var st = DIP.stats(img.gray);
+                container.appendChild(buildStatsEl('Original', st));
+
+                DIP.setLoading(container, false);
+                DIP.showToast('Original histogram plotted');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 2: Histogram Equalization ----
+        document.getElementById('btnEqualize').addEventListener('click', function() {
+            var sel = picker.getSelection();
+            var container = document.getElementById('part2Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Equalizing histogram...');
+
+            DIP.loadImage(sel.url).then(function(img) {
+                currentImage = img;
+                var eqGray = DIP.equalize(img.gray);
+
+                var panels = DIP.figure(container, 'Original vs Equalized', 2, [
+                    { type: 'image', title: 'Original' },
+                    { type: 'image', title: 'Equalized' },
+                    { type: 'chart', title: 'Original Histogram' },
+                    { type: 'chart', title: 'Equalized Histogram' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                DIP.draw.gray(panels[1].canvas, eqGray, img.width, img.height);
+
+                DIP.chart.histogram(panels[2].canvas, img.gray, {
+                    color: 'steelblue',
+                    title: 'Original Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+                DIP.chart.histogram(panels[3].canvas, eqGray, {
+                    color: 'darkorange',
+                    title: 'Equalized Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+
+                var origSt = DIP.stats(img.gray);
+                var eqSt = DIP.stats(eqGray);
+                container.appendChild(buildStatsEl('Original', origSt));
+                container.appendChild(buildStatsEl('Equalized', eqSt));
+
+                DIP.setLoading(container, false);
+                DIP.showToast('Histogram equalization complete');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 3: Transfer Function & CDF Analysis ----
+        document.getElementById('btnTransfer').addEventListener('click', function() {
+            var sel = picker.getSelection();
+            var container = document.getElementById('part3Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Computing transfer function...');
+
+            DIP.loadImage(sel.url).then(function(img) {
+                currentImage = img;
+
+                var hist = DIP.histogram(img.gray);
+                var pdfOrig = DIP.pdf(hist);
+                var cdfOrig = DIP.cdf(pdfOrig);
+
+                var eqGray = DIP.equalize(img.gray);
+                var histEq = DIP.histogram(eqGray);
+                var pdfEq = DIP.pdf(histEq);
+                var cdfEq = DIP.cdf(pdfEq);
+
+                // Transfer function: T(r) = CDF(r) * 255
+                var transferY = new Float64Array(256);
+                for (var i = 0; i < 256; i++) transferY[i] = cdfOrig[i] * 255;
+
+                // Identity line: y = x
+                var identityY = new Float64Array(256);
+                for (var i = 0; i < 256; i++) identityY[i] = i;
+
+                // Ideal uniform CDF: y = i / 255
+                var idealCDF = new Float64Array(256);
+                for (var i = 0; i < 256; i++) idealCDF[i] = i / 255;
+
+                var panels = DIP.figure(container, 'Transfer Function & CDF Analysis', 2, [
+                    { type: 'chart', title: 'Original PDF' },
+                    { type: 'chart', title: 'Transfer Function T(r)' },
+                    { type: 'chart', title: 'Equalized PDF' },
+                    { type: 'chart', title: 'CDF Comparison' }
+                ]);
+
+                // 1. Original PDF
+                DIP.chart.histogram(panels[0].canvas, pdfOrig, {
+                    color: 'steelblue',
+                    title: 'Original PDF',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'p(r)'
+                });
+
+                // 2. Transfer function with identity line
+                DIP.chart.line(panels[1].canvas, [
+                    { y: transferY, color: 'crimson', label: 'T(r) = CDF(r) x 255', lineWidth: 2 },
+                    { y: identityY, color: '#888888', label: 'Identity (y = r)', dash: true, lineWidth: 1 }
+                ], {
+                    title: 'Transfer Function T(r)',
+                    xlabel: 'Input Intensity r',
+                    ylabel: 'Output Intensity s',
+                    xlim: [0, 255],
+                    ylim: [0, 255],
+                    grid: true
+                });
+
+                // 3. Equalized PDF
+                DIP.chart.histogram(panels[2].canvas, pdfEq, {
+                    color: 'darkorange',
+                    title: 'Equalized PDF',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'p(s)'
+                });
+
+                // 4. CDF comparison
+                DIP.chart.line(panels[3].canvas, [
+                    { y: cdfOrig, color: 'steelblue', label: 'Original CDF', lineWidth: 2 },
+                    { y: cdfEq, color: 'darkorange', label: 'Equalized CDF', lineWidth: 2 },
+                    { y: idealCDF, color: '#000000', label: 'Ideal Uniform CDF', dash: true, lineWidth: 1 }
+                ], {
+                    title: 'CDF Comparison',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'CDF',
+                    xlim: [0, 255],
+                    ylim: [0, 1],
+                    grid: true
+                });
+
+                DIP.setLoading(container, false);
+                DIP.showToast('Transfer function analysis complete');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 4: Multi-Image Comparison ----
+        document.getElementById('btnMulti').addEventListener('click', function() {
+            var sel = picker.getSelection();
+            var container = document.getElementById('part4Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Loading multiple images...');
+
+            // Extract base path from the selected image URL
+            var basePath = sel.url.substring(0, sel.url.lastIndexOf('/') + 1);
+
+            var hardcoded = [
+                'Fig0222(b)(cameraman).png',
+                'Fig0236(a)(skull).png',
+                'Fig0240(a)(galaxy).png'
+            ];
+
+            var imageURLs = [sel.url];
+            var imageNames = [sel.filename];
+            hardcoded.forEach(function(f) {
+                if (f !== sel.filename) {
+                    imageURLs.push(basePath + f);
+                    imageNames.push(f);
+                }
+            });
+
+            var promises = imageURLs.map(function(url) {
+                return DIP.loadImage(url).catch(function() { return null; });
+            });
+
+            Promise.all(promises).then(function(images) {
+                var loaded = [];
+                for (var i = 0; i < images.length; i++) {
+                    if (images[i]) loaded.push({ img: images[i], name: imageNames[i] });
+                }
+
+                if (loaded.length === 0) {
+                    container.textContent = 'No images could be loaded.';
+                    DIP.setLoading(container, false);
+                    return;
+                }
+
+                var panelDefs = [];
+                loaded.forEach(function(item) {
+                    panelDefs.push({ type: 'image', title: item.name + ' (Original)' });
+                    panelDefs.push({ type: 'image', title: item.name + ' (Equalized)' });
+                });
+
+                var panels = DIP.figure(container, 'Multi-Image Comparison: Original vs Equalized', 2, panelDefs);
+
+                loaded.forEach(function(item, idx) {
+                    var origPanel = panels[idx * 2];
+                    var eqPanel = panels[idx * 2 + 1];
+                    var eqGray = DIP.equalize(item.img.gray);
+
+                    DIP.draw.gray(origPanel.canvas, item.img.gray, item.img.width, item.img.height);
+                    DIP.draw.gray(eqPanel.canvas, eqGray, item.img.width, item.img.height);
+                });
+
+                DIP.setLoading(container, false);
+                DIP.showToast('Multi-image comparison complete');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

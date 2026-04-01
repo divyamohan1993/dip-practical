@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practical 1: Loading &amp; Displaying Images | CSU2543</title>
+    <meta name="description" content="Practical 1: Loading & Displaying Images - Digital Image Processing Lab CSU2543. Shoolini University.">
+    <meta name="author" content="Divya Mohan">
+
+    <script>
+        (function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+
+    <style>
+        .print-only { display: none; }
+
+        @media print {
+            * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+            @page { margin: 0.75in 0.85in 0.75in 0.85in; }
+            body {
+                background: white !important; color: black !important;
+                font-family: 'Times New Roman', Times, serif !important;
+                font-size: 12pt !important; line-height: 1.45 !important; margin: 0 !important;
+            }
+            .dip-navbar, .theme-toggle, .skip-link, #toast, .btn-run,
+            .image-select, .chapter-select, select, .btn-pair, .pair-btn,
+            input[type="range"], .slider-group, .no-print, .site-footer,
+            .card-arrow, .hero-badge, .hero, .practical-grid,
+            .picker-bar, .image-picker, .picker-label,
+            label[for], input[type="radio"], .colab-badge { display: none !important; }
+            .print-only { display: block !important; }
+
+            .print-cover {
+                display: flex !important; flex-direction: column; align-items: center;
+                justify-content: center; min-height: 100vh; page-break-after: always;
+                text-align: center; padding: 0.75in 1in;
+                font-family: 'Times New Roman', Times, serif !important;
+                border: 3pt double black; margin: 0;
+            }
+            .print-cover .cover-logo { width: 140px; height: auto; margin-bottom: 18pt; }
+            .print-cover .cover-university { font-size: 20pt; font-weight: bold; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4pt; }
+            .print-cover .cover-dept { font-size: 12pt; margin-bottom: 28pt; color: #222; line-height: 1.6; }
+            .print-cover .cover-rule { width: 60%; height: 2pt; background: black; margin: 0 auto 20pt; }
+            .print-cover .cover-subject { font-size: 18pt; font-weight: bold; margin-bottom: 4pt; letter-spacing: 0.03em; }
+            .print-cover .cover-code { font-size: 13pt; font-weight: bold; margin-bottom: 20pt; color: #333; }
+            .print-cover .cover-practical { font-size: 15pt; font-weight: bold; font-style: italic; margin-bottom: 32pt; padding: 8pt 24pt; border-top: 1pt solid #666; border-bottom: 1pt solid #666; }
+            .print-cover .cover-table { border-collapse: collapse; font-size: 12pt; margin: 0 auto; text-align: left; }
+            .print-cover .cover-table td { padding: 4pt 12pt; vertical-align: top; }
+            .print-cover .cover-table td:first-child { font-weight: bold; text-align: right; padding-right: 16pt; white-space: nowrap; }
+            .print-cover .cover-rule-sm { width: 25%; height: 0.75pt; background: #888; margin: 28pt auto 10pt; }
+            .print-cover .cover-session { font-size: 12pt; font-style: italic; color: #444; }
+
+            .container { max-width: 100% !important; padding: 0 !important; }
+            #main-content { padding: 0 !important; margin: 0 !important; }
+
+            h2, #main-content h2 { font-family: 'Times New Roman', Times, serif !important; font-size: 16pt !important; font-weight: bold !important; text-align: center !important; margin: 14pt 0 10pt !important; padding: 0 !important; border: none !important; display: block !important; color: black !important; }
+            h3, .section-card h3 { font-family: 'Times New Roman', Times, serif !important; font-size: 13pt !important; font-weight: bold !important; color: black !important; border: none !important; border-bottom: 0.5pt solid #ccc !important; padding: 0 0 3pt 0 !important; margin: 10pt 0 6pt !important; }
+            h4, .analysis-box h4 { font-family: 'Times New Roman', Times, serif !important; font-size: 12pt !important; font-weight: bold !important; font-style: italic !important; color: black !important; margin: 8pt 0 4pt !important; padding: 0 !important; }
+
+            .section-card { background: transparent !important; border: none !important; box-shadow: none !important; padding: 0 !important; margin-bottom: 6pt !important; }
+            .section-card p, p { font-size: 12pt !important; text-align: justify !important; max-width: none !important; margin-bottom: 4pt !important; line-height: 1.45 !important; }
+
+            .theory-box { background: #f7f7f7 !important; border-left: 2.5pt solid #333 !important; border-top: none !important; border-right: none !important; border-bottom: none !important; padding: 6pt 10pt !important; margin: 6pt 0 !important; font-size: 11pt !important; color: black !important; page-break-inside: avoid; }
+            .theory-box strong { font-weight: bold; }
+            .theory-box ul { margin: 4pt 0 2pt 14pt !important; padding: 0 !important; }
+            .theory-box li { font-size: 11pt !important; margin-bottom: 1pt !important; }
+
+            .analysis-box { background: transparent !important; border-top: 1pt solid #ccc !important; border-bottom: none !important; border-left: none !important; border-right: none !important; padding: 6pt 0 0 !important; margin: 10pt 0 !important; page-break-inside: avoid; }
+            .analysis-box ol { font-size: 11pt !important; padding-left: 18pt !important; }
+            .analysis-box li { margin-bottom: 3pt !important; text-align: justify !important; line-height: 1.45 !important; }
+
+            .result-img { max-width: 95% !important; max-height: 8.5in !important; width: auto !important; height: auto !important; margin: 6pt auto !important; display: block !important; border: 0.5pt solid #bbb !important; border-radius: 0 !important; }
+            img { max-width: 100% !important; }
+
+            .props-table { font-size: 11pt !important; border: 0.5pt solid #999 !important; margin: 4pt 0 !important; page-break-inside: avoid; }
+            .props-table th, .props-table td { padding: 2pt 6pt !important; border-bottom: 0.5pt solid #ccc !important; font-size: 11pt !important; }
+            .props-table th { background: #f0f0f0 !important; font-weight: bold !important; color: black !important; text-transform: none !important; letter-spacing: normal !important; }
+
+            code { font-size: 10pt !important; background: #f5f5f5 !important; padding: 1pt 3pt !important; border: 0.5pt solid #ddd !important; font-family: 'Courier New', monospace !important; }
+            h2, h3, h4 { page-break-after: avoid !important; }
+
+            .print-header { display: block !important; text-align: center; font-family: 'Times New Roman', Times, serif !important; padding-bottom: 5pt; margin-bottom: 8pt; border-bottom: 0.75pt solid #999; }
+            .print-header .ph-line { font-size: 10pt; color: #555; letter-spacing: 0.02em; }
+        }
+    </style>
+</head>
+<body>
+
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <nav class="navbar navbar-expand-lg sticky-top dip-navbar" id="mainNav" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand fw-semibold" href="./index.html">DIP Lab</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false"
+                    aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="./index.html" data-page="index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="./p1.html" data-page="p1">P1</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p2.html" data-page="p2">P2</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p3.html" data-page="p3">P3</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p4.html" data-page="p4">P4</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p5.html" data-page="p5">P5</a></li>
+                </ul>
+                <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme">
+                    <span class="theme-toggle-label">Dark</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Print cover page (hidden on screen) -->
+    <div class="print-only print-cover" aria-hidden="true">
+        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
+        <div class="cover-university">Shoolini University</div>
+        <div class="cover-dept">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
+        <div class="cover-rule"></div>
+        <div class="cover-subject">Digital Image Processing</div>
+        <div class="cover-code">Course Code: CSU2543</div>
+        <div class="cover-practical">Practical 1: Loading &amp; Displaying Images</div>
+        <table class="cover-table">
+            <tr><td>Submitted by:</td><td>Divya Mohan</td></tr>
+            <tr><td>Programme:</td><td>B.Tech CSE (Cybersecurity)</td></tr>
+            <tr><td>Semester:</td><td>8th</td></tr>
+            <tr><td>Faculty Guide:</td><td>Ishani Sharma</td></tr>
+            <tr><td>Reference Text:</td><td>Gonzalez &amp; Woods, <em>Digital Image Processing</em>, 3rd Ed.</td></tr>
+        </table>
+        <div class="cover-rule-sm"></div>
+        <div class="cover-session">Academic Session 2025&ndash;2026</div>
+    </div>
+
+    <!-- Print running header (hidden on screen, shown on print content pages) -->
+    <div class="print-only print-header" aria-hidden="true">
+        <div class="ph-line">Shoolini University &middot; CSU2543 &middot; Digital Image Processing &middot; Divya Mohan</div>
+    </div>
+
+    <main id="main-content">
+        <div class="container">
+            <h2>Practical 1: Loading &amp; Displaying Images</h2>
+
+            <p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_1.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
+
+            <div class="section-card">
+                <h3>Objective</h3>
+                <p>To learn how to load, display, and inspect digital images using client-side image processing in the browser.</p>
+                <div class="theory-box">
+                    <strong>Theory:</strong> A digital image is a 2D matrix of pixel intensity values. For an 8-bit grayscale image, each pixel holds a value between 0 (black) and 255 (white). Understanding image representation is the foundation of all image processing.
+                    <ul>
+                        <li>Each pixel stores an integer intensity in the range [0, 255].</li>
+                        <li>The image dimensions (width &times; height) define its spatial resolution.</li>
+                        <li>Statistical measures (min, max, mean, std) summarize the intensity distribution.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Shared picker for Parts 1 & 2 -->
+            <div class="picker-bar" id="mainPicker"></div>
+
+            <div class="section-card">
+                <h3>Part 1: Load and Display a Single Image</h3>
+                <p>Load the selected image in grayscale and display it with its properties (shape, data type, min/max intensity, mean, and standard deviation).</p>
+                <button class="btn-run" id="btnDisplay" disabled>Display Image</button>
+                <div id="displayResult"></div>
+            </div>
+
+            <div class="section-card">
+                <h3>Part 2: Pixel Intensity Histogram</h3>
+                <p>Visualize the distribution of pixel intensities. The histogram shows how many pixels have each intensity value (0&ndash;255), revealing the contrast and brightness characteristics of the image.</p>
+                <button class="btn-run" id="btnHist" disabled>Show Histogram</button>
+                <div id="histResult"></div>
+            </div>
+
+            <div class="section-card">
+                <h3>Part 3: Display Multiple Images</h3>
+                <p>Display four sample images side by side in a 2&times;2 grid to compare different types of digital images.</p>
+                <button class="btn-run" id="btnMulti" disabled>Show Grid</button>
+                <div id="multiResult"></div>
+            </div>
+
+            <div class="analysis-box">
+                <h4>Analysis Questions</h4>
+                <ol>
+                    <li>What does the shape of the image array represent? How do grayscale and color images differ in their array dimensions?</li>
+                    <li>Why do we specify <code>cmap='gray'</code> when displaying grayscale images in Matplotlib? What happens if we omit it?</li>
+                    <li>Compare the histogram distributions of two different images. What does a narrow histogram versus a wide histogram indicate about the contrast of an image?</li>
+                </ol>
+            </div>
+        </div>
+    </main>
+
+    <footer class="site-footer" aria-label="Site footer">
+        <div class="container">
+            <p>CSU2543 Digital Image Processing &middot; Shoolini University &middot; Divya Mohan &middot; Ishani Sharma</p>
+        </div>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    <script src="./js/core.js"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/nav.js"></script>
+    <script src="./js/interactive.js"></script>
+    <script src="./js/dip.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="./js/plot.js"></script>
+    <script src="./js/picker.js"></script>
+
+    <script>
+    (async function() {
+        var picker = await DIP.createPicker('mainPicker', {
+            defaultImage: 'cameraman',
+            onReady: function() {
+                document.querySelectorAll('.btn-run').forEach(function(b) { b.disabled = false; });
+            }
+        });
+
+        // Part 1: Display Image with properties table
+        document.getElementById('btnDisplay').addEventListener('click', async function() {
+            var sel = picker.getSelection();
+            if (!sel.filename) return DIP.showToast('Select an image first');
+            var container = document.getElementById('displayResult');
+            DIP.setLoading(container, true);
+            try {
+                var img = await DIP.loadImage(sel.url);
+                var st = DIP.stats(img.gray);
+                var panels = DIP.figure(container, sel.filename, 1, [{type: 'image', title: 'Loaded Image'}]);
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+
+                var table = document.createElement('table');
+                table.className = 'props-table';
+                var headerRow = table.insertRow();
+                var th1 = document.createElement('th'); th1.textContent = 'Property'; headerRow.appendChild(th1);
+                var th2 = document.createElement('th'); th2.textContent = 'Value'; headerRow.appendChild(th2);
+
+                var props = [
+                    ['Shape', img.height + ' \u00d7 ' + img.width],
+                    ['Data Type', 'uint8'],
+                    ['Min Intensity', st.min],
+                    ['Max Intensity', st.max],
+                    ['Mean Intensity', st.mean],
+                    ['Std Deviation', st.std]
+                ];
+                for (var i = 0; i < props.length; i++) {
+                    var row = table.insertRow();
+                    var c1 = row.insertCell(); c1.textContent = props[i][0];
+                    var c2 = row.insertCell(); c2.textContent = props[i][1];
+                }
+                container.appendChild(table);
+            } catch(e) {
+                container.textContent = 'Error: ' + e.message;
+            }
+            DIP.setLoading(container, false);
+        });
+
+        // Part 2: Histogram (image + chart side by side)
+        document.getElementById('btnHist').addEventListener('click', async function() {
+            var sel = picker.getSelection();
+            if (!sel.filename) return DIP.showToast('Select an image first');
+            var container = document.getElementById('histResult');
+            DIP.setLoading(container, true);
+            try {
+                var img = await DIP.loadImage(sel.url);
+                var panels = DIP.figure(container, sel.filename, 2, [
+                    {type: 'image', title: 'Image'},
+                    {type: 'chart', title: 'Histogram'}
+                ]);
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                DIP.chart.histogram(panels[1].canvas, img.gray, {
+                    title: 'Pixel Intensity Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+            } catch(e) {
+                container.textContent = 'Error: ' + e.message;
+            }
+            DIP.setLoading(container, false);
+        });
+
+        // Part 3: Multi-image 2x2 grid
+        document.getElementById('btnMulti').addEventListener('click', async function() {
+            var container = document.getElementById('multiResult');
+            DIP.setLoading(container, true);
+            var names = ['cameraman', 'skull', 'dental_xray', 'galaxy'];
+            var sel = picker.getSelection();
+            var basePath = sel.url ? sel.url.replace(/[^/]+$/, '') : './data/';
+            var loaded = [];
+            for (var i = 0; i < names.length; i++) {
+                try {
+                    var img = await DIP.loadImage(basePath + names[i] + '.png');
+                    loaded.push({name: names[i], img: img});
+                } catch(e) {
+                    // Skip images that fail to load
+                }
+            }
+            if (loaded.length === 0) {
+                container.textContent = 'No images could be loaded.';
+                DIP.setLoading(container, false);
+                return;
+            }
+            var panelDefs = [];
+            for (var i = 0; i < loaded.length; i++) {
+                panelDefs.push({type: 'image', title: loaded[i].name});
+            }
+            var panels = DIP.figure(container, 'Multiple Images', 2, panelDefs);
+            for (var i = 0; i < loaded.length; i++) {
+                DIP.draw.gray(panels[i].canvas, loaded[i].img.gray, loaded[i].img.width, loaded[i].img.height);
+            }
+            DIP.setLoading(container, false);
+        });
+    })();
+    </script>
+</body>
+</html>

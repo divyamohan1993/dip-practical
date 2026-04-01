@@ -1,0 +1,168 @@
+{
+  "chapter": "CH02",
+  "chapter_name": "Digital Image Fundamentals",
+  "image_count": 23,
+  "images": [
+    {
+      "filename": "Fig0207(a)(gray level band).png",
+      "display_name": "Fig0207: a - gray level band",
+      "width": 7200,
+      "height": 2400,
+      "size_kb": 21.7
+    },
+    {
+      "filename": "Fig0219(rose1024).png",
+      "display_name": "Fig0219: rose1024",
+      "width": 1024,
+      "height": 1024,
+      "size_kb": 518.7
+    },
+    {
+      "filename": "Fig0220(a)(chronometer 3692x2812  2pt25 inch 1250 dpi).png",
+      "display_name": "Fig0220: a - chronometer 3692x2812  2pt25 inch 1250 dpi",
+      "width": 2812,
+      "height": 3692,
+      "size_kb": 3294.5
+    },
+    {
+      "filename": "Fig0221(a)(ctskull-256).png",
+      "display_name": "Fig0221: a - ctskull-256",
+      "width": 374,
+      "height": 452,
+      "size_kb": 69.6
+    },
+    {
+      "filename": "Fig0222(a)(face).png",
+      "display_name": "Fig0222: a - face",
+      "width": 300,
+      "height": 300,
+      "size_kb": 46.8
+    },
+    {
+      "filename": "Fig0222(b)(cameraman).png",
+      "display_name": "Fig0222: b - cameraman",
+      "width": 256,
+      "height": 256,
+      "size_kb": 37.7
+    },
+    {
+      "filename": "Fig0222(c)(crowd).png",
+      "display_name": "Fig0222: c - crowd",
+      "width": 512,
+      "height": 512,
+      "size_kb": 166.0
+    },
+    {
+      "filename": "Fig0226(galaxy_pair_original).png",
+      "display_name": "Fig0226: galaxy_pair_original",
+      "width": 566,
+      "height": 598,
+      "size_kb": 84.8
+    },
+    {
+      "filename": "Fig0227(a)(washington_infrared).png",
+      "display_name": "Fig0227: a - washington_infrared",
+      "width": 1024,
+      "height": 1024,
+      "size_kb": 750.0
+    },
+    {
+      "filename": "Fig0228(a)(angiography_mask_image).png",
+      "display_name": "Fig0228: a - angiography_mask_image",
+      "width": 420,
+      "height": 420,
+      "size_kb": 56.3
+    },
+    {
+      "filename": "Fig0228(b)(angiography_live_ image).png",
+      "display_name": "Fig0228: b - angiography_live_ image",
+      "width": 420,
+      "height": 420,
+      "size_kb": 58.8
+    },
+    {
+      "filename": "Fig0229(a)(tungsten_filament_shaded).png",
+      "display_name": "Fig0229: a - tungsten_filament_shaded",
+      "width": 754,
+      "height": 892,
+      "size_kb": 80.1
+    },
+    {
+      "filename": "Fig0229(b)(tungsten_sensor_shading).png",
+      "display_name": "Fig0229: b - tungsten_sensor_shading",
+      "width": 754,
+      "height": 892,
+      "size_kb": 28.1
+    },
+    {
+      "filename": "Fig0230(a)(dental_xray).png",
+      "display_name": "Fig0230: a - dental_xray",
+      "width": 882,
+      "height": 674,
+      "size_kb": 260.3
+    },
+    {
+      "filename": "Fig0230(b)(dental_xray_mask).png",
+      "display_name": "Fig0230: b - dental_xray_mask",
+      "width": 882,
+      "height": 674,
+      "size_kb": 2.3
+    },
+    {
+      "filename": "Fig0232(a)(partial_body_scan).png",
+      "display_name": "Fig0232: a - partial_body_scan",
+      "width": 750,
+      "height": 1482,
+      "size_kb": 70.8
+    },
+    {
+      "filename": "Fig0235(c)(kidney_original).png",
+      "display_name": "Fig0235: c - kidney_original",
+      "width": 686,
+      "height": 790,
+      "size_kb": 87.3
+    },
+    {
+      "filename": "Fig0236(a)(letter_T).png",
+      "display_name": "Fig0236: a - letter_T",
+      "width": 420,
+      "height": 540,
+      "size_kb": 2.3
+    },
+    {
+      "filename": "Fig0237(a)(characters test pattern)_POST.png",
+      "display_name": "Fig0237: a - characters test pattern_POST",
+      "width": 688,
+      "height": 688,
+      "size_kb": 11.5
+    },
+    {
+      "filename": "Fig0240(a)(apollo 17_boulder_noisy).png",
+      "display_name": "Fig0240: a - apollo 17_boulder_noisy",
+      "width": 630,
+      "height": 474,
+      "size_kb": 195.0
+    },
+    {
+      "filename": "Fig0241(a)(einstein low contrast).png",
+      "display_name": "Fig0241: a - einstein low contrast",
+      "width": 800,
+      "height": 679,
+      "size_kb": 185.8
+    },
+    {
+      "filename": "Fig0241(b)(einstein med contrast).png",
+      "display_name": "Fig0241: b - einstein med contrast",
+      "width": 800,
+      "height": 679,
+      "size_kb": 238.7
+    },
+    {
+      "filename": "Fig0241(c)(einstein high contrast).png",
+      "display_name": "Fig0241: c - einstein high contrast",
+      "width": 800,
+      "height": 679,
+      "size_kb": 269.4
+    }
+  ]
+}
