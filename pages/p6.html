@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practical 6: Histogram Matching &amp; Specification | CSU2543</title>
+    <meta name="description" content="Practical 6: Histogram Matching & Specification - Transform image histograms to match target distributions via CDF inversion. CSU2543 Digital Image Processing.">
+    <meta name="author" content="Divya Mohan">
+    <script>(function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar navbar-expand-lg sticky-top dip-navbar" id="mainNav" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand fw-semibold" href="./index.html">DIP Lab</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="./index.html" data-page="index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p1.html" data-page="p1">P1</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p2.html" data-page="p2">P2</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p3.html" data-page="p3">P3</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p4.html" data-page="p4">P4</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p5.html" data-page="p5">P5</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p6.html" data-page="p6">P6</a></li>
+                </ul>
+                <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme"><span class="theme-toggle-label">Dark</span></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Print cover page -->
+    <div class="print-only print-cover" aria-hidden="true">
+        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
+        <div class="cover-university">Shoolini University</div>
+        <div class="cover-dept">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
+        <div class="cover-rule"></div>
+        <div class="cover-subject">Digital Image Processing</div>
+        <div class="cover-code">Course Code: CSU2543</div>
+        <div class="cover-practical">Practical 6: Histogram Matching &amp; Specification</div>
+        <table class="cover-table">
+            <tr><td>Submitted by:</td><td>Divya Mohan</td></tr>
+            <tr><td>Programme:</td><td>B.Tech CSE (Cybersecurity)</td></tr>
+            <tr><td>Semester:</td><td>8th</td></tr>
+            <tr><td>Faculty Guide:</td><td>Ishani Sharma</td></tr>
+            <tr><td>Reference Text:</td><td>Gonzalez &amp; Woods, <em>Digital Image Processing</em>, 3rd Ed.</td></tr>
+        </table>
+        <div class="cover-rule-sm"></div>
+        <div class="cover-session">Academic Session 2025&ndash;2026</div>
+    </div>
+    <div class="print-only print-header" aria-hidden="true">
+        <div class="ph-line">Shoolini University &middot; CSU2543 &middot; Digital Image Processing &middot; Divya Mohan</div>
+    </div>
+
+    <main id="main-content">
+        <div class="container" style="max-width: 960px;">
+
+            <h1 style="margin: 2rem 0 0.5rem; font-size: clamp(1.6rem,1rem+2.5vw,2.5rem); font-weight: 800; letter-spacing: -0.04em;">Practical 6: Histogram Matching &amp; Specification</h1>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                <span style="font-size: 0.82rem;">Reference: Gonzalez &amp; Woods, Ch 3</span>
+            </p>
+
+            <!-- Objective -->
+            <section id="objective" class="section-card">
+                <h3>Objective</h3>
+                <p>Understand and implement histogram matching (specification) &mdash; a generalisation of histogram equalization that transforms a source image so its histogram approximates that of a given target image.</p>
+
+                <div class="theory-box">
+                    <strong>Theory:</strong> While histogram equalization maps to a uniform distribution, histogram matching maps to an <em>arbitrary</em> target distribution. The key insight is CDF inversion: if we know the source CDF and the target CDF, we can find the intensity mapping by inverting the target CDF at the source CDF values.
+                    <ul style="margin: 0.5rem 0 0.25rem; padding-left: 1.25rem;">
+                        <li><strong>Source CDF:</strong> \( \text{CDF}_s(r) = \sum_{j=0}^{r} p_s(j) \)</li>
+                        <li><strong>Target CDF:</strong> \( \text{CDF}_t(z) = \sum_{j=0}^{z} p_t(j) \)</li>
+                        <li><strong>Matching:</strong> For each \( r \), find \( z \) such that \( \text{CDF}_t(z) \approx \text{CDF}_s(r) \)</li>
+                    </ul>
+                </div>
+
+                <div class="formula-box">
+                    $$z = \text{CDF}_t^{-1}\!\bigl(\text{CDF}_s(r)\bigr)$$
+                </div>
+            </section>
+
+            <!-- Part 1: Source Histogram -->
+            <section id="part1" class="section-card">
+                <h3>Part 1: Source Histogram</h3>
+                <div class="picker-bar" id="srcPicker"></div>
+                <button class="btn-run" id="btnSrcHist" disabled>Plot Source Histogram</button>
+                <div id="part1Result"></div>
+            </section>
+
+            <!-- Part 2: Equalization Baseline -->
+            <section id="part2" class="section-card">
+                <h3>Part 2: Equalization Baseline</h3>
+                <button class="btn-run" id="btnEqualize" disabled>Equalize (Baseline)</button>
+                <div id="part2Result"></div>
+            </section>
+
+            <!-- Part 3: Histogram Matching -->
+            <section id="part3" class="section-card">
+                <h3>Part 3: Histogram Matching</h3>
+                <div class="picker-bar" id="tgtPicker"></div>
+                <button class="btn-run" id="btnMatch" disabled>Match Histograms</button>
+                <div id="part3Result"></div>
+            </section>
+
+            <!-- Part 4: Multi-Target Comparison -->
+            <section id="part4" class="section-card">
+                <h3>Part 4: Multi-Target Comparison</h3>
+                <button class="btn-run" id="btnMulti" disabled>Compare Multiple Targets</button>
+                <div id="part4Result"></div>
+            </section>
+
+            <!-- Part 5: Transfer Function Analysis -->
+            <section id="part5" class="section-card">
+                <h3>Part 5: Transfer Function Analysis</h3>
+                <button class="btn-run" id="btnTransfer" disabled>Show Transfer Function</button>
+                <div id="part5Result"></div>
+            </section>
+
+            <!-- Analysis Questions -->
+            <div class="analysis-box">
+                <h4>Analysis Questions</h4>
+                <ol>
+                    <li>How does histogram matching differ from histogram equalization in terms of the target distribution? When would you prefer one over the other?</li>
+                    <li>Why does the CDF inversion approach work for histogram matching? What mathematical property of CDFs makes this possible?</li>
+                    <li>When matching to multiple targets, which target produces results most similar to histogram equalization, and why?</li>
+                    <li>In the transfer function analysis, what does the deviation between the target CDF and matched CDF tell you about the quality of the matching?</li>
+                </ol>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="site-footer" aria-label="Site footer">
+        <div class="container">
+            <p>CSU2543 Digital Image Processing &middot; Shoolini University &middot; Divya Mohan &middot; Ishani Sharma</p>
+        </div>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./js/core.js"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/nav.js"></script>
+    <script src="./js/interactive.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="./js/dip.js"></script>
+    <script src="./js/plot.js"></script>
+    <script src="./js/picker.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var srcPickerObj, tgtPickerObj, currentSrcImage;
+
+        function buildStatsEl(label, st) {
+            var wrap = DIP.createEl('div', 'stats-inline');
+            var items = [
+                [label, ''],
+                ['Min', st.min],
+                ['Max', st.max],
+                ['Mean', st.mean],
+                ['Std', st.std]
+            ];
+            items.forEach(function(pair) {
+                var span = document.createElement('span');
+                if (pair[1] === '') {
+                    span.textContent = pair[0];
+                } else {
+                    span.textContent = pair[0] + ': ';
+                    var strong = document.createElement('strong');
+                    strong.textContent = pair[1];
+                    span.appendChild(strong);
+                }
+                wrap.appendChild(span);
+            });
+            return wrap;
+        }
+
+        // Initialize source picker
+        DIP.createPicker('srcPicker', {
+            label: 'Source Image',
+            defaultImage: 'einstein low',
+            onReady: function() {
+                document.getElementById('btnSrcHist').disabled = false;
+                document.getElementById('btnEqualize').disabled = false;
+                document.getElementById('btnMulti').disabled = false;
+                document.getElementById('btnTransfer').disabled = false;
+            }
+        }).then(function(p) { srcPickerObj = p; });
+
+        // Initialize target picker
+        DIP.createPicker('tgtPicker', {
+            label: 'Target Image',
+            defaultImage: 'cameraman',
+            onReady: function() {
+                document.getElementById('btnMatch').disabled = false;
+            }
+        }).then(function(p) { tgtPickerObj = p; });
+
+        // ---- Part 1: Source Histogram ----
+        document.getElementById('btnSrcHist').addEventListener('click', function() {
+            var sel = srcPickerObj.getSelection();
+            var container = document.getElementById('part1Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Loading source image...');
+
+            DIP.loadImage(sel.url).then(function(img) {
+                currentSrcImage = img;
+                var panels = DIP.figure(container, 'Source Image & Histogram', 2, [
+                    { type: 'image', title: sel.filename },
+                    { type: 'chart', title: 'Source Histogram' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                DIP.chart.histogram(panels[1].canvas, img.gray, {
+                    color: 'steelblue',
+                    title: 'Source Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+
+                var st = DIP.stats(img.gray);
+                container.appendChild(buildStatsEl('Source', st));
+
+                DIP.setLoading(container, false);
+                DIP.showToast('Source histogram plotted');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 2: Equalization Baseline ----
+        document.getElementById('btnEqualize').addEventListener('click', function() {
+            var sel = srcPickerObj.getSelection();
+            var container = document.getElementById('part2Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Equalizing histogram...');
+
+            DIP.loadImage(sel.url).then(function(img) {
+                currentSrcImage = img;
+                var eqGray = DIP.equalize(img.gray);
+
+                var panels = DIP.figure(container, 'Original vs Equalized', 2, [
+                    { type: 'image', title: 'Original' },
+                    { type: 'image', title: 'Equalized' },
+                    { type: 'chart', title: 'Original Histogram' },
+                    { type: 'chart', title: 'Equalized Histogram' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                DIP.draw.gray(panels[1].canvas, eqGray, img.width, img.height);
+
+                DIP.chart.histogram(panels[2].canvas, img.gray, {
+                    color: 'steelblue',
+                    title: 'Original Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+                DIP.chart.histogram(panels[3].canvas, eqGray, {
+                    color: 'darkorange',
+                    title: 'Equalized Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+
+                var origSt = DIP.stats(img.gray);
+                var eqSt = DIP.stats(eqGray);
+                container.appendChild(buildStatsEl('Original', origSt));
+                container.appendChild(buildStatsEl('Equalized', eqSt));
+
+                DIP.setLoading(container, false);
+                DIP.showToast('Equalization baseline complete');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 3: Histogram Matching ----
+        document.getElementById('btnMatch').addEventListener('click', function() {
+            var srcSel = srcPickerObj.getSelection();
+            var tgtSel = tgtPickerObj.getSelection();
+            var container = document.getElementById('part3Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Matching histograms...');
+
+            Promise.all([
+                DIP.loadImage(srcSel.url),
+                DIP.loadImage(tgtSel.url)
+            ]).then(function(results) {
+                var srcImg = results[0];
+                var tgtImg = results[1];
+                currentSrcImage = srcImg;
+
+                var matchedGray = DIP.histMatch(srcImg.gray, tgtImg.gray);
+
+                var panels = DIP.figure(container, 'Histogram Matching: Source, Target, Matched', 3, [
+                    { type: 'image', title: 'Source' },
+                    { type: 'image', title: 'Target' },
+                    { type: 'image', title: 'Matched' },
+                    { type: 'chart', title: 'Source Histogram' },
+                    { type: 'chart', title: 'Target Histogram' },
+                    { type: 'chart', title: 'Matched Histogram' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, srcImg.gray, srcImg.width, srcImg.height);
+                DIP.draw.gray(panels[1].canvas, tgtImg.gray, tgtImg.width, tgtImg.height);
+                DIP.draw.gray(panels[2].canvas, matchedGray, srcImg.width, srcImg.height);
+
+                DIP.chart.histogram(panels[3].canvas, srcImg.gray, {
+                    color: 'steelblue',
+                    title: 'Source Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+                DIP.chart.histogram(panels[4].canvas, tgtImg.gray, {
+                    color: 'seagreen',
+                    title: 'Target Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+                DIP.chart.histogram(panels[5].canvas, matchedGray, {
+                    color: 'darkorange',
+                    title: 'Matched Histogram',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'Frequency'
+                });
+
+                var srcSt = DIP.stats(srcImg.gray);
+                var tgtSt = DIP.stats(tgtImg.gray);
+                var matchSt = DIP.stats(matchedGray);
+                container.appendChild(buildStatsEl('Source', srcSt));
+                container.appendChild(buildStatsEl('Target', tgtSt));
+                container.appendChild(buildStatsEl('Matched', matchSt));
+
+                DIP.setLoading(container, false);
+                DIP.showToast('Histogram matching complete');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 4: Multi-Target Comparison ----
+        document.getElementById('btnMulti').addEventListener('click', function() {
+            var srcSel = srcPickerObj.getSelection();
+            var container = document.getElementById('part4Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Comparing multiple targets...');
+
+            var basePath = srcSel.url.substring(0, srcSel.url.lastIndexOf('/') + 1);
+
+            DIP.loadImage(srcSel.url).then(function(srcImg) {
+                currentSrcImage = srcImg;
+                var eqGray = DIP.equalize(srcImg.gray);
+
+                var targetFiles = [
+                    'Fig0316(3)(third_from_top).png',
+                    'Fig0222(b)(cameraman).png'
+                ];
+
+                var targetPromises = targetFiles.map(function(f) {
+                    return DIP.loadImage(basePath + f).catch(function() { return null; });
+                });
+
+                Promise.all(targetPromises).then(function(targetImages) {
+                    var targets = [
+                        { label: 'Equalized', gray: eqGray, w: srcImg.width, h: srcImg.height }
+                    ];
+
+                    if (targetImages[0]) {
+                        var matchHigh = DIP.histMatch(srcImg.gray, targetImages[0].gray);
+                        targets.push({ label: 'Matched (High Contrast)', gray: matchHigh, w: srcImg.width, h: srcImg.height });
+                    }
+                    if (targetImages[1]) {
+                        var matchCam = DIP.histMatch(srcImg.gray, targetImages[1].gray);
+                        targets.push({ label: 'Matched (Cameraman)', gray: matchCam, w: srcImg.width, h: srcImg.height });
+                    }
+
+                    var cols = 1 + targets.length;
+                    var panelDefs = [{ type: 'image', title: 'Source' }];
+                    targets.forEach(function(t) {
+                        panelDefs.push({ type: 'image', title: t.label });
+                    });
+                    panelDefs.push({ type: 'chart', title: 'Source Histogram' });
+                    targets.forEach(function(t) {
+                        panelDefs.push({ type: 'chart', title: t.label + ' Histogram' });
+                    });
+
+                    var panels = DIP.figure(container, 'Multi-Target Comparison', cols, panelDefs);
+
+                    DIP.draw.gray(panels[0].canvas, srcImg.gray, srcImg.width, srcImg.height);
+                    for (var i = 0; i < targets.length; i++) {
+                        DIP.draw.gray(panels[1 + i].canvas, targets[i].gray, targets[i].w, targets[i].h);
+                    }
+
+                    var histColors = ['steelblue', 'darkorange', 'seagreen', 'crimson'];
+                    DIP.chart.histogram(panels[cols].canvas, srcImg.gray, {
+                        color: histColors[0],
+                        title: 'Source Histogram',
+                        xlabel: 'Pixel Intensity',
+                        ylabel: 'Frequency'
+                    });
+                    for (var j = 0; j < targets.length; j++) {
+                        DIP.chart.histogram(panels[cols + 1 + j].canvas, targets[j].gray, {
+                            color: histColors[(j + 1) % histColors.length],
+                            title: targets[j].label + ' Histogram',
+                            xlabel: 'Pixel Intensity',
+                            ylabel: 'Frequency'
+                        });
+                    }
+
+                    container.appendChild(buildStatsEl('Source', DIP.stats(srcImg.gray)));
+                    targets.forEach(function(t) {
+                        container.appendChild(buildStatsEl(t.label, DIP.stats(t.gray)));
+                    });
+
+                    DIP.setLoading(container, false);
+                    DIP.showToast('Multi-target comparison complete');
+                });
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+
+        // ---- Part 5: Transfer Function Analysis ----
+        document.getElementById('btnTransfer').addEventListener('click', function() {
+            var srcSel = srcPickerObj.getSelection();
+            var container = document.getElementById('part5Result');
+            DIP.setLoading(container, true);
+            DIP.showToast('Computing transfer function...');
+
+            var tgtSel = tgtPickerObj.getSelection();
+
+            Promise.all([
+                DIP.loadImage(srcSel.url),
+                DIP.loadImage(tgtSel.url)
+            ]).then(function(results) {
+                var srcImg = results[0];
+                var tgtImg = results[1];
+                currentSrcImage = srcImg;
+
+                var matchedGray = DIP.histMatch(srcImg.gray, tgtImg.gray);
+
+                var srcHist = DIP.histogram(srcImg.gray);
+                var tgtHist = DIP.histogram(tgtImg.gray);
+                var matchHist = DIP.histogram(matchedGray);
+
+                var srcPdf = DIP.pdf(srcHist);
+                var tgtPdf = DIP.pdf(tgtHist);
+                var matchPdf = DIP.pdf(matchHist);
+
+                var srcCdf = DIP.cdf(srcPdf);
+                var tgtCdf = DIP.cdf(tgtPdf);
+                var matchCdf = DIP.cdf(matchPdf);
+
+                // Build lookup for transfer function
+                var transferY = new Float64Array(256);
+                for (var r = 0; r < 256; r++) {
+                    var minDiff = 2.0;
+                    var bestZ = 0;
+                    for (var z = 0; z < 256; z++) {
+                        var diff = Math.abs(tgtCdf[z] - srcCdf[r]);
+                        if (diff < minDiff) { minDiff = diff; bestZ = z; }
+                    }
+                    transferY[r] = bestZ;
+                }
+
+                // Identity line
+                var identityY = new Float64Array(256);
+                for (var i = 0; i < 256; i++) identityY[i] = i;
+
+                // Ideal uniform CDF
+                var idealCDF = new Float64Array(256);
+                for (var i = 0; i < 256; i++) idealCDF[i] = i / 255;
+
+                var panels = DIP.figure(container, 'Transfer Function Analysis', 3, [
+                    { type: 'chart', title: 'CDF Comparison' },
+                    { type: 'chart', title: 'Transfer Function' },
+                    { type: 'chart', title: 'Verification' }
+                ]);
+
+                // Panel 1: CDF comparison (source + target + ideal dashed)
+                DIP.chart.line(panels[0].canvas, [
+                    { y: srcCdf, color: 'steelblue', label: 'Source CDF', lineWidth: 2 },
+                    { y: tgtCdf, color: 'seagreen', label: 'Target CDF', lineWidth: 2 },
+                    { y: idealCDF, color: '#000000', label: 'Ideal Uniform CDF', dash: true, lineWidth: 1 }
+                ], {
+                    title: 'CDF Comparison',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'CDF',
+                    xlim: [0, 255],
+                    ylim: [0, 1],
+                    grid: true
+                });
+
+                // Panel 2: Transfer function mapping (crimson line, identity dashed)
+                DIP.chart.line(panels[1].canvas, [
+                    { y: transferY, color: 'crimson', label: 'Transfer Function z = T(r)', lineWidth: 2 },
+                    { y: identityY, color: '#888888', label: 'Identity (z = r)', dash: true, lineWidth: 1 }
+                ], {
+                    title: 'Transfer Function',
+                    xlabel: 'Input Intensity r',
+                    ylabel: 'Output Intensity z',
+                    xlim: [0, 255],
+                    ylim: [0, 255],
+                    grid: true
+                });
+
+                // Panel 3: Verification (target CDF seagreen + matched CDF darkorange dashed)
+                DIP.chart.line(panels[2].canvas, [
+                    { y: tgtCdf, color: 'seagreen', label: 'Target CDF', lineWidth: 2 },
+                    { y: matchCdf, color: 'darkorange', label: 'Matched CDF', dash: true, lineWidth: 2 }
+                ], {
+                    title: 'Verification: Target vs Matched CDF',
+                    xlabel: 'Pixel Intensity',
+                    ylabel: 'CDF',
+                    xlim: [0, 255],
+                    ylim: [0, 1],
+                    grid: true
+                });
+
+                DIP.setLoading(container, false);
+                DIP.showToast('Transfer function analysis complete');
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                DIP.showToast('Error: ' + err.message);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

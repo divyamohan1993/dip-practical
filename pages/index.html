@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Image Processing Lab | CSU2543</title>
-    <meta name="description" content="Digital Image Processing Practical Lab - CSU2543. 5 interactive practicals. Shoolini University.">
+    <meta name="description" content="Digital Image Processing Practical Lab - CSU2543. 6 interactive practicals. Shoolini University.">
     <meta name="author" content="Divya Mohan">
     <script>(function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,6 +50,7 @@
                     <li class="nav-item"><a class="nav-link" href="./p3.html" data-page="p3">P3</a></li>
                     <li class="nav-item"><a class="nav-link" href="./p4.html" data-page="p4">P4</a></li>
                     <li class="nav-item"><a class="nav-link" href="./p5.html" data-page="p5">P5</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p6.html" data-page="p6">P6</a></li>
                 </ul>
                 <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme">
                     <span class="theme-toggle-label">Dark</span>
@@ -88,7 +89,7 @@
             <section class="hero">
                 <span class="hero-badge">CSU2543</span>
                 <h1>Digital Image Processing Lab</h1>
-                <p>5 interactive practicals covering Gonzalez &amp; Woods 3rd Edition. Shoolini University.</p>
+                <p>6 interactive practicals covering Gonzalez &amp; Woods 3rd Edition. Shoolini University.</p>
             </section>
 
             <!-- Practical Cards -->
@@ -128,6 +129,13 @@
                     <span class="card-desc">Enhance contrast via CDF-based intensity redistribution, transfer functions, and PDF/CDF analysis.</span>
                     <span class="card-arrow">Explore &rarr;</span>
                 </a>
+                <a href="./p6.html" class="practical-card" role="listitem">
+                    <span class="card-number">06</span>
+                    <span class="card-chapter">G&amp;W Ch 3</span>
+                    <span class="card-title">Histogram Matching &amp; Specification</span>
+                    <span class="card-desc">Transform image histograms to match target distributions via CDF inversion and multi-target comparison.</span>
+                    <span class="card-arrow">Explore &rarr;</span>
+                </a>
             </div>
 
             <!-- Print-only Table of Contents -->
@@ -139,6 +147,7 @@
                     <li><a href="#print-p3">Practical 3 &mdash; Negation, Subtraction &amp; Inversion</a></li>
                     <li><a href="#print-p4">Practical 4 &mdash; Gamma Correction &amp; Power Law Transformations</a></li>
                     <li><a href="#print-p5">Practical 5 &mdash; Histogram Equalization</a></li>
+                    <li><a href="#print-p6">Practical 6 &mdash; Histogram Matching &amp; Specification</a></li>
                 </ol>
             </section>
 
@@ -223,6 +232,22 @@
                     <li>Transfer function: <em>s<sub>k</sub> = (L &minus; 1) &middot; CDF(r<sub>k</sub>)</em></li>
                     <li>Global vs local (CLAHE) histogram equalization</li>
                     <li>Contrast-limited adaptive histogram equalization</li>
+                </ul>
+            </section>
+
+            <section class="print-only print-summary" id="print-p6" aria-hidden="true">
+                <h2>Practical 6 &mdash; Histogram Matching &amp; Specification</h2>
+                <p><strong>Reference:</strong> Gonzalez &amp; Woods, Ch 3</p>
+                <h3>Objective</h3>
+                <p>Transform image histograms to match target distributions via CDF inversion. Compare histogram matching across multiple target images and analyse the transfer function.</p>
+                <h3>Theory</h3>
+                <p>Histogram matching (specification) generalises histogram equalization by mapping the source image&rsquo;s CDF to a desired target CDF. Given source CDF <em>CDF<sub>s</sub></em> and target CDF <em>CDF<sub>t</sub></em>, the mapping is: <em>z = CDF<sub>t</sub><sup>&minus;1</sup>(CDF<sub>s</sub>(r))</em>. For each source intensity <em>r</em>, we find the target intensity <em>z</em> whose CDF value most closely matches <em>CDF<sub>s</sub>(r)</em>.</p>
+                <h3>Key Concepts</h3>
+                <ul>
+                    <li>CDF inversion for histogram specification</li>
+                    <li>Lookup table (LUT) construction from CDF matching</li>
+                    <li>Multi-target histogram comparison</li>
+                    <li>Transfer function analysis and verification</li>
                 </ul>
             </section>
 

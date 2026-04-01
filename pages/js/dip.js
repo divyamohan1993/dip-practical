@@ -198,4 +198,27 @@
         }
         return id;
     };
+
+    // ---- Histogram matching (specification) ----
+    DIP.histMatch = function(srcGray, tgtGray) {
+        var srcHist = DIP.histogram(srcGray);
+        var tgtHist = DIP.histogram(tgtGray);
+        var srcPdf = DIP.pdf(srcHist);
+        var tgtPdf = DIP.pdf(tgtHist);
+        var srcCdf = DIP.cdf(srcPdf);
+        var tgtCdf = DIP.cdf(tgtPdf);
+        var lut = new Uint8Array(256);
+        for (var r = 0; r < 256; r++) {
+            var minDiff = 2.0;
+            var bestZ = 0;
+            for (var z = 0; z < 256; z++) {
+                var diff = Math.abs(tgtCdf[z] - srcCdf[r]);
+                if (diff < minDiff) { minDiff = diff; bestZ = z; }
+            }
+            lut[r] = bestZ;
+        }
+        var out = new Uint8Array(srcGray.length);
+        for (var i = 0; i < srcGray.length; i++) out[i] = lut[srcGray[i]];
+        return out;
+    };
 })();

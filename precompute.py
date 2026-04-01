@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app.processors.common import get_chapter_images, ensure_chapter
-from app.processors import p01_display, p02_downsampling, p03_negation_subtraction, p04_gamma, p05_histogram_eq
+from app.processors import p01_display, p02_downsampling, p03_negation_subtraction, p04_gamma, p05_histogram_eq, p06_histogram_matching
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "app", "static", "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -93,6 +93,18 @@ def main():
         {"chapter": ch, "filename": skull},
         {"chapter": ch, "filename": galaxy},
     ]))
+
+    # === Practical 6 ===
+    einstein_high = next((i["filename"] for i in images if "einstein high" in i["filename"]), cameraman)
+    print("Practical 6: Histogram Matching")
+    save("p6_source_histogram", p06_histogram_matching.compute_source_histogram(einstein_low, chapter=ch))
+    save("p6_equalize", p06_histogram_matching.compute_equalize_baseline(einstein_low, chapter=ch))
+    save("p6_match", p06_histogram_matching.compute_matching(einstein_low, cameraman, src_chapter=ch, tgt_chapter=ch))
+    save("p6_multi_target", p06_histogram_matching.compute_multi_target(einstein_low, [
+        {"filename": einstein_high, "chapter": ch, "label": "High Contrast"},
+        {"filename": cameraman, "chapter": ch, "label": "Cameraman"},
+    ], src_chapter=ch))
+    save("p6_transfer", p06_histogram_matching.compute_transfer_analysis(einstein_low, cameraman, src_chapter=ch, tgt_chapter=ch))
 
     # === Image list (legacy) ===
     save("images", {"images": images, "count": len(images)})

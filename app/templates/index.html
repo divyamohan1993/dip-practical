@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Digital Image Processing Lab{% endblock %}
-{% block description %}Digital Image Processing Practical Lab - CSU2543. 5 interactive practicals. Shoolini University.{% endblock %}
+{% block description %}Digital Image Processing Practical Lab - CSU2543. 6 interactive practicals. Shoolini University.{% endblock %}
 {% block print_title %}Practical Lab Report — Complete{% endblock %}
 
 {% block extra_css %}
@@ -36,7 +36,7 @@
 <div class="hero">
     <span class="hero-badge">CSU2543</span>
     <h1>Digital Image Processing Lab</h1>
-    <p>5 interactive practicals covering Gonzalez &amp; Woods 3<sup>rd</sup> Edition. Shoolini University.</p>
+    <p>6 interactive practicals covering Gonzalez &amp; Woods 3<sup>rd</sup> Edition. Shoolini University.</p>
 </div>
 
 <div class="practical-grid" role="list">
@@ -73,6 +73,13 @@
         <span class="card-chapter">G&amp;W Ch 3</span>
         <span class="card-title">Histogram Equalization</span>
         <span class="card-desc">Enhance contrast via CDF-based intensity redistribution, transfer functions, and PDF/CDF analysis.</span>
+        <span class="card-arrow">Explore &rarr;</span>
+    </a>
+    <a href="/practical/6" class="practical-card" role="listitem">
+        <span class="card-number">06</span>
+        <span class="card-chapter">G&amp;W Ch 3</span>
+        <span class="card-title">Histogram Matching &amp; Specification</span>
+        <span class="card-desc">Transform image histograms to match target distributions via CDF inversion and multi-target comparison.</span>
         <span class="card-arrow">Explore &rarr;</span>
     </a>
 </div>
@@ -120,6 +127,13 @@
             <td class="toc-chapter">G&amp;W Ch 3</td>
         </tr>
         <tr><td colspan="3" class="toc-desc">CDF-based intensity redistribution, transfer function analysis, PDF/CDF comparison, multi-image equalization.</td></tr>
+
+        <tr>
+            <td class="toc-num">6.</td>
+            <td class="toc-title">Histogram Matching and Specification</td>
+            <td class="toc-chapter">G&amp;W Ch 3</td>
+        </tr>
+        <tr><td colspan="3" class="toc-desc">CDF inversion-based histogram matching, equalization baseline, multi-target comparison, transfer function analysis.</td></tr>
     </table>
 </div>
 
@@ -288,6 +302,47 @@
             <li>How does the equalized CDF differ from the original CDF? What would a perfectly uniform histogram's CDF look like?</li>
             <li>Does histogram equalization always improve image quality? What happens when you equalize an image that already has good contrast?</li>
             <li>The transfer function is monotonically increasing. Why is this property necessary? What would happen if the mapping were not monotonic?</li>
+        </ol>
+    </div>
+</div>
+
+<!-- Practical 6 (print only) -->
+<div class="print-only print-practical">
+    <h2>Practical 6: Histogram Matching and Specification</h2>
+    <div class="section-card">
+        <h3>6.1 Objective</h3>
+        <p>To understand and implement histogram matching (specification) &mdash; a generalization of histogram equalization that transforms an image so its histogram approximates a specified target histogram rather than a uniform one.</p>
+        <div class="theory-box">
+            <strong>Theory:</strong> Histogram matching uses CDF inversion: for each source intensity <em>r</em>, find target intensity <em>z</em> such that CDF<sub>t</sub>(<em>z</em>) &asymp; CDF<sub>s</sub>(<em>r</em>). This builds a lookup table mapping[<em>r</em>] = <em>z</em>. Equalization is the special case where the target CDF is linear (uniform distribution).
+        </div>
+    </div>
+    <div class="section-card">
+        <h3>6.2 Part 1: Source Histogram</h3>
+        <p>Visualize the source image and its pixel intensity distribution to understand the starting point.</p>
+    </div>
+    <div class="section-card">
+        <h3>6.3 Part 2: Equalization Baseline</h3>
+        <p>Equalize the source as a baseline comparison. Equalization targets a uniform distribution &mdash; the simplest special case of histogram matching.</p>
+    </div>
+    <div class="section-card">
+        <h3>6.4 Part 3: Histogram Matching</h3>
+        <p>Select a target reference image and match the source histogram to the target's distribution. Compare source, target, and matched result with their histograms.</p>
+    </div>
+    <div class="section-card">
+        <h3>6.5 Part 4: Multi-Target Comparison</h3>
+        <p>Match the same source to multiple targets (equalized, high-contrast, cameraman) to demonstrate how different target distributions reshape the same source.</p>
+    </div>
+    <div class="section-card">
+        <h3>6.6 Part 5: Transfer Function Analysis</h3>
+        <p>Examine the CDF-based mapping: source vs. target CDFs, the derived transfer function, and verification that the matched CDF approximates the target CDF.</p>
+    </div>
+    <div class="analysis-box">
+        <h4>Analysis Questions</h4>
+        <ol>
+            <li>How does histogram matching differ from histogram equalization? When would you prefer matching over equalization?</li>
+            <li>After matching, the result histogram approximates the target but isn't identical. Why?</li>
+            <li>Compare the matched result when the target is a bright image vs. a dark image. How does the transfer function change?</li>
+            <li>If you match image A to B, then match the result to A, do you get back the original? Why or why not?</li>
         </ol>
     </div>
 </div>

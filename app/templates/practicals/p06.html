@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+
+{% block title %}Practical 6: Histogram Matching{% endblock %}
+{% block print_title %}Practical 6: Histogram Matching &amp; Specification{% endblock %}
+
+{% block content %}
+<h2>Practical 6: Histogram Matching &amp; Specification</h2>
+<p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_6.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
+
+<div class="section-card">
+    <h3>Objective</h3>
+    <p>To understand and implement histogram matching (specification) &mdash; a generalization of histogram equalization that transforms an image so its histogram approximates a <em>specified</em> target histogram rather than a uniform one.</p>
+    <div class="theory-box">
+        <strong>Theory:</strong> Histogram equalization maps every image to a uniform distribution. Histogram matching goes further: given a source image and a target (reference) image, we transform the source so its intensity distribution matches the target's. The algorithm uses CDF inversion:
+        <ul style="margin-top:0.5rem;margin-bottom:0">
+            <li>Compute \(\text{CDF}_s(r)\) of the source image.</li>
+            <li>Compute \(\text{CDF}_t(z)\) of the target image.</li>
+            <li>For each source intensity \(r\), find \(z\) such that \(\text{CDF}_t(z) \approx \text{CDF}_s(r)\).</li>
+            <li>Build a lookup table: \(\text{mapping}[r] = z\).</li>
+        </ul>
+    </div>
+    <div class="formula-box">$$z = \text{CDF}_t^{-1}\!\bigl(\text{CDF}_s(r)\bigr)$$</div>
+</div>
+
+<div class="section-card">
+    <h3>Source Image</h3>
+    <p>Select the source image whose histogram you want to transform.</p>
+    <div class="picker-bar" id="srcPicker"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 1: Source Histogram</h3>
+    <p>Visualize the source image and its pixel intensity distribution.</p>
+    <button class="btn-run" id="btnSrcHist" disabled>Plot Source Histogram</button>
+    <div id="srcHistResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 2: Equalization Baseline</h3>
+    <p>Equalize the source as a baseline. Equalization is histogram matching where the target is a <em>uniform</em> distribution &mdash; the simplest special case.</p>
+    <button class="btn-run" id="btnEqualize" disabled>Equalize (Baseline)</button>
+    <div id="equalizeResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 3: Histogram Matching</h3>
+    <p>Select a target (reference) image. The source image's histogram will be transformed to match the target's distribution.</p>
+    <div class="picker-bar" id="tgtPicker"></div>
+    <button class="btn-run" id="btnMatch" disabled>Match Histograms</button>
+    <div id="matchResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 4: Multi-Target Comparison</h3>
+    <p>Match the same source to multiple targets simultaneously: the equalized version, a high-contrast image, and a bright image. This demonstrates how different target distributions reshape the same source.</p>
+    <button class="btn-run" id="btnMultiTarget" disabled>Compare Multiple Targets</button>
+    <div id="multiTargetResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 5: Transfer Function Analysis</h3>
+    <p>Examine the CDF-based mapping used in histogram matching: source vs. target CDFs, the derived transfer function, and verification that the matched CDF approximates the target CDF.</p>
+    <button class="btn-run" id="btnTransfer" disabled>Show Transfer Function</button>
+    <div id="transferResult"></div>
+</div>
+
+<div class="analysis-box">
+    <h4>Analysis Questions</h4>
+    <ol>
+        <li>How does histogram matching differ from histogram equalization? When would you prefer matching over equalization?</li>
+        <li>After matching, the result histogram approximates the target but isn't identical. Why? What limitations does the discrete nature of pixel intensities impose?</li>
+        <li>Compare the matched result when the target is a bright image vs. a dark image. How does the transfer function change?</li>
+        <li>If you match image A to B, then match the result to A, do you get back the original? Why or why not?</li>
+    </ol>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(async function() {
+    var API = '/api';
+
+    var srcPicker = await DIP.createPicker('srcPicker', {
+        id: 'src', label: 'Source',
+        defaultChapter: 'CH02', defaultImage: 'einstein low',
+        onReady: function() {
+            document.querySelectorAll('.btn-run').forEach(function(b) { b.disabled = false; });
+        }
+    });
+
+    var tgtPicker = await DIP.createPicker('tgtPicker', {
+        id: 'tgt', label: 'Target',
+        defaultChapter: 'CH02', defaultImage: 'cameraman',
+    });
+
+    function showPlot(container, base64) {
+        var img = document.createElement('img');
+        img.className = 'result-img';
+        img.alt = 'Result';
+        img.src = 'data:image/png;base64,' + base64;
+        container.textContent = '';
+        container.appendChild(img);
+    }
+
+    function showError(container, msg) {
+        var p = document.createElement('p');
+        p.style.color = 'var(--error)';
+        p.textContent = 'Error: ' + msg;
+        container.textContent = '';
+        container.appendChild(p);
+    }
+
+    async function callAPI(url, body, container) {
+        DIP.setLoading(container, true);
+        try {
+            var resp = await DIP.apiCall(url, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body)
+            });
+            showPlot(container, resp.plot);
+        } catch (e) {
+            showError(container, e.message);
+        }
+        DIP.setLoading(container, false);
+    }
+
+    function getSrc() {
+        var s = srcPicker.getSelection();
+        if (!s.filename) DIP.showToast('Select a source image');
+        return s;
+    }
+    function getTgt() {
+        var s = tgtPicker.getSelection();
+        if (!s.filename) DIP.showToast('Select a target image');
+        return s;
+    }
+
+    document.getElementById('btnSrcHist').addEventListener('click', function() {
+        var s = getSrc(); if (!s.filename) return;
+        callAPI(API + '/p6/source-histogram', {filename: s.filename, chapter: s.chapter}, document.getElementById('srcHistResult'));
+    });
+
+    document.getElementById('btnEqualize').addEventListener('click', function() {
+        var s = getSrc(); if (!s.filename) return;
+        callAPI(API + '/p6/equalize-baseline', {filename: s.filename, chapter: s.chapter}, document.getElementById('equalizeResult'));
+    });
+
+    document.getElementById('btnMatch').addEventListener('click', function() {
+        var s = getSrc(), t = getTgt();
+        if (!s.filename || !t.filename) return;
+        callAPI(API + '/p6/match', {
+            src_filename: s.filename, src_chapter: s.chapter,
+            tgt_filename: t.filename, tgt_chapter: t.chapter
+        }, document.getElementById('matchResult'));
+    });
+
+    document.getElementById('btnMultiTarget').addEventListener('click', function() {
+        var s = getSrc(); if (!s.filename) return;
+        callAPI(API + '/p6/multi-target', {
+            src_filename: s.filename, src_chapter: s.chapter,
+            targets: [
+                {filename: 'Fig0241(c)(einstein high contrast).tif', chapter: 'CH02', label: 'High Contrast'},
+                {filename: 'Fig0222(b)(cameraman).tif', chapter: 'CH02', label: 'Cameraman'},
+            ]
+        }, document.getElementById('multiTargetResult'));
+    });
+
+    document.getElementById('btnTransfer').addEventListener('click', function() {
+        var s = getSrc(), t = getTgt();
+        if (!s.filename || !t.filename) return;
+        callAPI(API + '/p6/transfer-analysis', {
+            src_filename: s.filename, src_chapter: s.chapter,
+            tgt_filename: t.filename, tgt_chapter: t.chapter
+        }, document.getElementById('transferResult'));
+    });
+
+    // Auto-load cached defaults
+    function loadCache(url, containerId) {
+        fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+            showPlot(document.getElementById(containerId), data.plot);
+        }).catch(function() {});
+    }
+    loadCache('/static/cache/p6_source_histogram.json?v=2', 'srcHistResult');
+    loadCache('/static/cache/p6_equalize.json?v=2', 'equalizeResult');
+    loadCache('/static/cache/p6_match.json?v=2', 'matchResult');
+    loadCache('/static/cache/p6_multi_target.json?v=2', 'multiTargetResult');
+    loadCache('/static/cache/p6_transfer.json?v=2', 'transferResult');
+})();
+</script>
+{% endblock %}

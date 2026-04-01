@@ -336,3 +336,73 @@ def p5_multi_equalize():
     if result is None:
         return jsonify({"error": "Failed to equalize images"}), 400
     return jsonify(result)
+
+
+# -----------------------------------------------------------------------
+# Practical 6 — Histogram Matching (/api/p6/...)
+# -----------------------------------------------------------------------
+
+def _p6():
+    from app.processors import p06_histogram_matching
+    return p06_histogram_matching
+
+
+@api_bp.route('/p6/source-histogram', methods=['POST'])
+def p6_source_histogram():
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+    result = _p6().compute_source_histogram(data['filename'], chapter=data.get('chapter', 'CH02'))
+    if result is None:
+        return jsonify({"error": "Failed to compute histogram"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p6/equalize-baseline', methods=['POST'])
+def p6_equalize_baseline():
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+    result = _p6().compute_equalize_baseline(data['filename'], chapter=data.get('chapter', 'CH02'))
+    if result is None:
+        return jsonify({"error": "Failed to equalize"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p6/match', methods=['POST'])
+def p6_match():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Provide source and target"}), 400
+    result = _p6().compute_matching(
+        data.get('src_filename', ''), data.get('tgt_filename', ''),
+        src_chapter=data.get('src_chapter', 'CH02'), tgt_chapter=data.get('tgt_chapter', 'CH02'))
+    if result is None:
+        return jsonify({"error": "Failed to match histograms"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p6/multi-target', methods=['POST'])
+def p6_multi_target():
+    data = request.get_json()
+    if not data or 'src_filename' not in data:
+        return jsonify({"error": "Provide 'src_filename' and 'targets'"}), 400
+    result = _p6().compute_multi_target(
+        data['src_filename'], data.get('targets', []),
+        src_chapter=data.get('src_chapter', 'CH02'))
+    if result is None:
+        return jsonify({"error": "Failed to match"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p6/transfer-analysis', methods=['POST'])
+def p6_transfer_analysis():
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "Provide source and target"}), 400
+    result = _p6().compute_transfer_analysis(
+        data.get('src_filename', ''), data.get('tgt_filename', ''),
+        src_chapter=data.get('src_chapter', 'CH02'), tgt_chapter=data.get('tgt_chapter', 'CH02'))
+    if result is None:
+        return jsonify({"error": "Failed to compute transfer analysis"}), 400
+    return jsonify(result)

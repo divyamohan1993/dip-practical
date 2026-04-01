@@ -14,6 +14,7 @@ PRACTICAL_META = {
     3: {"title": "Image Negation, Subtraction & Inversion", "chapter": "G&W Ch 2-3"},
     4: {"title": "Gamma Correction & Power Law Transformations", "chapter": "G&W Ch 3"},
     5: {"title": "Histogram Equalization", "chapter": "G&W Ch 3"},
+    6: {"title": "Histogram Matching & Specification", "chapter": "G&W Ch 3"},
 }
 
 
