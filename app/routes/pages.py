@@ -13,6 +13,7 @@ PRACTICAL_META = {
     2: {"title": "Impact of Sampling Rate on Spatial Resolution", "chapter": "G&W Ch 2"},
     3: {"title": "Image Negation, Subtraction & Inversion", "chapter": "G&W Ch 2-3"},
     4: {"title": "Gamma Correction & Power Law Transformations", "chapter": "G&W Ch 3"},
+    5: {"title": "Histogram Equalization", "chapter": "G&W Ch 3"},
 }
 
 

@@ -279,3 +279,60 @@ def p4_contrast():
     if result is None:
         return jsonify({"error": "Failed to enhance contrast"}), 400
     return jsonify(result)
+
+
+# -----------------------------------------------------------------------
+# Practical 5 — Histogram Equalization (/api/p5/...)
+# -----------------------------------------------------------------------
+
+def _p5():
+    from app.processors import p05_histogram_eq
+    return p05_histogram_eq
+
+
+@api_bp.route('/p5/original-histogram', methods=['POST'])
+def p5_original_histogram():
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+    chapter = data.get('chapter', 'CH02')
+    result = _p5().compute_original_histogram(data['filename'], chapter=chapter)
+    if result is None:
+        return jsonify({"error": "Failed to compute histogram"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p5/equalize', methods=['POST'])
+def p5_equalize():
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+    chapter = data.get('chapter', 'CH02')
+    result = _p5().compute_equalization(data['filename'], chapter=chapter)
+    if result is None:
+        return jsonify({"error": "Failed to equalize histogram"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p5/transfer-function', methods=['POST'])
+def p5_transfer_function():
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+    chapter = data.get('chapter', 'CH02')
+    result = _p5().compute_transfer_function(data['filename'], chapter=chapter)
+    if result is None:
+        return jsonify({"error": "Failed to compute transfer function"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p5/multi-equalize', methods=['POST'])
+def p5_multi_equalize():
+    data = request.get_json()
+    images = data.get('images') if data else None
+    if not images:
+        return jsonify({"error": "Provide 'images' array of {chapter, filename}"}), 400
+    result = _p5().compute_multi_equalize(images)
+    if result is None:
+        return jsonify({"error": "Failed to equalize images"}), 400
+    return jsonify(result)

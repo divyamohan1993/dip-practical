@@ -11,7 +11,7 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app.processors.common import get_chapter_images, ensure_chapter
-from app.processors import p01_display, p02_downsampling, p03_negation_subtraction, p04_gamma
+from app.processors import p01_display, p02_downsampling, p03_negation_subtraction, p04_gamma, p05_histogram_eq
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "app", "static", "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -81,6 +81,18 @@ def main():
     save("p4_curves", p04_gamma.transformation_curves())
     save("p4_log", p04_gamma.log_transform(einstein_low, chapter=ch))
     save("p4_contrast", p04_gamma.contrast_enhancement(einstein_low, chapter=ch, mode="dark"))
+
+    # === Practical 5 ===
+    print("Practical 5: Histogram Equalization")
+    save("p5_original_histogram", p05_histogram_eq.compute_original_histogram(einstein_low, chapter=ch))
+    save("p5_equalize", p05_histogram_eq.compute_equalization(einstein_low, chapter=ch))
+    save("p5_transfer", p05_histogram_eq.compute_transfer_function(einstein_low, chapter=ch))
+    save("p5_multi", p05_histogram_eq.compute_multi_equalize([
+        {"chapter": ch, "filename": einstein_low},
+        {"chapter": ch, "filename": cameraman},
+        {"chapter": ch, "filename": skull},
+        {"chapter": ch, "filename": galaxy},
+    ]))
 
     # === Image list (legacy) ===
     save("images", {"images": images, "count": len(images)})

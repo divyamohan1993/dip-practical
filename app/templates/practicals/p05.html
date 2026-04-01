@@ -1,0 +1,157 @@
+{% extends "base.html" %}
+
+{% block title %}Practical 5: Histogram Equalization{% endblock %}
+{% block print_title %}Practical 5: Histogram Equalization{% endblock %}
+
+{% block content %}
+<h2>Practical 5: Histogram Equalization</h2>
+<p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_5.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
+
+<div class="section-card">
+    <h3>Objective</h3>
+    <p>To understand and implement histogram equalization &mdash; a technique that enhances image contrast by redistributing pixel intensities to approximate a uniform distribution.</p>
+    <div class="theory-box">
+        <strong>Theory:</strong> Histogram equalization uses the cumulative distribution function (CDF) of an image's intensity histogram as a transfer function. For an image with \(L\) intensity levels (0 to \(L{-}1\)), the transformation maps each input intensity \(r_k\) to output intensity \(s_k\) using:
+        <ul style="margin-top:0.5rem;margin-bottom:0">
+            <li><strong>PDF:</strong> \(p(r_k) = n_k / n\), where \(n_k\) is the count of pixels with intensity \(r_k\) and \(n\) is the total pixel count.</li>
+            <li><strong>CDF:</strong> \(T(r_k) = \sum_{j=0}^{k} p(r_j)\), the cumulative sum of the PDF.</li>
+            <li>The output intensity: \(s_k = (L{-}1) \cdot T(r_k)\), rounded to the nearest integer.</li>
+        </ul>
+    </div>
+    <div class="formula-box">$$s_k = (L - 1) \cdot \sum_{j=0}^{k} \frac{n_j}{n}$$</div>
+</div>
+
+<div class="picker-bar" id="mainPicker"></div>
+
+<div class="section-card">
+    <h3>Part 1: Original Image &amp; Histogram</h3>
+    <p>Load an image and visualize its pixel intensity histogram. The histogram shape reveals the contrast characteristics &mdash; a narrow cluster means low contrast, a wide spread means high contrast.</p>
+    <button class="btn-run" id="btnOrigHist" disabled>Plot Original Histogram</button>
+    <div id="origHistResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 2: Histogram Equalization</h3>
+    <p>Apply histogram equalization using <code>cv2.equalizeHist()</code>. Compare the original and equalized images side by side with their histograms. Notice how the equalized histogram spreads pixel intensities across the full 0&ndash;255 range.</p>
+    <button class="btn-run" id="btnEqualize" disabled>Equalize Histogram</button>
+    <div id="equalizeResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 3: Transfer Function &amp; CDF Analysis</h3>
+    <p>Examine the internals of histogram equalization: the original PDF, the CDF-based transfer function \(T(r) = \text{CDF}(r) \times (L{-}1)\), the equalized PDF, and a comparison of original vs. equalized CDFs. The equalized CDF should approximate a straight diagonal line (uniform distribution).</p>
+    <button class="btn-run" id="btnTransfer" disabled>Show Transfer Function</button>
+    <div id="transferResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 4: Multi-Image Comparison</h3>
+    <p>Apply histogram equalization to multiple images simultaneously and compare the before/after results. This demonstrates that equalization adapts to each image's unique intensity distribution.</p>
+    <button class="btn-run" id="btnMulti" disabled>Compare Multiple Images</button>
+    <div id="multiResult"></div>
+</div>
+
+<div class="analysis-box">
+    <h4>Analysis Questions</h4>
+    <ol>
+        <li>Compare the original and equalized histograms. Why does the equalized histogram approximate a uniform distribution? Is it perfectly uniform &mdash; why or why not?</li>
+        <li>Look at the CDF comparison plot. How does the equalized CDF differ from the original CDF? What would a perfectly uniform histogram's CDF look like?</li>
+        <li>Does histogram equalization always improve image quality? Consider an image that already has good contrast &mdash; what happens when you equalize it?</li>
+        <li>The transfer function is monotonically increasing. Why is this property necessary? What would happen if the mapping were not monotonic?</li>
+    </ol>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(async function() {
+    var API = '/api';
+
+    var picker = await DIP.createPicker('mainPicker', {
+        id: 'main',
+        defaultChapter: 'CH02',
+        defaultImage: 'einstein low',
+        onReady: function() {
+            document.querySelectorAll('.btn-run').forEach(function(b) { b.disabled = false; });
+        }
+    });
+
+    function getSel() {
+        var s = picker.getSelection();
+        if (!s.filename) DIP.showToast('Select an image first');
+        return s;
+    }
+
+    function showPlot(container, base64) {
+        var img = document.createElement('img');
+        img.className = 'result-img';
+        img.alt = 'Result';
+        img.src = 'data:image/png;base64,' + base64;
+        container.textContent = '';
+        container.appendChild(img);
+    }
+
+    function showError(container, msg) {
+        var p = document.createElement('p');
+        p.style.color = 'var(--error)';
+        p.textContent = 'Error: ' + msg;
+        container.textContent = '';
+        container.appendChild(p);
+    }
+
+    async function callAPI(url, body, container) {
+        DIP.setLoading(container, true);
+        try {
+            var resp = await DIP.apiCall(url, {
+                method: body ? 'POST' : 'GET',
+                headers: body ? {'Content-Type': 'application/json'} : {},
+                body: body ? JSON.stringify(body) : undefined
+            });
+            showPlot(container, resp.plot);
+        } catch (e) {
+            showError(container, e.message);
+        }
+        DIP.setLoading(container, false);
+    }
+
+    document.getElementById('btnOrigHist').addEventListener('click', function() {
+        var sel = getSel();
+        if (!sel.filename) return;
+        callAPI(API + '/p5/original-histogram', {filename: sel.filename, chapter: sel.chapter}, document.getElementById('origHistResult'));
+    });
+
+    document.getElementById('btnEqualize').addEventListener('click', function() {
+        var sel = getSel();
+        if (!sel.filename) return;
+        callAPI(API + '/p5/equalize', {filename: sel.filename, chapter: sel.chapter}, document.getElementById('equalizeResult'));
+    });
+
+    document.getElementById('btnTransfer').addEventListener('click', function() {
+        var sel = getSel();
+        if (!sel.filename) return;
+        callAPI(API + '/p5/transfer-function', {filename: sel.filename, chapter: sel.chapter}, document.getElementById('transferResult'));
+    });
+
+    document.getElementById('btnMulti').addEventListener('click', function() {
+        var sel = getSel();
+        if (!sel.filename) return;
+        callAPI(API + '/p5/multi-equalize', {
+            images: [
+                {filename: sel.filename, chapter: sel.chapter}
+            ]
+        }, document.getElementById('multiResult'));
+    });
+
+    // Auto-load cached defaults
+    function loadCache(url, containerId) {
+        fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+            showPlot(document.getElementById(containerId), data.plot);
+        }).catch(function() {});
+    }
+    loadCache('/static/cache/p5_original_histogram.json?v=2', 'origHistResult');
+    loadCache('/static/cache/p5_equalize.json?v=2', 'equalizeResult');
+    loadCache('/static/cache/p5_transfer.json?v=2', 'transferResult');
+    loadCache('/static/cache/p5_multi.json?v=2', 'multiResult');
+})();
+</script>
+{% endblock %}

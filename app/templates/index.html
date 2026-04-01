@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Digital Image Processing Lab{% endblock %}
-{% block description %}Digital Image Processing Practical Lab - CSU2543. 4 interactive practicals. Shoolini University.{% endblock %}
+{% block description %}Digital Image Processing Practical Lab - CSU2543. 5 interactive practicals. Shoolini University.{% endblock %}
 {% block print_title %}Practical Lab Report — Complete{% endblock %}
 
 {% block extra_css %}
@@ -36,7 +36,7 @@
 <div class="hero">
     <span class="hero-badge">CSU2543</span>
     <h1>Digital Image Processing Lab</h1>
-    <p>4 interactive practicals covering Gonzalez &amp; Woods 3<sup>rd</sup> Edition. Shoolini University.</p>
+    <p>5 interactive practicals covering Gonzalez &amp; Woods 3<sup>rd</sup> Edition. Shoolini University.</p>
 </div>
 
 <div class="practical-grid" role="list">
@@ -66,6 +66,13 @@
         <span class="card-chapter">G&amp;W Ch 3</span>
         <span class="card-title">Gamma Correction &amp; Power Law Transformations</span>
         <span class="card-desc">Power law transformations, log transforms, and contrast enhancement for dark and bright images.</span>
+        <span class="card-arrow">Explore &rarr;</span>
+    </a>
+    <a href="/practical/5" class="practical-card" role="listitem">
+        <span class="card-number">05</span>
+        <span class="card-chapter">G&amp;W Ch 3</span>
+        <span class="card-title">Histogram Equalization</span>
+        <span class="card-desc">Enhance contrast via CDF-based intensity redistribution, transfer functions, and PDF/CDF analysis.</span>
         <span class="card-arrow">Explore &rarr;</span>
     </a>
 </div>
@@ -106,6 +113,13 @@
             <td class="toc-chapter">G&amp;W Ch 3</td>
         </tr>
         <tr><td colspan="3" class="toc-desc">Power law transformation curves, log transform comparison, dark/bright image contrast enhancement.</td></tr>
+
+        <tr>
+            <td class="toc-num">5.</td>
+            <td class="toc-title">Histogram Equalization</td>
+            <td class="toc-chapter">G&amp;W Ch 3</td>
+        </tr>
+        <tr><td colspan="3" class="toc-desc">CDF-based intensity redistribution, transfer function analysis, PDF/CDF comparison, multi-image equalization.</td></tr>
     </table>
 </div>
 
@@ -237,6 +251,43 @@
             <li>For a dark image, which gamma value produces the best visual enhancement? Why does &gamma; &lt; 1 brighten dark regions?</li>
             <li>Compare log transformation with &gamma; = 0.4 on the same image. Which produces better results and why?</li>
             <li>How does gamma correction relate to display devices? If a monitor has &gamma; = 2.5, what pre-correction gamma should be applied?</li>
+        </ol>
+    </div>
+</div>
+
+<!-- Practical 5 (print only) -->
+<div class="print-only print-practical">
+    <h2>Practical 5: Histogram Equalization</h2>
+    <div class="section-card">
+        <h3>5.1 Objective</h3>
+        <p>To understand and implement histogram equalization &mdash; a technique that enhances image contrast by redistributing pixel intensities to approximate a uniform distribution.</p>
+        <div class="theory-box">
+            <strong>Theory:</strong> Histogram equalization uses the cumulative distribution function (CDF) of the image histogram as a transfer function. For an image with <em>L</em> intensity levels, each input intensity <em>r<sub>k</sub></em> is mapped to output <em>s<sub>k</sub></em> = (<em>L</em>&minus;1) &middot; &sum;<sub>j=0</sub><sup>k</sup> <em>p</em>(<em>r<sub>j</sub></em>), where <em>p</em>(<em>r<sub>j</sub></em>) = <em>n<sub>j</sub></em>/<em>n</em> is the normalized histogram (PDF).
+        </div>
+    </div>
+    <div class="section-card">
+        <h3>5.2 Part 1: Original Image &amp; Histogram</h3>
+        <p>Load a grayscale image and visualize its pixel intensity histogram. The histogram shape reveals contrast characteristics: narrow clusters indicate low contrast, wide spreads indicate high contrast.</p>
+    </div>
+    <div class="section-card">
+        <h3>5.3 Part 2: Histogram Equalization</h3>
+        <p>Apply histogram equalization using <code>cv2.equalizeHist()</code>. Compare original and equalized images with their histograms. The equalized histogram spreads intensities across the full 0&ndash;255 range.</p>
+    </div>
+    <div class="section-card">
+        <h3>5.4 Part 3: Transfer Function &amp; CDF Analysis</h3>
+        <p>Examine the PDF, CDF-based transfer function, equalized PDF, and CDF comparison. The equalized CDF approximates a straight diagonal (uniform distribution).</p>
+    </div>
+    <div class="section-card">
+        <h3>5.5 Part 4: Multi-Image Comparison</h3>
+        <p>Apply histogram equalization to multiple images simultaneously and compare before/after results, demonstrating adaptation to each image's unique intensity distribution.</p>
+    </div>
+    <div class="analysis-box">
+        <h4>Analysis Questions</h4>
+        <ol>
+            <li>Compare the original and equalized histograms. Why does the equalized histogram approximate a uniform distribution? Is it perfectly uniform &mdash; why or why not?</li>
+            <li>How does the equalized CDF differ from the original CDF? What would a perfectly uniform histogram's CDF look like?</li>
+            <li>Does histogram equalization always improve image quality? What happens when you equalize an image that already has good contrast?</li>
+            <li>The transfer function is monotonically increasing. Why is this property necessary? What would happen if the mapping were not monotonic?</li>
         </ol>
     </div>
 </div>
