@@ -4,7 +4,6 @@ Multi-chapter dataset support with on-demand download from public source.
 """
 
 import cv2
-import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt

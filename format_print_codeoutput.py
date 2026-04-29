@@ -11,7 +11,6 @@ Result for the printed practical handbook:
     5. Analysis
 """
 import json
-import re
 from html import escape
 from pathlib import Path
 

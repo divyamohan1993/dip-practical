@@ -1,5 +1,4 @@
 """Practical 4: Gamma Correction and Power Law Transformations."""
-import cv2
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')

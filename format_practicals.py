@@ -327,9 +327,9 @@ def build_practical(num):
 
     cells = nb["cells"]
 
-    # 1. Locate Colab badge cell (cell 0 typically) and title cell.
+    # 1. Locate Colab badge cell (cell 0 typically); the existing title cell
+    # is found by iterating below rather than precomputed.
     badge_idx = next((i for i, c in enumerate(cells) if has_colab_badge(c)), -1)
-    title_idx = next((i for i, c in enumerate(cells) if is_title_heading(c)), -1)
 
     # If the existing notebook already has an "Aim" or "Theory" markdown cell as
     # second cell, we'll prepend our preamble + replace those headings;
@@ -366,7 +366,6 @@ def build_practical(num):
 
     # Now copy through the original code + sub-section cells, skipping
     # superseded items (old objectives, old analysis, the original title).
-    skip_next_after_match = False
     for i, cell in enumerate(cells_after_badge):
         if cell is new_cells[0]:
             continue

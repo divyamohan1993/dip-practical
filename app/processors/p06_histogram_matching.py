@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from app.processors.common import load_image, image_to_base64_png, fig_to_base64
+from app.processors.common import load_image, fig_to_base64
 
 
 def _histogram_match(source, target):
@@ -167,7 +167,7 @@ def compute_multi_target(src_filename, tgt_filenames, src_chapter='CH02', tgt_ch
         axes[0, i + 1].axis('off')
         c = colors[i % len(colors)]
         axes[1, i + 1].hist(matched.ravel(), bins=256, range=(0, 256), color=c, alpha=0.85, edgecolor='none')
-        axes[1, i + 1].set_title(f"Matched Hist")
+        axes[1, i + 1].set_title("Matched Hist")
         axes[1, i + 1].set_xlim(0, 255)
 
     fig.suptitle("Histogram Matching: One Source → Multiple Targets", fontsize=14, fontweight='bold')

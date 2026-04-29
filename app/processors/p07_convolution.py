@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-from app.processors.common import load_image, image_to_base64_png, fig_to_base64
+from app.processors.common import load_image, fig_to_base64
 
 
 def _correlate2d(f, w, mode='same'):
