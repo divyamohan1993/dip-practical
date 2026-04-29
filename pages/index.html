@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Image Processing Lab | CSU2543</title>
-    <meta name="description" content="Digital Image Processing Practical Lab - CSU2543. 6 interactive practicals. Shoolini University.">
+    <meta name="description" content="Digital Image Processing Practical Lab - CSU2543. 8 interactive practicals. Shoolini University.">
     <meta name="author" content="Divya Mohan">
     <script>(function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,6 +51,8 @@
                     <li class="nav-item"><a class="nav-link" href="./p4.html" data-page="p4">P4</a></li>
                     <li class="nav-item"><a class="nav-link" href="./p5.html" data-page="p5">P5</a></li>
                     <li class="nav-item"><a class="nav-link" href="./p6.html" data-page="p6">P6</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p7.html" data-page="p7">P7</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p8.html" data-page="p8">P8</a></li>
                 </ul>
                 <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme">
                     <span class="theme-toggle-label">Dark</span>
@@ -89,7 +91,7 @@
             <section class="hero">
                 <span class="hero-badge">CSU2543</span>
                 <h1>Digital Image Processing Lab</h1>
-                <p>6 interactive practicals covering Gonzalez &amp; Woods 3rd Edition. Shoolini University.</p>
+                <p>8 interactive practicals covering Gonzalez &amp; Woods 3rd Edition. Shoolini University.</p>
             </section>
 
             <!-- Practical Cards -->
@@ -136,6 +138,20 @@
                     <span class="card-desc">Transform image histograms to match target distributions via CDF inversion and multi-target comparison.</span>
                     <span class="card-arrow">Explore &rarr;</span>
                 </a>
+                <a href="./p7.html" class="practical-card" role="listitem">
+                    <span class="card-number">07</span>
+                    <span class="card-chapter">G&amp;W Ch 3</span>
+                    <span class="card-title">2D Correlation &amp; Convolution</span>
+                    <span class="card-desc">Implement correlation and convolution from first principles, demonstrate the impulse response, and apply standard kernels to a real image.</span>
+                    <span class="card-arrow">Explore &rarr;</span>
+                </a>
+                <a href="./p8.html" class="practical-card" role="listitem">
+                    <span class="card-number">08</span>
+                    <span class="card-chapter">G&amp;W Ch 3</span>
+                    <span class="card-title">Spatial Filtering: Smoothing &amp; Sharpening</span>
+                    <span class="card-desc">Box and median filters for noise smoothing; Laplacian and Sobel operators for sharpening and edge detection.</span>
+                    <span class="card-arrow">Explore &rarr;</span>
+                </a>
             </div>
 
             <!-- Print-only Table of Contents -->
@@ -148,6 +164,8 @@
                     <li><a href="#print-p4">Practical 4 &mdash; Gamma Correction &amp; Power Law Transformations</a></li>
                     <li><a href="#print-p5">Practical 5 &mdash; Histogram Equalization</a></li>
                     <li><a href="#print-p6">Practical 6 &mdash; Histogram Matching &amp; Specification</a></li>
+                    <li><a href="#print-p7">Practical 7 &mdash; 2D Correlation &amp; Convolution</a></li>
+                    <li><a href="#print-p8">Practical 8 &mdash; Spatial Filtering: Smoothing &amp; Sharpening</a></li>
                 </ol>
             </section>
 
@@ -248,6 +266,40 @@
                     <li>Lookup table (LUT) construction from CDF matching</li>
                     <li>Multi-target histogram comparison</li>
                     <li>Transfer function analysis and verification</li>
+                </ul>
+            </section>
+
+            <section class="print-only print-summary" id="print-p7" aria-hidden="true">
+                <h2>Practical 7 &mdash; 2D Correlation &amp; Convolution</h2>
+                <p><strong>Reference:</strong> Gonzalez &amp; Woods, Ch 3</p>
+                <h3>Aim</h3>
+                <p>Implement and analyze 2D correlation and convolution from first principles, demonstrate the impulse-response interpretation that distinguishes them, and apply standard kernels to a real image.</p>
+                <h3>Theory</h3>
+                <p>For an image <em>f</em> and kernel <em>w</em> of size <em>m&times;n</em>: correlation is <em>(w &#x22C6; f)(x,y) = &sum; w(s,t) f(x+s,y+t)</em> and convolution is <em>(w &lowast; f)(x,y) = &sum; w(s,t) f(x&minus;s,y&minus;t)</em>. The two satisfy the identity <em>w &lowast; f = rot<sub>180</sub>(w) &#x22C6; f</em>, so a unit impulse reveals correlation as <em>rot<sub>180</sub>(w)</em> and convolution as <em>w</em>.</p>
+                <h3>Key Concepts</h3>
+                <ul>
+                    <li>2D correlation and convolution by direct summation</li>
+                    <li>Zero padding and boundary handling</li>
+                    <li>Impulse-response interpretation as the operational definition</li>
+                    <li>Symmetric kernels: when correlation equals convolution</li>
+                    <li>Standard kernels: box, Laplacian, Sobel</li>
+                </ul>
+            </section>
+
+            <section class="print-only print-summary" id="print-p8" aria-hidden="true">
+                <h2>Practical 8 &mdash; Spatial Filtering: Smoothing and Sharpening</h2>
+                <p><strong>Reference:</strong> Gonzalez &amp; Woods, Ch 3</p>
+                <h3>Aim</h3>
+                <p>Implement and analyze the four canonical spatial-domain filters: box and median filters for smoothing, and Laplacian and Sobel operators for sharpening and edge detection.</p>
+                <h3>Theory</h3>
+                <p>The box filter <em>&hat;f = (1/mn)&sum; f</em> is a linear smoother. The median filter <em>&hat;f = median{f}</em> is non-linear and edge-preserving, ideal for impulse noise. The Laplacian <em>&nabla;<sup>2</sup>f &asymp; f<sub>N</sub>+f<sub>S</sub>+f<sub>E</sub>+f<sub>W</sub> &minus; 4f</em> sharpens via <em>g = f &minus; &nabla;<sup>2</sup>f</em>. The Sobel operator combines first-derivative kernels <em>G<sub>x</sub>, G<sub>y</sub></em>, with magnitude <em>|G| &asymp; |G<sub>x</sub>|+|G<sub>y</sub>|</em> and direction <em>&theta; = arctan(G<sub>y</sub>/G<sub>x</sub>)</em>.</p>
+                <h3>Key Concepts</h3>
+                <ul>
+                    <li>Box (mean) filter and its low-pass behaviour</li>
+                    <li>Median filter as an order-statistic, edge-preserving smoother</li>
+                    <li>Edge preservation: median vs box under impulse noise</li>
+                    <li>Laplacian sharpening (4-neighbour and 8-neighbour kernels)</li>
+                    <li>Sobel gradient: magnitude, direction, and threshold</li>
                 </ul>
             </section>
 

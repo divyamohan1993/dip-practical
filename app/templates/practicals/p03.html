@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Practical 3: Negation, Subtraction & Inversion{% endblock %}
-{% block print_title %}Practical 3: Image Negation, Subtraction &amp; Inversion{% endblock %}
+{% block print_title %}<div class="cover-practical-name">Practical 3: Image Negation, Subtraction &amp; Inversion</div>{% endblock %}
 
 {% block content %}
 <h2>Practical 3: Negation, Subtraction &amp; Inversion</h2>
 <p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_3.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
 
+<span class="print-only dip-section-marker dip-section-aim">1. Aim</span>
 <div class="section-card">
     <h3>Objective</h3>
     <p>To implement and analyze fundamental intensity transformation operations: image negation, image subtraction, and intensity inversion.</p>
+    <span class="print-only dip-section-marker dip-section-theory">2. Description / Theory</span>
+
     <div class="theory-box">
         <strong>Theory:</strong> Intensity transformations are point operations that modify pixel values individually.
         <strong>Negation</strong> reverses the intensity scale: \(s = (L-1) - r\), useful for enhancing detail in dark regions.
@@ -18,6 +21,250 @@
 </div>
 
 <!-- Part 1: Negation — single image picker -->
+<span class="print-only dip-section-marker dip-section-code">3. Code</span>
+<pre class="print-only literal-code"><code>
+
+# ----------------------------------------------------------------------
+
+# Install dependencies (uncomment for Google Colab)
+# !pip install opencv-python-headless matplotlib numpy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# === AUTO-DOWNLOAD DATASET (works in Google Colab and locally) ===
+import os, urllib.request, zipfile
+
+# Choose which chapter to download (CH01-CH12)
+CHAPTER = &quot;CH02&quot;  # Chapter 2: Digital Image Fundamentals
+DATASET_PATH = f&quot;datasets/{CHAPTER}/&quot;
+DOWNLOAD_BASE = &quot;https://www.imageprocessingplace.com/downloads_V3/dip3e_downloads/dip3e_book_images&quot;
+
+if not os.path.exists(DATASET_PATH) or not any(f.endswith(&#x27;.tif&#x27;) for f in os.listdir(DATASET_PATH)):
+    zip_name = f&quot;DIP3E_{CHAPTER}_Original_Images.zip&quot;
+    url = f&quot;{DOWNLOAD_BASE}/{zip_name}&quot;
+    print(f&quot;Downloading {CHAPTER} dataset from imageprocessingplace.com...&quot;)
+    urllib.request.urlretrieve(url, &quot;chapter.zip&quot;)
+    os.makedirs(DATASET_PATH, exist_ok=True)
+    with zipfile.ZipFile(&quot;chapter.zip&quot;, &quot;r&quot;) as z:
+        for f in z.namelist():
+            if f.lower().endswith(&quot;.tif&quot;):
+                fname = os.path.basename(f)
+                if fname:
+                    with z.open(f) as src, open(os.path.join(DATASET_PATH, fname), &quot;wb&quot;) as dst:
+                        dst.write(src.read())
+    os.remove(&quot;chapter.zip&quot;)
+    print(f&quot;Downloaded {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+else:
+    print(f&quot;Dataset ready: {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+
+# List all available images
+images = sorted([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])
+print(f&quot;\nAvailable images ({len(images)}):&quot;)
+for i, name in enumerate(images, 1):
+    print(f&quot;  {i}. {name}&quot;)
+
+# === SELECT YOUR IMAGE HERE ===
+selected_image = &quot;Fig0232(a)(partial_body_scan).tif&quot;  # Change to any image
+
+# Load the image
+img_color = cv2.imread(os.path.join(DATASET_PATH, selected_image))
+img_gray = cv2.cvtColor(img_color, cv2.COLOR_BGR2GRAY)
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(10, 5))
+ax1.imshow(cv2.cvtColor(img_color, cv2.COLOR_BGR2RGB))
+ax1.set_title(&quot;Original (Color)&quot;)
+ax1.axis(&#x27;off&#x27;)
+
+ax2.imshow(img_gray, cmap=&#x27;gray&#x27;)
+ax2.set_title(&quot;Grayscale&quot;)
+ax2.axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Grayscale Conversion&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+print(f&quot;Color shape: {img_color.shape}, Grayscale shape: {img_gray.shape}&quot;)
+
+# === SELECT IMAGE FOR NEGATION ===
+negation_image = &quot;Fig0232(a)(partial_body_scan).tif&quot;  # Change to any image
+
+img = cv2.imread(os.path.join(DATASET_PATH, negation_image), cv2.IMREAD_GRAYSCALE)
+
+# Compute negative: s = 255 - r
+negative = 255 - img
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+# Original image
+axes[0, 0].imshow(img, cmap=&#x27;gray&#x27;)
+axes[0, 0].set_title(&quot;Original Image&quot;)
+axes[0, 0].axis(&#x27;off&#x27;)
+
+# Negative image
+axes[0, 1].imshow(negative, cmap=&#x27;gray&#x27;)
+axes[0, 1].set_title(&quot;Negative (s = 255 - r)&quot;)
+axes[0, 1].axis(&#x27;off&#x27;)
+
+# Original histogram
+axes[1, 0].hist(img.ravel(), bins=256, range=(0, 256), color=&#x27;black&#x27;, alpha=0.7)
+axes[1, 0].set_title(&quot;Original Histogram&quot;)
+axes[1, 0].set_xlabel(&quot;Intensity&quot;)
+axes[1, 0].set_ylabel(&quot;Frequency&quot;)
+
+# Negative histogram
+axes[1, 1].hist(negative.ravel(), bins=256, range=(0, 256), color=&#x27;black&#x27;, alpha=0.7)
+axes[1, 1].set_title(&quot;Negative Histogram&quot;)
+axes[1, 1].set_xlabel(&quot;Intensity&quot;)
+axes[1, 1].set_ylabel(&quot;Frequency&quot;)
+
+plt.suptitle(f&quot;Image Negation: {negation_image}&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# === ANGIOGRAPHY IMAGE PAIR (change to any two images) ===
+mask_file = &quot;Fig0228(a)(angiography_mask_image).tif&quot;
+live_file = &quot;Fig0228(b)(angiography_live_ image).tif&quot;
+
+mask = cv2.imread(os.path.join(DATASET_PATH, mask_file), cv2.IMREAD_GRAYSCALE)
+live = cv2.imread(os.path.join(DATASET_PATH, live_file), cv2.IMREAD_GRAYSCALE)
+
+# Ensure same size
+if mask.shape != live.shape:
+    live = cv2.resize(live, (mask.shape[1], mask.shape[0]))
+
+# Compute absolute difference
+difference = cv2.absdiff(live, mask)
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+axes[0].imshow(mask, cmap=&#x27;gray&#x27;)
+axes[0].set_title(&quot;Mask Image (Before Contrast)&quot;)
+axes[0].axis(&#x27;off&#x27;)
+
+axes[1].imshow(live, cmap=&#x27;gray&#x27;)
+axes[1].set_title(&quot;Live Image (After Contrast)&quot;)
+axes[1].axis(&#x27;off&#x27;)
+
+axes[2].imshow(difference, cmap=&#x27;gray&#x27;)
+axes[2].set_title(&quot;Subtraction: |Live - Mask|&quot;)
+axes[2].axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Digital Subtraction Angiography&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# === DENTAL IMAGE PAIR (change to any two images) ===
+dental_file = &quot;Fig0230(a)(dental_xray).tif&quot;
+dental_mask_file = &quot;Fig0230(b)(dental_xray_mask).tif&quot;
+
+dental = cv2.imread(os.path.join(DATASET_PATH, dental_file), cv2.IMREAD_GRAYSCALE)
+dental_mask = cv2.imread(os.path.join(DATASET_PATH, dental_mask_file), cv2.IMREAD_GRAYSCALE)
+
+if dental.shape != dental_mask.shape:
+    dental_mask = cv2.resize(dental_mask, (dental.shape[1], dental.shape[0]))
+
+dental_diff = cv2.absdiff(dental, dental_mask)
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+axes[0].imshow(dental, cmap=&#x27;gray&#x27;)
+axes[0].set_title(&quot;Dental X-ray&quot;)
+axes[0].axis(&#x27;off&#x27;)
+
+axes[1].imshow(dental_mask, cmap=&#x27;gray&#x27;)
+axes[1].set_title(&quot;Dental Mask&quot;)
+axes[1].axis(&#x27;off&#x27;)
+
+axes[2].imshow(dental_diff, cmap=&#x27;gray&#x27;)
+axes[2].set_title(&quot;Subtraction: |Xray - Mask|&quot;)
+axes[2].axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Dental X-ray Subtraction&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# === TUNGSTEN IMAGE PAIR (change to any two images) ===
+filament_file = &quot;Fig0229(a)(tungsten_filament_shaded).tif&quot;
+shading_file = &quot;Fig0229(b)(tungsten_sensor_shading).tif&quot;
+
+filament = cv2.imread(os.path.join(DATASET_PATH, filament_file), cv2.IMREAD_GRAYSCALE)
+shading = cv2.imread(os.path.join(DATASET_PATH, shading_file), cv2.IMREAD_GRAYSCALE)
+
+if filament.shape != shading.shape:
+    shading = cv2.resize(shading, (filament.shape[1], filament.shape[0]))
+
+# Shading correction via subtraction
+corrected = cv2.absdiff(filament, shading)
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+axes[0].imshow(filament, cmap=&#x27;gray&#x27;)
+axes[0].set_title(&quot;Shaded Filament&quot;)
+axes[0].axis(&#x27;off&#x27;)
+
+axes[1].imshow(shading, cmap=&#x27;gray&#x27;)
+axes[1].set_title(&quot;Sensor Shading Pattern&quot;)
+axes[1].axis(&#x27;off&#x27;)
+
+axes[2].imshow(corrected, cmap=&#x27;gray&#x27;)
+axes[2].set_title(&quot;Corrected: |Filament - Shading|&quot;)
+axes[2].axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Shading Correction&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Invert the angiography subtraction result
+inverted_diff = 255 - difference
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+axes[0].imshow(difference, cmap=&#x27;gray&#x27;)
+axes[0].set_title(&quot;Subtraction Result&quot;)
+axes[0].axis(&#x27;off&#x27;)
+
+axes[1].imshow(inverted_diff, cmap=&#x27;gray&#x27;)
+axes[1].set_title(&quot;Inverted Subtraction (255 - diff)&quot;)
+axes[1].axis(&#x27;off&#x27;)
+
+# Enhanced version with contrast stretching
+enhanced = cv2.normalize(difference, None, 0, 255, cv2.NORM_MINMAX)
+axes[2].imshow(enhanced, cmap=&#x27;gray&#x27;)
+axes[2].set_title(&quot;Enhanced (Contrast Stretched)&quot;)
+axes[2].axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Inversion and Enhancement Pipeline&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Full pipeline on angiography images
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+axes[0, 0].imshow(mask, cmap=&#x27;gray&#x27;)
+axes[0, 0].set_title(&quot;1. Mask Image&quot;)
+axes[0, 0].axis(&#x27;off&#x27;)
+
+axes[0, 1].imshow(live, cmap=&#x27;gray&#x27;)
+axes[0, 1].set_title(&quot;2. Live Image&quot;)
+axes[0, 1].axis(&#x27;off&#x27;)
+
+axes[0, 2].imshow(difference, cmap=&#x27;gray&#x27;)
+axes[0, 2].set_title(&quot;3. |Live - Mask|&quot;)
+axes[0, 2].axis(&#x27;off&#x27;)
+
+axes[1, 0].imshow(255 - mask, cmap=&#x27;gray&#x27;)
+axes[1, 0].set_title(&quot;4. Negation of Mask&quot;)
+axes[1, 0].axis(&#x27;off&#x27;)
+
+axes[1, 1].imshow(inverted_diff, cmap=&#x27;gray&#x27;)
+axes[1, 1].set_title(&quot;5. Inverted Difference&quot;)
+axes[1, 1].axis(&#x27;off&#x27;)
+
+axes[1, 2].imshow(enhanced, cmap=&#x27;gray&#x27;)
+axes[1, 2].set_title(&quot;6. Enhanced Result&quot;)
+axes[1, 2].axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Complete Pipeline: Subtraction -&gt; Negation -&gt; Enhancement&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
 <div class="section-card">
     <h3>Part 1: Image Negation (s = 255 - r)</h3>
     <p>Compute the negative of an image by inverting all pixel intensities.</p>
@@ -47,6 +294,10 @@
     <div id="pipelineResult"></div>
 </div>
 
+<span class="print-only dip-section-marker dip-section-output">4. Output</span>
+<div class="print-only output-collection" id="printOutput" aria-label="Result figures and computed outputs"></div>
+
+<span class="print-only dip-section-marker dip-section-analysis">5. Analysis / Conclusion</span>
 <div class="analysis-box">
     <h4>Analysis Questions</h4>
     <ol>

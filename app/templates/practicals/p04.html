@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Practical 4: Gamma Correction{% endblock %}
-{% block print_title %}Practical 4: Gamma Correction &amp; Power Law Transformations{% endblock %}
+{% block print_title %}<div class="cover-practical-name">Practical 4: Gamma Correction &amp; Power Law Transformations</div>{% endblock %}
 
 {% block content %}
 <h2>Practical 4: Gamma Correction &amp; Power Law Transformations</h2>
 <p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_4.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
 
+<span class="print-only dip-section-marker dip-section-aim">1. Aim</span>
 <div class="section-card">
     <h3>Objective</h3>
     <p>To understand and implement power law (gamma) transformations for image contrast enhancement.</p>
+    <span class="print-only dip-section-marker dip-section-theory">2. Description / Theory</span>
+
     <div class="theory-box">
         <strong>Theory:</strong> The power law transformation \(s = c \cdot r^\gamma\) is one of the most important intensity transformations.
         <ul style="margin-top:0.5rem;margin-bottom:0">
@@ -23,6 +26,243 @@
 
 <div class="picker-bar" id="mainPicker"></div>
 
+<span class="print-only dip-section-marker dip-section-code">3. Code</span>
+<pre class="print-only literal-code"><code>
+
+# ----------------------------------------------------------------------
+
+# Install dependencies (uncomment for Google Colab)
+# !pip install opencv-python-headless matplotlib numpy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# === AUTO-DOWNLOAD DATASET (works in Google Colab and locally) ===
+import os, urllib.request, zipfile
+
+# Choose which chapter to download (CH01-CH12)
+CHAPTER = &quot;CH02&quot;  # Chapter 2: Digital Image Fundamentals
+DATASET_PATH = f&quot;datasets/{CHAPTER}/&quot;
+DOWNLOAD_BASE = &quot;https://www.imageprocessingplace.com/downloads_V3/dip3e_downloads/dip3e_book_images&quot;
+
+if not os.path.exists(DATASET_PATH) or not any(f.endswith(&#x27;.tif&#x27;) for f in os.listdir(DATASET_PATH)):
+    zip_name = f&quot;DIP3E_{CHAPTER}_Original_Images.zip&quot;
+    url = f&quot;{DOWNLOAD_BASE}/{zip_name}&quot;
+    print(f&quot;Downloading {CHAPTER} dataset from imageprocessingplace.com...&quot;)
+    urllib.request.urlretrieve(url, &quot;chapter.zip&quot;)
+    os.makedirs(DATASET_PATH, exist_ok=True)
+    with zipfile.ZipFile(&quot;chapter.zip&quot;, &quot;r&quot;) as z:
+        for f in z.namelist():
+            if f.lower().endswith(&quot;.tif&quot;):
+                fname = os.path.basename(f)
+                if fname:
+                    with z.open(f) as src, open(os.path.join(DATASET_PATH, fname), &quot;wb&quot;) as dst:
+                        dst.write(src.read())
+    os.remove(&quot;chapter.zip&quot;)
+    print(f&quot;Downloaded {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+else:
+    print(f&quot;Dataset ready: {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+
+# List all available images
+images = sorted([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])
+print(f&quot;\nAvailable images ({len(images)}):&quot;)
+for i, name in enumerate(images, 1):
+    print(f&quot;  {i}. {name}&quot;)
+
+# === SELECT YOUR IMAGE HERE (dark image for best gamma demo) ===
+selected_image = &quot;Fig0241(a)(einstein low contrast).tif&quot;  # Change to any image
+
+img = cv2.imread(os.path.join(DATASET_PATH, selected_image), cv2.IMREAD_GRAYSCALE)
+
+# Normalize to [0, 1] range
+img_normalized = img / 255.0
+
+print(f&quot;Image: {selected_image}&quot;)
+print(f&quot;Shape: {img.shape}&quot;)
+print(f&quot;Original range: [{img.min()}, {img.max()}]&quot;)
+print(f&quot;Normalized range: [{img_normalized.min():.4f}, {img_normalized.max():.4f}]&quot;)
+
+plt.figure(figsize=(6, 6))
+plt.imshow(img, cmap=&#x27;gray&#x27;)
+plt.title(f&quot;Original: {selected_image}&quot;)
+plt.axis(&#x27;off&#x27;)
+plt.show()
+
+# Apply gamma correction with different gamma values
+gamma_values = [0.3, 0.5, 1.0, 1.5, 2.5, 5.0]
+c = 1  # constant
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+for ax, gamma in zip(axes.flatten(), gamma_values):
+    # Gamma correction: s = c * r^gamma
+    corrected = c * np.power(img_normalized, gamma)
+    
+    # Convert back to uint8
+    corrected_uint8 = np.uint8(np.clip(corrected * 255, 0, 255))
+    
+    ax.imshow(corrected_uint8, cmap=&#x27;gray&#x27;)
+    ax.set_title(f&quot;γ = {gamma}&quot;, fontsize=13, fontweight=&#x27;bold&#x27;)
+    ax.axis(&#x27;off&#x27;)
+
+plt.suptitle(f&quot;Gamma Correction: s = c · r^γ  (c={c})&quot;, fontsize=15, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Plot transformation curves
+r = np.linspace(0, 1, 256)
+gamma_values_plot = [0.04, 0.1, 0.2, 0.4, 0.67, 1.0, 1.5, 2.5, 5.0, 10.0, 25.0]
+
+plt.figure(figsize=(8, 8))
+for gamma in gamma_values_plot:
+    s = np.power(r, gamma)
+    plt.plot(r, s, label=f&quot;γ = {gamma}&quot;)
+
+plt.plot([0, 1], [0, 1], &#x27;k--&#x27;, alpha=0.3, label=&quot;Identity (γ=1)&quot;)
+plt.xlabel(&quot;Input Intensity (r)&quot;, fontsize=12)
+plt.ylabel(&quot;Output Intensity (s)&quot;, fontsize=12)
+plt.title(&quot;Power Law Transformation Curves: s = r^γ&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.legend(loc=&#x27;best&#x27;, fontsize=9)
+plt.grid(True, alpha=0.3)
+plt.axis(&#x27;equal&#x27;)
+plt.xlim(0, 1)
+plt.ylim(0, 1)
+plt.tight_layout()
+plt.show()
+
+# Log transformation: s = c * log(1 + r)
+c_log = 1.0
+log_transformed = c_log * np.log1p(img_normalized)  # log(1 + r)
+
+# Normalize to [0, 1]
+log_transformed = log_transformed / log_transformed.max()
+log_uint8 = np.uint8(log_transformed * 255)
+
+# Compare with gamma = 0.4
+gamma_04 = np.power(img_normalized, 0.4)
+gamma_04_uint8 = np.uint8(np.clip(gamma_04 * 255, 0, 255))
+
+fig, axes = plt.subplots(1, 3, figsize=(15, 5))
+
+axes[0].imshow(img, cmap=&#x27;gray&#x27;)
+axes[0].set_title(&quot;Original&quot;)
+axes[0].axis(&#x27;off&#x27;)
+
+axes[1].imshow(log_uint8, cmap=&#x27;gray&#x27;)
+axes[1].set_title(&quot;Log Transform: s = c·log(1+r)&quot;)
+axes[1].axis(&#x27;off&#x27;)
+
+axes[2].imshow(gamma_04_uint8, cmap=&#x27;gray&#x27;)
+axes[2].set_title(&quot;Gamma: s = r^0.4&quot;)
+axes[2].axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Log Transformation vs Gamma Correction&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# === DARK IMAGE (change to any image) ===
+dark_image_file = &quot;Fig0241(a)(einstein low contrast).tif&quot;
+dark_img = cv2.imread(os.path.join(DATASET_PATH, dark_image_file), cv2.IMREAD_GRAYSCALE)
+dark_norm = dark_img / 255.0
+
+# Gamma values for dark image enhancement
+dark_gammas = [0.3, 0.4, 0.6]
+
+fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+axes[0].imshow(dark_img, cmap=&#x27;gray&#x27;)
+axes[0].set_title(&quot;Original (Dark)&quot;)
+axes[0].axis(&#x27;off&#x27;)
+
+for ax, gamma in zip(axes[1:], dark_gammas):
+    enhanced = np.uint8(np.clip(np.power(dark_norm, gamma) * 255, 0, 255))
+    ax.imshow(enhanced, cmap=&#x27;gray&#x27;)
+    ax.set_title(f&quot;γ = {gamma}&quot;)
+    ax.axis(&#x27;off&#x27;)
+
+plt.suptitle(f&quot;Dark Image Enhancement: {dark_image_file}&quot;, fontsize=13, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# === BRIGHT IMAGE (change to any image) ===
+bright_image_file = &quot;Fig0241(c)(einstein high contrast).tif&quot;
+bright_img = cv2.imread(os.path.join(DATASET_PATH, bright_image_file), cv2.IMREAD_GRAYSCALE)
+bright_norm = bright_img / 255.0
+
+# Gamma values for bright image compression
+bright_gammas = [3.0, 4.0, 5.0]
+
+fig, axes = plt.subplots(1, 4, figsize=(16, 4))
+axes[0].imshow(bright_img, cmap=&#x27;gray&#x27;)
+axes[0].set_title(&quot;Original (Bright)&quot;)
+axes[0].axis(&#x27;off&#x27;)
+
+for ax, gamma in zip(axes[1:], bright_gammas):
+    compressed = np.uint8(np.clip(np.power(bright_norm, gamma) * 255, 0, 255))
+    ax.imshow(compressed, cmap=&#x27;gray&#x27;)
+    ax.set_title(f&quot;γ = {gamma}&quot;)
+    ax.axis(&#x27;off&#x27;)
+
+plt.suptitle(f&quot;Bright Image Compression: {bright_image_file}&quot;, fontsize=13, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Compare all three Einstein contrast levels with gamma correction
+einstein_files = [
+    &quot;Fig0241(a)(einstein low contrast).tif&quot;,
+    &quot;Fig0241(b)(einstein med contrast).tif&quot;,
+    &quot;Fig0241(c)(einstein high contrast).tif&quot;
+]
+labels = [&quot;Low Contrast&quot;, &quot;Medium Contrast&quot;, &quot;High Contrast&quot;]
+
+fig, axes = plt.subplots(3, 4, figsize=(16, 12))
+
+for row, (efile, label) in enumerate(zip(einstein_files, labels)):
+    eimg = cv2.imread(os.path.join(DATASET_PATH, efile), cv2.IMREAD_GRAYSCALE)
+    enorm = eimg / 255.0
+    
+    axes[row, 0].imshow(eimg, cmap=&#x27;gray&#x27;)
+    axes[row, 0].set_title(f&quot;Original ({label})&quot;)
+    axes[row, 0].axis(&#x27;off&#x27;)
+    
+    for col, gamma in enumerate([0.4, 1.0, 2.5]):
+        result = np.uint8(np.clip(np.power(enorm, gamma) * 255, 0, 255))
+        axes[row, col+1].imshow(result, cmap=&#x27;gray&#x27;)
+        axes[row, col+1].set_title(f&quot;γ = {gamma}&quot;)
+        axes[row, col+1].axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Gamma Correction Across Contrast Levels&quot;, fontsize=15, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Show histogram changes with gamma correction
+gamma_demo = 0.4
+corrected_demo = np.uint8(np.clip(np.power(img_normalized, gamma_demo) * 255, 0, 255))
+
+fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+
+axes[0, 0].imshow(img, cmap=&#x27;gray&#x27;)
+axes[0, 0].set_title(&quot;Original&quot;)
+axes[0, 0].axis(&#x27;off&#x27;)
+
+axes[0, 1].imshow(corrected_demo, cmap=&#x27;gray&#x27;)
+axes[0, 1].set_title(f&quot;Gamma Corrected (γ={gamma_demo})&quot;)
+axes[0, 1].axis(&#x27;off&#x27;)
+
+axes[1, 0].hist(img.ravel(), bins=256, range=(0, 256), color=&#x27;black&#x27;, alpha=0.7)
+axes[1, 0].set_title(&quot;Original Histogram&quot;)
+axes[1, 0].set_xlabel(&quot;Intensity&quot;)
+axes[1, 0].set_ylabel(&quot;Frequency&quot;)
+
+axes[1, 1].hist(corrected_demo.ravel(), bins=256, range=(0, 256), color=&#x27;black&#x27;, alpha=0.7)
+axes[1, 1].set_title(f&quot;Gamma Corrected Histogram (γ={gamma_demo})&quot;)
+axes[1, 1].set_xlabel(&quot;Intensity&quot;)
+axes[1, 1].set_ylabel(&quot;Frequency&quot;)
+
+plt.suptitle(&quot;Histogram Comparison&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
 <div class="section-card">
     <h3>Part 1: Apply Gamma Correction</h3>
     <p>Adjust the gamma slider and see the transformation result with histogram comparison.</p>
@@ -70,6 +310,10 @@
     <div id="contrastResult"></div>
 </div>
 
+<span class="print-only dip-section-marker dip-section-output">4. Output</span>
+<div class="print-only output-collection" id="printOutput" aria-label="Result figures and computed outputs"></div>
+
+<span class="print-only dip-section-marker dip-section-analysis">5. Analysis / Conclusion</span>
 <div class="analysis-box">
     <h4>Analysis Questions</h4>
     <ol>

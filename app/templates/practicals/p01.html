@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Practical 1: Loading & Displaying Images{% endblock %}
-{% block print_title %}Practical 1: Loading &amp; Displaying Digital Images{% endblock %}
+{% block print_title %}<div class="cover-practical-name">Practical 1: Loading &amp; Displaying Digital Images</div>{% endblock %}
 
 {% block content %}
 <h2>Practical 1: Loading &amp; Displaying Images</h2>
 <p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_1.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
 
+<span class="print-only dip-section-marker dip-section-aim">1. Aim</span>
 <div class="section-card">
     <h3>Objective</h3>
     <p>To learn how to load, display, and inspect digital images using OpenCV and Matplotlib.</p>
+    <span class="print-only dip-section-marker dip-section-theory">2. Description / Theory</span>
+
     <div class="theory-box">
         <strong>Theory:</strong> A digital image is a 2D matrix of pixel intensity values. For an 8-bit grayscale image, each pixel holds a value between 0 (black) and 255 (white). Understanding image representation is the foundation of all image processing.
     </div>
@@ -18,6 +21,117 @@
 <!-- Shared picker for Parts 1 & 2 -->
 <div class="picker-bar" id="mainPicker"></div>
 
+<span class="print-only dip-section-marker dip-section-code">3. Code</span>
+<pre class="print-only literal-code"><code>
+
+# ----------------------------------------------------------------------
+
+# Install dependencies (uncomment for Google Colab)
+# !pip install opencv-python-headless matplotlib numpy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# === AUTO-DOWNLOAD DATASET (works in Google Colab and locally) ===
+import os, urllib.request, zipfile
+
+# Choose which chapter to download (CH01-CH12)
+CHAPTER = &quot;CH02&quot;  # Chapter 2: Digital Image Fundamentals
+DATASET_PATH = f&quot;datasets/{CHAPTER}/&quot;
+DOWNLOAD_BASE = &quot;https://www.imageprocessingplace.com/downloads_V3/dip3e_downloads/dip3e_book_images&quot;
+
+if not os.path.exists(DATASET_PATH) or not any(f.endswith(&#x27;.tif&#x27;) for f in os.listdir(DATASET_PATH)):
+    zip_name = f&quot;DIP3E_{CHAPTER}_Original_Images.zip&quot;
+    url = f&quot;{DOWNLOAD_BASE}/{zip_name}&quot;
+    print(f&quot;Downloading {CHAPTER} dataset from imageprocessingplace.com...&quot;)
+    urllib.request.urlretrieve(url, &quot;chapter.zip&quot;)
+    os.makedirs(DATASET_PATH, exist_ok=True)
+    with zipfile.ZipFile(&quot;chapter.zip&quot;, &quot;r&quot;) as z:
+        for f in z.namelist():
+            if f.lower().endswith(&quot;.tif&quot;):
+                fname = os.path.basename(f)
+                if fname:
+                    with z.open(f) as src, open(os.path.join(DATASET_PATH, fname), &quot;wb&quot;) as dst:
+                        dst.write(src.read())
+    os.remove(&quot;chapter.zip&quot;)
+    print(f&quot;Downloaded {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+else:
+    print(f&quot;Dataset ready: {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+
+# List all available images
+images = sorted([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])
+print(f&quot;\nAvailable images ({len(images)}):&quot;)
+for i, name in enumerate(images, 1):
+    print(f&quot;  {i}. {name}&quot;)
+
+# === SELECT YOUR IMAGE HERE ===
+selected_image = &quot;Fig0222(b)(cameraman).tif&quot;  # Change this to any image from the list above
+
+# Load the image in grayscale
+img = cv2.imread(os.path.join(DATASET_PATH, selected_image), cv2.IMREAD_GRAYSCALE)
+
+# Display image properties
+print(f&quot;Image: {selected_image}&quot;)
+print(f&quot;Shape: {img.shape}&quot;)
+print(f&quot;Data type: {img.dtype}&quot;)
+print(f&quot;Min pixel value: {img.min()}&quot;)
+print(f&quot;Max pixel value: {img.max()}&quot;)
+print(f&quot;Mean pixel value: {img.mean():.2f}&quot;)
+
+plt.figure(figsize=(6, 6))
+plt.imshow(img, cmap=&#x27;gray&#x27;)
+plt.title(f&quot;{selected_image} ({img.shape[0]}x{img.shape[1]})&quot;)
+plt.axis(&#x27;off&#x27;)
+plt.tight_layout()
+plt.show()
+
+# === SELECT 4 IMAGES TO COMPARE ===
+image_names = [
+    &quot;Fig0222(b)(cameraman).tif&quot;,
+    &quot;Fig0221(a)(ctskull-256).tif&quot;,
+    &quot;Fig0230(a)(dental_xray).tif&quot;,
+    &quot;Fig0226(galaxy_pair_original).tif&quot;
+]
+
+fig, axes = plt.subplots(2, 2, figsize=(10, 10))
+for ax, name in zip(axes.flatten(), image_names):
+    image = cv2.imread(os.path.join(DATASET_PATH, name), cv2.IMREAD_GRAYSCALE)
+    ax.imshow(image, cmap=&#x27;gray&#x27;)
+    ax.set_title(f&quot;{name.split(&#x27;(&#x27;)[-1].replace(&#x27;).tif&#x27;,&#x27;&#x27;)}\n{image.shape[0]}x{image.shape[1]}&quot;)
+    ax.axis(&#x27;off&#x27;)
+plt.suptitle(&quot;Multiple Images from Dataset&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Detailed properties
+print(f&quot;{&#x27;Property&#x27;:&lt;20} {&#x27;Value&#x27;}&quot;)
+print(&quot;-&quot; * 40)
+print(f&quot;{&#x27;Filename&#x27;:&lt;20} {selected_image}&quot;)
+print(f&quot;{&#x27;Dimensions&#x27;:&lt;20} {img.shape[0]} x {img.shape[1]}&quot;)
+print(f&quot;{&#x27;Total pixels&#x27;:&lt;20} {img.size}&quot;)
+print(f&quot;{&#x27;Data type&#x27;:&lt;20} {img.dtype}&quot;)
+print(f&quot;{&#x27;Min intensity&#x27;:&lt;20} {img.min()}&quot;)
+print(f&quot;{&#x27;Max intensity&#x27;:&lt;20} {img.max()}&quot;)
+print(f&quot;{&#x27;Mean intensity&#x27;:&lt;20} {img.mean():.2f}&quot;)
+print(f&quot;{&#x27;Std deviation&#x27;:&lt;20} {img.std():.2f}&quot;)
+
+# Display image alongside its histogram
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+ax1.imshow(img, cmap=&#x27;gray&#x27;)
+ax1.set_title(f&quot;{selected_image}&quot;)
+ax1.axis(&#x27;off&#x27;)
+
+ax2.hist(img.ravel(), bins=256, range=(0, 256), color=&#x27;black&#x27;, alpha=0.7)
+ax2.set_title(&quot;Pixel Intensity Histogram&quot;)
+ax2.set_xlabel(&quot;Intensity Value (0-255)&quot;)
+ax2.set_ylabel(&quot;Frequency&quot;)
+ax2.set_xlim(0, 256)
+
+plt.tight_layout()
+plt.show()</code></pre>
 <div class="section-card">
     <h3>Part 1: Load and Display a Single Image</h3>
     <p>Load the selected image in grayscale and display it with its properties.</p>
@@ -42,6 +156,10 @@
     <div id="multiResult"></div>
 </div>
 
+<span class="print-only dip-section-marker dip-section-output">4. Output</span>
+<div class="print-only output-collection" id="printOutput" aria-label="Result figures and computed outputs"></div>
+
+<span class="print-only dip-section-marker dip-section-analysis">5. Analysis / Conclusion</span>
 <div class="analysis-box">
     <h4>Analysis Questions</h4>
     <ol>

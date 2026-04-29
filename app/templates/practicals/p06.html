@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Practical 6: Histogram Matching{% endblock %}
-{% block print_title %}Practical 6: Histogram Matching &amp; Specification{% endblock %}
+{% block print_title %}<div class="cover-practical-name">Practical 6: Histogram Matching &amp; Specification</div>{% endblock %}
 
 {% block content %}
 <h2>Practical 6: Histogram Matching &amp; Specification</h2>
 <p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_6.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
 
+<span class="print-only dip-section-marker dip-section-aim">1. Aim</span>
 <div class="section-card">
     <h3>Objective</h3>
     <p>To understand and implement histogram matching (specification) &mdash; a generalization of histogram equalization that transforms an image so its histogram approximates a <em>specified</em> target histogram rather than a uniform one.</p>
+    <span class="print-only dip-section-marker dip-section-theory">2. Description / Theory</span>
+
     <div class="theory-box">
         <strong>Theory:</strong> Histogram equalization maps every image to a uniform distribution. Histogram matching goes further: given a source image and a target (reference) image, we transform the source so its intensity distribution matches the target's. The algorithm uses CDF inversion:
         <ul style="margin-top:0.5rem;margin-bottom:0">
@@ -28,6 +31,270 @@
     <div class="picker-bar" id="srcPicker"></div>
 </div>
 
+<span class="print-only dip-section-marker dip-section-code">3. Code</span>
+<pre class="print-only literal-code"><code>
+
+# ----------------------------------------------------------------------
+
+# Install dependencies (uncomment for Google Colab)
+# !pip install opencv-python-headless matplotlib numpy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# === AUTO-DOWNLOAD DATASET (works in Google Colab and locally) ===
+import os, urllib.request, zipfile
+
+# Choose which chapter to download (CH01-CH12)
+CHAPTER = &quot;CH02&quot;  # Chapter 2: Digital Image Fundamentals
+DATASET_PATH = f&quot;datasets/{CHAPTER}/&quot;
+DOWNLOAD_BASE = &quot;https://www.imageprocessingplace.com/downloads_V3/dip3e_downloads/dip3e_book_images&quot;
+
+if not os.path.exists(DATASET_PATH) or not any(f.endswith(&#x27;.tif&#x27;) for f in os.listdir(DATASET_PATH)):
+    zip_name = f&quot;DIP3E_{CHAPTER}_Original_Images.zip&quot;
+    url = f&quot;{DOWNLOAD_BASE}/{zip_name}&quot;
+    print(f&quot;Downloading {CHAPTER} dataset from imageprocessingplace.com...&quot;)
+    urllib.request.urlretrieve(url, &quot;chapter.zip&quot;)
+    os.makedirs(DATASET_PATH, exist_ok=True)
+    with zipfile.ZipFile(&quot;chapter.zip&quot;, &quot;r&quot;) as z:
+        for f in z.namelist():
+            if f.lower().endswith(&quot;.tif&quot;):
+                fname = os.path.basename(f)
+                if fname:
+                    with z.open(f) as src, open(os.path.join(DATASET_PATH, fname), &quot;wb&quot;) as dst:
+                        dst.write(src.read())
+    os.remove(&quot;chapter.zip&quot;)
+    print(f&quot;Downloaded {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+else:
+    print(f&quot;Dataset ready: {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+
+# List all available images
+images = sorted([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])
+print(f&quot;\nAvailable images ({len(images)}):&quot;)
+for i, name in enumerate(images, 1):
+    print(f&quot;  {i}. {name}&quot;)
+
+# === SOURCE IMAGE: Low-contrast Einstein ===
+source_file = &quot;Fig0241(a)(einstein low contrast).tif&quot;
+source = cv2.imread(os.path.join(DATASET_PATH, source_file), cv2.IMREAD_GRAYSCALE)
+
+print(f&quot;Source: {source_file}&quot;)
+print(f&quot;Shape: {source.shape}&quot;)
+print(f&quot;Intensity range: [{source.min()}, {source.max()}]&quot;)
+print(f&quot;Mean: {source.mean():.2f}, Std: {source.std():.2f}&quot;)
+
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+
+axes[0].imshow(source, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[0].set_title(&#x27;Source Image (Low Contrast)&#x27;)
+axes[0].axis(&#x27;off&#x27;)
+
+axes[1].hist(source.ravel(), bins=256, range=(0, 256), color=&#x27;steelblue&#x27;, alpha=0.85)
+axes[1].set_title(&#x27;Source Histogram&#x27;)
+axes[1].set_xlabel(&#x27;Pixel Intensity&#x27;)
+axes[1].set_ylabel(&#x27;Frequency&#x27;)
+axes[1].set_xlim(0, 255)
+
+plt.suptitle(f&#x27;Source Image &amp; Histogram: {source_file}&#x27;, fontsize=13, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Equalization baseline
+equalized = cv2.equalizeHist(source)
+
+print(f&quot;Original  — Mean: {source.mean():.2f}, Std: {source.std():.2f}, Range: [{source.min()}, {source.max()}]&quot;)
+print(f&quot;Equalized — Mean: {equalized.mean():.2f}, Std: {equalized.std():.2f}, Range: [{equalized.min()}, {equalized.max()}]&quot;)
+
+fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+axes[0, 0].imshow(source, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[0, 0].set_title(&#x27;Original Image&#x27;)
+axes[0, 0].axis(&#x27;off&#x27;)
+
+axes[0, 1].imshow(equalized, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[0, 1].set_title(&#x27;Histogram Equalized Image&#x27;)
+axes[0, 1].axis(&#x27;off&#x27;)
+
+axes[1, 0].hist(source.ravel(), bins=256, range=(0, 256), color=&#x27;steelblue&#x27;, alpha=0.85)
+axes[1, 0].set_title(&#x27;Original Histogram&#x27;)
+axes[1, 0].set_xlabel(&#x27;Pixel Intensity&#x27;)
+axes[1, 0].set_ylabel(&#x27;Frequency&#x27;)
+axes[1, 0].set_xlim(0, 255)
+
+axes[1, 1].hist(equalized.ravel(), bins=256, range=(0, 256), color=&#x27;darkorange&#x27;, alpha=0.85)
+axes[1, 1].set_title(&#x27;Equalized Histogram&#x27;)
+axes[1, 1].set_xlabel(&#x27;Pixel Intensity&#x27;)
+axes[1, 1].set_ylabel(&#x27;Frequency&#x27;)
+axes[1, 1].set_xlim(0, 255)
+
+plt.suptitle(&#x27;Equalization Baseline: Original vs Equalized&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+def histogram_match(source, target):
+    &quot;&quot;&quot;Match source histogram to target histogram using CDF mapping.&quot;&quot;&quot;
+    src_hist, _ = np.histogram(source.ravel(), 256, [0, 256])
+    tgt_hist, _ = np.histogram(target.ravel(), 256, [0, 256])
+    src_cdf = np.cumsum(src_hist).astype(np.float64)
+    src_cdf /= src_cdf[-1]
+    tgt_cdf = np.cumsum(tgt_hist).astype(np.float64)
+    tgt_cdf /= tgt_cdf[-1]
+    lut = np.zeros(256, dtype=np.uint8)
+    for r in range(256):
+        lut[r] = np.argmin(np.abs(tgt_cdf - src_cdf[r]))
+    return lut[source]
+
+# Load target image
+target_file = &quot;Fig0222(b)(cameraman).tif&quot;
+target = cv2.imread(os.path.join(DATASET_PATH, target_file), cv2.IMREAD_GRAYSCALE)
+
+# Perform histogram matching
+matched = histogram_match(source, target)
+
+print(f&quot;Source:  {source_file} — Mean: {source.mean():.2f}, Std: {source.std():.2f}&quot;)
+print(f&quot;Target:  {target_file} — Mean: {target.mean():.2f}, Std: {target.std():.2f}&quot;)
+print(f&quot;Matched: Mean: {matched.mean():.2f}, Std: {matched.std():.2f}&quot;)
+
+fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+
+# Top row: images
+axes[0, 0].imshow(source, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[0, 0].set_title(&#x27;Source (Low Contrast)&#x27;)
+axes[0, 0].axis(&#x27;off&#x27;)
+
+axes[0, 1].imshow(target, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[0, 1].set_title(&#x27;Target (Cameraman)&#x27;)
+axes[0, 1].axis(&#x27;off&#x27;)
+
+axes[0, 2].imshow(matched, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[0, 2].set_title(&#x27;Matched Result&#x27;)
+axes[0, 2].axis(&#x27;off&#x27;)
+
+# Bottom row: histograms
+axes[1, 0].hist(source.ravel(), bins=256, range=(0, 256), color=&#x27;steelblue&#x27;, alpha=0.85)
+axes[1, 0].set_title(&#x27;Source Histogram&#x27;)
+axes[1, 0].set_xlabel(&#x27;Pixel Intensity&#x27;)
+axes[1, 0].set_ylabel(&#x27;Frequency&#x27;)
+axes[1, 0].set_xlim(0, 255)
+
+axes[1, 1].hist(target.ravel(), bins=256, range=(0, 256), color=&#x27;forestgreen&#x27;, alpha=0.85)
+axes[1, 1].set_title(&#x27;Target Histogram&#x27;)
+axes[1, 1].set_xlabel(&#x27;Pixel Intensity&#x27;)
+axes[1, 1].set_ylabel(&#x27;Frequency&#x27;)
+axes[1, 1].set_xlim(0, 255)
+
+axes[1, 2].hist(matched.ravel(), bins=256, range=(0, 256), color=&#x27;darkorange&#x27;, alpha=0.85)
+axes[1, 2].set_title(&#x27;Matched Histogram&#x27;)
+axes[1, 2].set_xlabel(&#x27;Pixel Intensity&#x27;)
+axes[1, 2].set_ylabel(&#x27;Frequency&#x27;)
+axes[1, 2].set_xlim(0, 255)
+
+plt.suptitle(&#x27;Histogram Matching: Source → Target&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Load target images
+high_contrast_file = &quot;Fig0241(c)(einstein high contrast).tif&quot;
+cameraman_file = &quot;Fig0222(b)(cameraman).tif&quot;
+
+high_contrast = cv2.imread(os.path.join(DATASET_PATH, high_contrast_file), cv2.IMREAD_GRAYSCALE)
+cameraman = cv2.imread(os.path.join(DATASET_PATH, cameraman_file), cv2.IMREAD_GRAYSCALE)
+
+# Match source to each target
+matched_eq = histogram_match(source, equalized)  # Match to equalized (uniform-ish)
+matched_high = histogram_match(source, high_contrast)  # Match to high contrast
+matched_cam = histogram_match(source, cameraman)  # Match to cameraman
+
+results = [
+    (&quot;Source&quot;, source),
+    (&quot;Matched \u2192 Equalized&quot;, matched_eq),
+    (&quot;Matched \u2192 High Contrast&quot;, matched_high),
+    (&quot;Matched \u2192 Cameraman&quot;, matched_cam),
+]
+
+fig, axes = plt.subplots(2, 4, figsize=(20, 10))
+
+colors = [&#x27;steelblue&#x27;, &#x27;darkorange&#x27;, &#x27;crimson&#x27;, &#x27;forestgreen&#x27;]
+
+for col, (title, img) in enumerate(results):
+    # Top row: images
+    axes[0, col].imshow(img, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+    axes[0, col].set_title(title)
+    axes[0, col].axis(&#x27;off&#x27;)
+
+    # Bottom row: histograms
+    axes[1, col].hist(img.ravel(), bins=256, range=(0, 256), color=colors[col], alpha=0.85)
+    axes[1, col].set_title(f&#x27;{title} Histogram&#x27;)
+    axes[1, col].set_xlabel(&#x27;Pixel Intensity&#x27;)
+    axes[1, col].set_ylabel(&#x27;Frequency&#x27;)
+    axes[1, col].set_xlim(0, 255)
+
+plt.suptitle(&#x27;Multi-Target Histogram Matching Comparison&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+# Compute CDFs
+src_hist, _ = np.histogram(source.ravel(), 256, [0, 256])
+tgt_hist, _ = np.histogram(target.ravel(), 256, [0, 256])
+matched_hist, _ = np.histogram(matched.ravel(), 256, [0, 256])
+
+src_cdf = np.cumsum(src_hist).astype(np.float64)
+src_cdf /= src_cdf[-1]
+tgt_cdf = np.cumsum(tgt_hist).astype(np.float64)
+tgt_cdf /= tgt_cdf[-1]
+matched_cdf = np.cumsum(matched_hist).astype(np.float64)
+matched_cdf /= matched_cdf[-1]
+
+# Build the transfer function (LUT)
+lut = np.zeros(256, dtype=np.uint8)
+for r in range(256):
+    lut[r] = np.argmin(np.abs(tgt_cdf - src_cdf[r]))
+
+fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+# Plot 1: Source CDF vs Target CDF
+axes[0].plot(range(256), src_cdf, color=&#x27;steelblue&#x27;, linewidth=2, label=&#x27;Source CDF T(r)&#x27;)
+axes[0].plot(range(256), tgt_cdf, color=&#x27;forestgreen&#x27;, linewidth=2, label=&#x27;Target CDF G(z)&#x27;)
+axes[0].set_title(&#x27;CDF Comparison: Source vs Target&#x27;)
+axes[0].set_xlabel(&#x27;Pixel Intensity&#x27;)
+axes[0].set_ylabel(&#x27;Cumulative Probability&#x27;)
+axes[0].legend()
+axes[0].set_xlim(0, 255)
+axes[0].set_ylim(0, 1.05)
+axes[0].grid(True, alpha=0.3)
+
+# Plot 2: Transfer function (mapping)
+axes[1].plot(range(256), lut, color=&#x27;crimson&#x27;, linewidth=2)
+axes[1].plot([0, 255], [0, 255], &#x27;k--&#x27;, alpha=0.3, label=&#x27;Identity&#x27;)
+axes[1].set_title(&#x27;Transfer Function: LUT[r] = G\u207b\u00b9(T(r))&#x27;)
+axes[1].set_xlabel(&#x27;Input Intensity (r)&#x27;)
+axes[1].set_ylabel(&#x27;Output Intensity (z)&#x27;)
+axes[1].legend()
+axes[1].set_xlim(0, 255)
+axes[1].set_ylim(0, 255)
+axes[1].set_aspect(&#x27;equal&#x27;)
+axes[1].grid(True, alpha=0.3)
+
+# Plot 3: Verification — Matched CDF vs Target CDF
+axes[2].plot(range(256), tgt_cdf, color=&#x27;forestgreen&#x27;, linewidth=2, label=&#x27;Target CDF G(z)&#x27;)
+axes[2].plot(range(256), matched_cdf, color=&#x27;darkorange&#x27;, linewidth=2, linestyle=&#x27;--&#x27;, label=&#x27;Matched CDF&#x27;)
+axes[2].set_title(&#x27;Verification: Matched CDF \u2248 Target CDF&#x27;)
+axes[2].set_xlabel(&#x27;Pixel Intensity&#x27;)
+axes[2].set_ylabel(&#x27;Cumulative Probability&#x27;)
+axes[2].legend()
+axes[2].set_xlim(0, 255)
+axes[2].set_ylim(0, 1.05)
+axes[2].grid(True, alpha=0.3)
+
+# Quantify CDF match quality
+cdf_error = np.mean(np.abs(matched_cdf - tgt_cdf))
+print(f&quot;Mean absolute CDF error (matched vs target): {cdf_error:.6f}&quot;)
+
+plt.suptitle(&#x27;Transfer Function Analysis: Histogram Matching&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
 <div class="section-card">
     <h3>Part 1: Source Histogram</h3>
     <p>Visualize the source image and its pixel intensity distribution.</p>
@@ -64,6 +331,10 @@
     <div id="transferResult"></div>
 </div>
 
+<span class="print-only dip-section-marker dip-section-output">4. Output</span>
+<div class="print-only output-collection" id="printOutput" aria-label="Result figures and computed outputs"></div>
+
+<span class="print-only dip-section-marker dip-section-analysis">5. Analysis / Conclusion</span>
 <div class="analysis-box">
     <h4>Analysis Questions</h4>
     <ol>

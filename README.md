@@ -8,15 +8,19 @@ Interactive web lab for **CSU2543 — Digital Image Processing** at Shoolini Uni
 
 ## What It Does
 
-A hands-on companion to Gonzalez & Woods' *Digital Image Processing (3e)* Chapter 2. Load real images, run operations, and see results instantly — no local Python setup needed.
+A hands-on companion to Gonzalez & Woods' *Digital Image Processing (3e)* Chapters 2 and 3. Load real images, run operations, and see results instantly — no local Python setup needed.
 
-**Sections:**
-- **Foundations** — pixel grids, grayscale, bit depth, storage math
-- **Practical 1** — spatial image differencing (angiography, dental X-ray, shading correction)
-- **Image Explorer** — pixel inspector, 3D surface plots
-- **Matplotlib Reference** — interactive command reference with live demos
-- **Theory Notes** — distance metrics, arithmetic operations, neighborhoods (with MathJax)
-- **Quizzes** — test your understanding after each section
+**Practicals:**
+- **P1** — Loading and displaying images, histograms (G&W Ch 2)
+- **P2** — Sampling rate vs. spatial resolution; aliasing (G&W Ch 2)
+- **P3** — Negation, subtraction, inversion; medical-imaging applications (G&W Ch 2–3)
+- **P4** — Gamma correction and power-law transformations (G&W Ch 3)
+- **P5** — Histogram equalization (G&W Ch 3)
+- **P6** — Histogram matching and specification (G&W Ch 3)
+- **P7** — 2D correlation and convolution (G&W Ch 3)
+- **P8** — Spatial filtering: box, median, Laplacian, Sobel (G&W Ch 3)
+
+Each practical ships in three forms: a **Jupyter notebook** (`Practical_N.ipynb`, runs in Colab), a **Flask server** version with on-demand dataset download, and a **fully static** version (Cloudflare Pages / Vercel) that runs all image processing in the browser via the Canvas API.
 
 ![Angiography Demo](docs/screenshots/angiography.png)
 

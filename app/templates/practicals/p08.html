@@ -1,0 +1,343 @@
+{% extends "base.html" %}
+
+{% block title %}Practical 8: Spatial Filtering{% endblock %}
+{% block print_title %}<div class="cover-practical-name">Practical 8: Spatial Filtering &mdash; Smoothing &amp; Sharpening</div>{% endblock %}
+
+{% block content %}
+<h2>Practical 8: Spatial Filtering &mdash; Smoothing &amp; Sharpening</h2>
+<p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_8.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
+
+<span class="print-only dip-section-marker dip-section-aim">1. Aim</span>
+<div class="section-card">
+    <h3>Aim</h3>
+    <p>To implement and analyze the four canonical spatial-domain filters of digital image processing: the box (averaging) filter and median filter for noise smoothing, and the Laplacian and Sobel operators for sharpening and edge detection.</p>
+    <span class="print-only dip-section-marker dip-section-theory">2. Description / Theory</span>
+
+    <div class="theory-box">
+        <strong>Theory:</strong>
+        <ul style="margin-top:0.5rem;margin-bottom:0">
+            <li><strong>Box (mean):</strong> \( \hat f(x,y) = \frac{1}{mn} \sum_{(s,t)\in S_{xy}} f(s,t) \) &mdash; linear smoothing.</li>
+            <li><strong>Median:</strong> \( \hat f(x,y) = \mathrm{median}\{ f(s,t) : (s,t)\in S_{xy} \} \) &mdash; non-linear, preserves edges, ideal for impulse noise.</li>
+            <li><strong>Laplacian:</strong> \( \nabla^2 f \approx f_{N}+f_{S}+f_{E}+f_{W} - 4f(x,y) \) &mdash; second derivative for sharpening: \( g = f - \nabla^2 f \).</li>
+            <li><strong>Sobel:</strong> first-derivative gradient via \(G_x, G_y\); magnitude \(|G| \approx |G_x|+|G_y|\); direction \(\theta = \arctan(G_y/G_x)\).</li>
+        </ul>
+    </div>
+</div>
+
+<span class="print-only dip-section-marker dip-section-code">3. Code</span>
+<pre class="print-only literal-code"><code>
+
+# ----------------------------------------------------------------------
+
+# Install dependencies (uncomment for Google Colab)
+# !pip install opencv-python-headless matplotlib numpy scipy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# === AUTO-DOWNLOAD DATASET (works in Google Colab and locally) ===
+import os, urllib.request, zipfile
+
+CHAPTER = &quot;CH03&quot;  # Chapter 3: Spatial Filtering
+DATASET_PATH = f&quot;datasets/{CHAPTER}/&quot;
+DOWNLOAD_BASE = &quot;https://www.imageprocessingplace.com/downloads_V3/dip3e_downloads/dip3e_book_images&quot;
+
+if not os.path.exists(DATASET_PATH) or not any(f.endswith(&#x27;.tif&#x27;) for f in os.listdir(DATASET_PATH)):
+    zip_name = f&quot;DIP3E_{CHAPTER}_Original_Images.zip&quot;
+    url = f&quot;{DOWNLOAD_BASE}/{zip_name}&quot;
+    print(f&quot;Downloading {CHAPTER} dataset from imageprocessingplace.com...&quot;)
+    urllib.request.urlretrieve(url, &quot;chapter.zip&quot;)
+    os.makedirs(DATASET_PATH, exist_ok=True)
+    with zipfile.ZipFile(&quot;chapter.zip&quot;, &quot;r&quot;) as z:
+        for f in z.namelist():
+            if f.lower().endswith(&quot;.tif&quot;):
+                fname = os.path.basename(f)
+                if fname:
+                    with z.open(f) as src, open(os.path.join(DATASET_PATH, fname), &quot;wb&quot;) as dst:
+                        dst.write(src.read())
+    os.remove(&quot;chapter.zip&quot;)
+    print(f&quot;Downloaded {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+else:
+    print(f&quot;Dataset ready: {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+
+images = sorted([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])
+print(f&quot;\nAvailable images ({len(images)}):&quot;)
+for i, name in enumerate(images, 1):
+    print(f&quot;  {i:2d}. {name}&quot;)
+
+def box_filter(img, k=3):
+    &quot;&quot;&quot;Manual box filter via 2D correlation with a uniform kernel.&quot;&quot;&quot;
+    p = k // 2
+    kernel = np.ones((k, k), dtype=np.float64) / (k * k)
+    padded = np.pad(img.astype(np.float64), p, mode=&#x27;edge&#x27;)
+    out = np.zeros_like(img, dtype=np.float64)
+    h, w = img.shape
+    for i in range(h):
+        for j in range(w):
+            out[i, j] = np.sum(padded[i:i+k, j:j+k] * kernel)
+    return np.clip(out, 0, 255).astype(np.uint8)
+
+test_pattern_file = &quot;Fig0333(a)(test_pattern_blurring_orig).tif&quot;
+tp = cv2.imread(os.path.join(DATASET_PATH, test_pattern_file), cv2.IMREAD_GRAYSCALE)
+print(f&quot;Test pattern: {test_pattern_file}, shape={tp.shape}&quot;)
+
+kernel_sizes = [3, 5, 9, 15, 35]
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+axes = axes.ravel()
+axes[0].imshow(tp, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[0].set_title(&#x27;Original\nFig0333(a)&#x27;); axes[0].axis(&#x27;off&#x27;)
+for idx, k in enumerate(kernel_sizes, start=1):
+    out = box_filter(tp, k=k)
+    axes[idx].imshow(out, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+    axes[idx].set_title(f&#x27;Box {k}x{k}&#x27;); axes[idx].axis(&#x27;off&#x27;)
+plt.suptitle(&#x27;Box Filter: Effect of Kernel Size on Test Pattern&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+def median_filter(img, k=3):
+    &quot;&quot;&quot;Manual median filter via sliding window.&quot;&quot;&quot;
+    p = k // 2
+    padded = np.pad(img, p, mode=&#x27;edge&#x27;)
+    out = np.zeros_like(img)
+    h, w = img.shape
+    for i in range(h):
+        for j in range(w):
+            out[i, j] = np.median(padded[i:i+k, j:j+k])
+    return out.astype(np.uint8)
+
+salt_pepper_file = &quot;Fig0335(a)(ckt_board_saltpep_prob_pt05).tif&quot;
+if salt_pepper_file not in images:
+    # Some distributions name it differently
+    candidates = [f for f in images if &#x27;ckt&#x27; in f.lower() and (&#x27;saltpep&#x27; in f.lower() or &#x27;saltpr&#x27; in f.lower())]
+    salt_pepper_file = candidates[0] if candidates else images[0]
+    print(f&quot;Substituted: {salt_pepper_file}&quot;)
+
+noisy = cv2.imread(os.path.join(DATASET_PATH, salt_pepper_file), cv2.IMREAD_GRAYSCALE)
+print(f&quot;Noisy image: {salt_pepper_file}, shape={noisy.shape}&quot;)
+
+fig, axes = plt.subplots(1, 5, figsize=(20, 5))
+axes[0].imshow(noisy, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[0].set_title(&#x27;Original\n(Salt &amp; Pepper, p=0.05)&#x27;); axes[0].axis(&#x27;off&#x27;)
+for idx, k in enumerate([3, 5, 7, 9], start=1):
+    out = median_filter(noisy, k=k)
+    axes[idx].imshow(out, cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+    axes[idx].set_title(f&#x27;Median {k}x{k}&#x27;); axes[idx].axis(&#x27;off&#x27;)
+plt.suptitle(&#x27;Median Filter: Removing Impulse Noise&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+k = 3
+box_out = box_filter(noisy, k=k)
+med_out = median_filter(noisy, k=k)
+removed_box = np.abs(noisy.astype(int) - box_out.astype(int)).astype(np.uint8)
+removed_med = np.abs(noisy.astype(int) - med_out.astype(int)).astype(np.uint8)
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+axes[0, 0].imshow(noisy,   cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[0, 0].set_title(&#x27;Noisy input&#x27;); axes[0, 0].axis(&#x27;off&#x27;)
+axes[0, 1].imshow(box_out, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[0, 1].set_title(f&#x27;Box {k}x{k}&#x27;); axes[0, 1].axis(&#x27;off&#x27;)
+axes[0, 2].imshow(med_out, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[0, 2].set_title(f&#x27;Median {k}x{k}&#x27;); axes[0, 2].axis(&#x27;off&#x27;)
+axes[1, 0].axis(&#x27;off&#x27;)
+axes[1, 1].imshow(removed_box, cmap=&#x27;hot&#x27;); axes[1, 1].set_title(&#x27;Removed by Box (noise + edges)&#x27;); axes[1, 1].axis(&#x27;off&#x27;)
+axes[1, 2].imshow(removed_med, cmap=&#x27;hot&#x27;); axes[1, 2].set_title(&#x27;Removed by Median (mostly noise)&#x27;); axes[1, 2].axis(&#x27;off&#x27;)
+plt.suptitle(&#x27;Box vs Median: Edge Preservation Under Impulse Noise&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+print(f&quot;Mean energy removed by box   = {removed_box.mean():.2f}&quot;)
+print(f&quot;Mean energy removed by median = {removed_med.mean():.2f}&quot;)
+
+lap4 = np.array([[ 0, -1,  0],
+                 [-1,  4, -1],
+                 [ 0, -1,  0]], dtype=np.float64)
+
+lap8 = np.array([[-1, -1, -1],
+                 [-1,  8, -1],
+                 [-1, -1, -1]], dtype=np.float64)
+
+moon_file = &quot;Fig0338(a)(blurry_moon).tif&quot;
+if moon_file not in images:
+    candidates = [f for f in images if &#x27;moon&#x27; in f.lower()]
+    moon_file = candidates[0] if candidates else images[0]
+    print(f&quot;Substituted: {moon_file}&quot;)
+
+moon = cv2.imread(os.path.join(DATASET_PATH, moon_file), cv2.IMREAD_GRAYSCALE)
+print(f&quot;Moon image: {moon_file}, shape={moon.shape}&quot;)
+
+lap4_resp = cv2.filter2D(moon.astype(np.float64), ddepth=-1, kernel=lap4)
+lap8_resp = cv2.filter2D(moon.astype(np.float64), ddepth=-1, kernel=lap8)
+
+sharp4 = np.clip(moon.astype(np.float64) - lap4_resp, 0, 255).astype(np.uint8)
+sharp8 = np.clip(moon.astype(np.float64) - lap8_resp, 0, 255).astype(np.uint8)
+
+def to_disp(a):
+    a = a - a.min()
+    return (255.0 * a / max(a.max(), 1e-9)).astype(np.uint8)
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+axes[0, 0].imshow(moon, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[0, 0].set_title(&#x27;Original (blurry moon)&#x27;); axes[0, 0].axis(&#x27;off&#x27;)
+axes[0, 1].imshow(to_disp(lap4_resp), cmap=&#x27;gray&#x27;); axes[0, 1].set_title(&#x27;Laplacian response (4-neighbour)&#x27;); axes[0, 1].axis(&#x27;off&#x27;)
+axes[0, 2].imshow(sharp4, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[0, 2].set_title(&#x27;Sharpened: f - lap4(f)&#x27;); axes[0, 2].axis(&#x27;off&#x27;)
+axes[1, 0].imshow(moon, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[1, 0].set_title(&#x27;Original (blurry moon)&#x27;); axes[1, 0].axis(&#x27;off&#x27;)
+axes[1, 1].imshow(to_disp(lap8_resp), cmap=&#x27;gray&#x27;); axes[1, 1].set_title(&#x27;Laplacian response (8-neighbour)&#x27;); axes[1, 1].axis(&#x27;off&#x27;)
+axes[1, 2].imshow(sharp8, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[1, 2].set_title(&#x27;Sharpened: f - lap8(f)&#x27;); axes[1, 2].axis(&#x27;off&#x27;)
+plt.suptitle(&#x27;Laplacian Sharpening: 4-neighbour vs 8-neighbour kernel&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+sx = np.array([[-1, 0, 1],
+               [-2, 0, 2],
+               [-1, 0, 1]], dtype=np.float64)
+sy = np.array([[-1, -2, -1],
+               [ 0,  0,  0],
+               [ 1,  2,  1]], dtype=np.float64)
+
+lens_file = &quot;Fig0342(a)(contact_lens_original).tif&quot;
+if lens_file not in images:
+    candidates = [f for f in images if &#x27;lens&#x27; in f.lower() or &#x27;contact&#x27; in f.lower()]
+    lens_file = candidates[0] if candidates else images[0]
+    print(f&quot;Substituted: {lens_file}&quot;)
+
+lens = cv2.imread(os.path.join(DATASET_PATH, lens_file), cv2.IMREAD_GRAYSCALE)
+print(f&quot;Edge-detection image: {lens_file}, shape={lens.shape}&quot;)
+
+Gx = cv2.filter2D(lens.astype(np.float64), ddepth=-1, kernel=sx)
+Gy = cv2.filter2D(lens.astype(np.float64), ddepth=-1, kernel=sy)
+Gmag = np.abs(Gx) + np.abs(Gy)
+Gmag_disp = np.clip(255.0 * Gmag / max(Gmag.max(), 1e-9), 0, 255).astype(np.uint8)
+Gtheta = np.arctan2(Gy, Gx)  # radians, range [-pi, pi]
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+axes[0, 0].imshow(lens, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[0, 0].set_title(&#x27;Original&#x27;); axes[0, 0].axis(&#x27;off&#x27;)
+axes[0, 1].imshow(np.abs(Gx), cmap=&#x27;gray&#x27;); axes[0, 1].set_title(&#x27;|Gx| (vertical edges)&#x27;); axes[0, 1].axis(&#x27;off&#x27;)
+axes[0, 2].imshow(np.abs(Gy), cmap=&#x27;gray&#x27;); axes[0, 2].set_title(&#x27;|Gy| (horizontal edges)&#x27;); axes[0, 2].axis(&#x27;off&#x27;)
+axes[1, 0].imshow(Gmag_disp, cmap=&#x27;gray&#x27;); axes[1, 0].set_title(&#x27;|G| = |Gx|+|Gy|&#x27;); axes[1, 0].axis(&#x27;off&#x27;)
+th_disp = ((Gtheta + np.pi) / (2 * np.pi) * 255).astype(np.uint8)
+axes[1, 1].imshow(th_disp, cmap=&#x27;hsv&#x27;); axes[1, 1].set_title(&#x27;Gradient direction \u03B8&#x27;); axes[1, 1].axis(&#x27;off&#x27;)
+thresh = (Gmag_disp &gt; 64).astype(np.uint8) * 255
+axes[1, 2].imshow(thresh, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[1, 2].set_title(&#x27;Thresholded edges&#x27;); axes[1, 2].axis(&#x27;off&#x27;)
+plt.suptitle(&#x27;Sobel Edge Detection: Gx, Gy, magnitude, direction, threshold&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
+<div class="section-card">
+    <h3>Part 1: Box Filter (Smoothing)</h3>
+    <p>Apply the box filter at multiple kernel sizes (3, 5, 9, 15, 35) on the standard test pattern. Larger kernels produce stronger blur because they low-pass at lower cut-off frequencies.</p>
+    <button class="btn-run" id="btnBox">Run Box Series</button>
+    <div id="boxResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 2: Median Filter on Salt-and-Pepper Noise</h3>
+    <p>Apply the median filter at multiple kernel sizes to the circuit-board image corrupted with 5% salt-and-pepper noise.</p>
+    <button class="btn-run" id="btnMedian">Run Median Series</button>
+    <div id="medianResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 3: Box vs Median &mdash; Edge Preservation</h3>
+    <p>Apply both filters at the same kernel size to the same noisy input. The box filter blurs noise and edges together; the median filter removes noise while preserving edges.</p>
+    <button class="btn-run" id="btnCompare">Compare Box vs Median</button>
+    <div id="compareResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 4: Laplacian Sharpening</h3>
+    <p>Compute \(\nabla^2 f\) with the 4-neighbour and 8-neighbour kernels and form the sharpened image \(g = f - \nabla^2 f\). Demonstrated on the blurry-moon image.</p>
+    <button class="btn-run" id="btnLaplacian">Run Laplacian</button>
+    <div id="laplacianResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 5: Sobel Edge Detection</h3>
+    <p>Compute \(G_x\), \(G_y\), gradient magnitude \(|G|\) and direction \(\theta\) on the contact-lens image, then threshold the magnitude to obtain a clean edge map.</p>
+    <button class="btn-run" id="btnSobel">Run Sobel</button>
+    <div id="sobelResult"></div>
+</div>
+
+<span class="print-only dip-section-marker dip-section-output">4. Output</span>
+<div class="print-only output-collection" id="printOutput" aria-label="Result figures and computed outputs"></div>
+
+<span class="print-only dip-section-marker dip-section-analysis">5. Analysis / Conclusion</span>
+<div class="analysis-box">
+    <h4>Analysis Questions</h4>
+    <ol>
+        <li>As the box-filter kernel grows from 3&times;3 to 35&times;35, what happens to the image, and why does this happen at \(O(1/k)\) in the spatial-frequency sense?</li>
+        <li>Why does the median filter remove salt-and-pepper noise without blurring edges, while the box filter blurs both?</li>
+        <li>The Laplacian is a second-derivative operator. Why does subtracting its response sharpen the image rather than darken it? How does the 8-neighbour kernel differ from the 4-neighbour version?</li>
+        <li>Sobel uses two separate kernels and combines their magnitudes. Why is it preferred over the Laplacian for edge detection, even though both involve derivatives?</li>
+    </ol>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(async function() {
+    'use strict';
+    var API = '/api';
+
+    function showPlot(container, base64) {
+        container.textContent = '';
+        var img = document.createElement('img');
+        img.className = 'result-img';
+        img.alt = 'Result';
+        img.src = 'data:image/png;base64,' + base64;
+        container.appendChild(img);
+    }
+    function showError(container, msg) {
+        container.textContent = '';
+        var p = document.createElement('p');
+        p.style.color = 'var(--error)';
+        p.textContent = 'Error: ' + msg;
+        container.appendChild(p);
+    }
+
+    async function runEndpoint(url, body, container) {
+        DIP.setLoading(container, true);
+        try {
+            var resp = await DIP.apiCall(url, {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(body || {})
+            });
+            showPlot(container, resp.plot);
+            if (resp.stats) {
+                var p = document.createElement('p');
+                p.style.fontSize = '0.9rem';
+                p.style.color = 'var(--text-muted)';
+                p.textContent = 'Mean energy removed by box: ' + resp.stats.removed_by_box +
+                                '   |   by median: ' + resp.stats.removed_by_median;
+                container.appendChild(p);
+            }
+        } catch (e) { showError(container, e.message); }
+        DIP.setLoading(container, false);
+    }
+
+    document.getElementById('btnBox').addEventListener('click', function() {
+        runEndpoint(API + '/p8/box', {chapter: 'CH03'}, document.getElementById('boxResult'));
+    });
+    document.getElementById('btnMedian').addEventListener('click', function() {
+        runEndpoint(API + '/p8/median', {chapter: 'CH03'}, document.getElementById('medianResult'));
+    });
+    document.getElementById('btnCompare').addEventListener('click', function() {
+        runEndpoint(API + '/p8/box-vs-median', {chapter: 'CH03', k: 3}, document.getElementById('compareResult'));
+    });
+    document.getElementById('btnLaplacian').addEventListener('click', function() {
+        runEndpoint(API + '/p8/laplacian', {chapter: 'CH03'}, document.getElementById('laplacianResult'));
+    });
+    document.getElementById('btnSobel').addEventListener('click', function() {
+        runEndpoint(API + '/p8/sobel', {chapter: 'CH03'}, document.getElementById('sobelResult'));
+    });
+
+    function loadCache(url, containerId) {
+        fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+            if (data && data.plot) showPlot(document.getElementById(containerId), data.plot);
+        }).catch(function() {});
+    }
+    loadCache('/static/cache/p8_box.json?v=1', 'boxResult');
+    loadCache('/static/cache/p8_median.json?v=1', 'medianResult');
+    loadCache('/static/cache/p8_compare.json?v=1', 'compareResult');
+    loadCache('/static/cache/p8_laplacian.json?v=1', 'laplacianResult');
+    loadCache('/static/cache/p8_sobel.json?v=1', 'sobelResult');
+})();
+</script>
+{% endblock %}

@@ -3,8 +3,10 @@ Page routes for DIP Practical web application.
 Serves HTML templates for the main page, individual practicals, and health check.
 """
 
-from flask import Blueprint, render_template, jsonify
+from flask import Blueprint, render_template, jsonify, request
 from jinja2 import TemplateNotFound
+
+from app.processors.common import qr_data_uri
 
 pages_bp = Blueprint('pages', __name__)
 
@@ -15,6 +17,8 @@ PRACTICAL_META = {
     4: {"title": "Gamma Correction & Power Law Transformations", "chapter": "G&W Ch 3"},
     5: {"title": "Histogram Equalization", "chapter": "G&W Ch 3"},
     6: {"title": "Histogram Matching & Specification", "chapter": "G&W Ch 3"},
+    7: {"title": "2D Correlation & Convolution", "chapter": "G&W Ch 3"},
+    8: {"title": "Spatial Filtering: Smoothing & Sharpening", "chapter": "G&W Ch 3"},
 }
 
 
@@ -30,8 +34,17 @@ def practical(num):
     if num not in PRACTICAL_META:
         return jsonify({"error": f"Practical {num} not found"}), 404
 
+    # Canonical URL the user just visited — encoded into the cover-page QR.
+    practical_url = request.url
+    qr_uri = qr_data_uri(practical_url)
+
     try:
-        return render_template(f'practicals/p{num:02d}.html')
+        return render_template(
+            f'practicals/p{num:02d}.html',
+            practical_num=num,
+            practical_url=practical_url,
+            practical_qr=qr_uri,
+        )
     except TemplateNotFound:
         meta = PRACTICAL_META[num]
         return render_template(

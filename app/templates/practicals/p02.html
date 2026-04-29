@@ -1,15 +1,18 @@
 {% extends "base.html" %}
 
 {% block title %}Practical 2: Downsampling{% endblock %}
-{% block print_title %}Practical 2: Impact of Sampling Rate on Spatial Resolution{% endblock %}
+{% block print_title %}<div class="cover-practical-name">Practical 2: Impact of Sampling Rate on Spatial Resolution</div>{% endblock %}
 
 {% block content %}
 <h2>Practical 2: Impact of Sampling Rate on Spatial Resolution</h2>
 <p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_2.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
 
+<span class="print-only dip-section-marker dip-section-aim">1. Aim</span>
 <div class="section-card">
     <h3>Objective</h3>
     <p>To evaluate the relationship between the sampling rate (N) and spatial resolution in digital images.</p>
+    <span class="print-only dip-section-marker dip-section-theory">2. Description / Theory</span>
+
     <div class="theory-box">
         <strong>Problem Statement:</strong> Spatial resolution represents the size of the smallest perceptible detail in an image and is fundamentally dependent on the sampling rate. A decrease in the number of samples (N) results in a loss of geometric detail. In this experiment, you will simulate progressive spatial resolution reduction and analyze the resulting artifacts.
     </div>
@@ -17,6 +20,115 @@
 
 <div class="picker-bar" id="mainPicker"></div>
 
+<span class="print-only dip-section-marker dip-section-code">3. Code</span>
+<pre class="print-only literal-code"><code>
+
+# ----------------------------------------------------------------------
+
+# Install dependencies (uncomment for Google Colab)
+# !pip install opencv-python-headless matplotlib numpy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# === AUTO-DOWNLOAD DATASET (works in Google Colab and locally) ===
+import os, urllib.request, zipfile
+
+# Choose which chapter to download (CH01-CH12)
+CHAPTER = &quot;CH02&quot;  # Chapter 2: Digital Image Fundamentals
+DATASET_PATH = f&quot;datasets/{CHAPTER}/&quot;
+DOWNLOAD_BASE = &quot;https://www.imageprocessingplace.com/downloads_V3/dip3e_downloads/dip3e_book_images&quot;
+
+if not os.path.exists(DATASET_PATH) or not any(f.endswith(&#x27;.tif&#x27;) for f in os.listdir(DATASET_PATH)):
+    zip_name = f&quot;DIP3E_{CHAPTER}_Original_Images.zip&quot;
+    url = f&quot;{DOWNLOAD_BASE}/{zip_name}&quot;
+    print(f&quot;Downloading {CHAPTER} dataset from imageprocessingplace.com...&quot;)
+    urllib.request.urlretrieve(url, &quot;chapter.zip&quot;)
+    os.makedirs(DATASET_PATH, exist_ok=True)
+    with zipfile.ZipFile(&quot;chapter.zip&quot;, &quot;r&quot;) as z:
+        for f in z.namelist():
+            if f.lower().endswith(&quot;.tif&quot;):
+                fname = os.path.basename(f)
+                if fname:
+                    with z.open(f) as src, open(os.path.join(DATASET_PATH, fname), &quot;wb&quot;) as dst:
+                        dst.write(src.read())
+    os.remove(&quot;chapter.zip&quot;)
+    print(f&quot;Downloaded {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+else:
+    print(f&quot;Dataset ready: {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+
+# List all available images
+images = sorted([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])
+print(f&quot;\nAvailable images ({len(images)}):&quot;)
+for i, name in enumerate(images, 1):
+    print(f&quot;  {i}. {name}&quot;)
+
+# === SELECT YOUR IMAGE HERE ===
+selected_image = &quot;Fig0222(b)(cameraman).tif&quot;  # Change this to any image
+
+# Load the image
+img = cv2.imread(os.path.join(DATASET_PATH, selected_image))
+
+# Convert BGR to Grayscale
+gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+print(f&quot;Original shape: {gray.shape}&quot;)
+
+# Establish baseline resolution: 1024 x 1024
+baseline = cv2.resize(gray, (1024, 1024), interpolation=cv2.INTER_LINEAR)
+print(f&quot;Baseline resolution: {baseline.shape}&quot;)
+
+plt.figure(figsize=(6, 6))
+plt.imshow(baseline, cmap=&#x27;gray&#x27;)
+plt.title(f&quot;Baseline: 1024 x 1024&quot;)
+plt.axis(&#x27;off&#x27;)
+plt.show()
+
+# Progressive downsampling
+current = baseline.copy()
+resolutions = [(1024, 1024)]  # Store all resolutions
+downsampled_images = [baseline.copy()]  # Store all images
+
+for i in range(5):
+    h, w = current.shape
+    new_h = h // 2
+    new_w = w // 2
+    current = cv2.resize(current, (new_w, new_h), interpolation=cv2.INTER_AREA)
+    resolutions.append((new_h, new_w))
+    downsampled_images.append(current.copy())
+    
+    plt.figure(figsize=(5, 5))
+    plt.imshow(current, cmap=&#x27;gray&#x27;)
+    plt.title(f&quot;Step {i+1}: {new_w} x {new_h}&quot;)
+    plt.axis(&#x27;off&#x27;)
+    plt.show()
+    print(f&quot;Step {i+1}: Resolution = {new_w} x {new_h}&quot;)
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+labels = [&quot;1024x1024&quot;, &quot;512x512&quot;, &quot;256x256&quot;, &quot;128x128&quot;, &quot;64x64&quot;, &quot;32x32&quot;]
+
+for ax, img_ds, label in zip(axes.flatten(), downsampled_images, labels):
+    ax.imshow(img_ds, cmap=&#x27;gray&#x27;)
+    ax.set_title(label, fontsize=12, fontweight=&#x27;bold&#x27;)
+    ax.axis(&#x27;off&#x27;)
+
+plt.suptitle(f&quot;Progressive Downsampling: {selected_image}&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+fig, axes = plt.subplots(2, 3, figsize=(15, 10))
+
+for ax, img_ds, label in zip(axes.flatten(), downsampled_images, labels):
+    # Resize back to 1024x1024 to see quality loss
+    upscaled = cv2.resize(img_ds, (1024, 1024), interpolation=cv2.INTER_LINEAR)
+    ax.imshow(upscaled, cmap=&#x27;gray&#x27;)
+    ax.set_title(f&quot;From {label} → 1024x1024&quot;, fontsize=11)
+    ax.axis(&#x27;off&#x27;)
+
+plt.suptitle(&quot;Quality Loss: Downsampled then Upscaled Back to 1024x1024&quot;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()</code></pre>
 <div class="section-card">
     <h3>Part 1: Progressive Downsampling</h3>
     <p>The image is resized to a 1024x1024 baseline, then progressively halved 5 times using <code>cv2.INTER_AREA</code> interpolation: 1024 → 512 → 256 → 128 → 64 → 32.</p>
@@ -38,6 +150,10 @@
     <div id="upscalePlot"></div>
 </div>
 
+<span class="print-only dip-section-marker dip-section-output">4. Output</span>
+<div class="print-only output-collection" id="printOutput" aria-label="Result figures and computed outputs"></div>
+
+<span class="print-only dip-section-marker dip-section-analysis">5. Analysis / Conclusion</span>
 <div class="analysis-box">
     <h4>Analysis Questions</h4>
     <ol>

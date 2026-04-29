@@ -11,7 +11,11 @@ import sys
 sys.path.insert(0, os.path.dirname(__file__))
 
 from app.processors.common import get_chapter_images, ensure_chapter
-from app.processors import p01_display, p02_downsampling, p03_negation_subtraction, p04_gamma, p05_histogram_eq, p06_histogram_matching
+from app.processors import (
+    p01_display, p02_downsampling, p03_negation_subtraction,
+    p04_gamma, p05_histogram_eq, p06_histogram_matching,
+    p07_convolution, p08_filtering,
+)
 
 CACHE_DIR = os.path.join(os.path.dirname(__file__), "app", "static", "cache")
 os.makedirs(CACHE_DIR, exist_ok=True)
@@ -105,6 +109,28 @@ def main():
         {"filename": cameraman, "chapter": ch, "label": "Cameraman"},
     ], src_chapter=ch))
     save("p6_transfer", p06_histogram_matching.compute_transfer_analysis(einstein_low, cameraman, src_chapter=ch, tgt_chapter=ch))
+
+    # === Practical 7: Correlation & Convolution ===
+    print("Practical 7: Correlation & Convolution")
+    save("p7_impulse", p07_convolution.compute_impulse_demo())
+    save("p7_filter", p07_convolution.compute_image_filtering(cameraman, chapter=ch))
+    save("p7_verify", p07_convolution.compute_verify_cv2(cameraman, chapter=ch))
+
+    # === Practical 8: Spatial Filtering ===
+    # Needs CH03 (test pattern, salt-pepper, moon, contact lens). Pre-fetch it.
+    print("Practical 8: Spatial Filtering")
+    if ensure_chapter('CH03'):
+        ch3_imgs = get_chapter_images('CH03')
+        if ch3_imgs:
+            save("p8_box", p08_filtering.compute_box_series(chapter='CH03'))
+            save("p8_median", p08_filtering.compute_median_series(chapter='CH03'))
+            save("p8_compare", p08_filtering.compute_box_vs_median(chapter='CH03'))
+            save("p8_laplacian", p08_filtering.compute_laplacian(chapter='CH03'))
+            save("p8_sobel", p08_filtering.compute_sobel(chapter='CH03'))
+        else:
+            print("  CH03 download failed; skipping P8 cache")
+    else:
+        print("  CH03 unavailable; skipping P8 cache")
 
     # === Image list (legacy) ===
     save("images", {"images": images, "count": len(images)})

@@ -192,3 +192,27 @@ def fig_to_base64(fig, dpi=120):
     plt.close(fig)
     buf.seek(0)
     return base64.b64encode(buf.read()).decode('utf-8')
+
+
+def qr_data_uri(url, box_size=10, border=2):
+    """Generate a QR code for `url` and return it as a base64 PNG data URI.
+
+    The QR is rendered server-side (no external service), with error-correction
+    level M which gives a robust scan even if the printed copy is creased or
+    smudged. `box_size` controls each module's pixel size; we use 10 so the QR
+    is sharp at the 2-inch print size we render it at.
+    """
+    import qrcode
+    qr = qrcode.QRCode(
+        version=None,
+        error_correction=qrcode.constants.ERROR_CORRECT_M,
+        box_size=box_size,
+        border=border,
+    )
+    qr.add_data(url)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buf = io.BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    return 'data:image/png;base64,' + base64.b64encode(buf.read()).decode('ascii')

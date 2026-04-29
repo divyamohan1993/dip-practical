@@ -7,6 +7,7 @@ dist/
 build/
 venv/
 .venv/
+.claude/
 
 # Environment
 .env
@@ -37,3 +38,9 @@ docs/
 .wrangler/
 .playwright-mcp/
 *.pdf
+
+# Local backup of pre-format notebooks (kept for rollback only)
+.backup-pre-format/
+
+# Original draft notebook from the lab (now superseded by Practical_7/8.ipynb)
+lab7 and 8.ipynb

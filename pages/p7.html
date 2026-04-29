@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Practical 7: 2D Correlation &amp; Convolution | CSU2543</title>
+    <meta name="description" content="Practical 7: Implement 2D correlation and convolution from first principles, demonstrate impulse response, and apply standard kernels. CSU2543 Digital Image Processing.">
+    <meta name="author" content="Divya Mohan">
+    <script>(function(){var t=localStorage.getItem('dip-theme');if(!t){t=window.matchMedia&&window.matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light';}document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <link rel="stylesheet" href="./css/base.css">
+    <link rel="stylesheet" href="./css/components.css">
+</head>
+<body>
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+    <nav class="navbar navbar-expand-lg sticky-top dip-navbar" id="mainNav" aria-label="Main navigation">
+        <div class="container">
+            <a class="navbar-brand fw-semibold" href="./index.html">DIP Lab</a>
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto gap-1">
+                    <li class="nav-item"><a class="nav-link" href="./index.html" data-page="index">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p1.html" data-page="p1">P1</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p2.html" data-page="p2">P2</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p3.html" data-page="p3">P3</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p4.html" data-page="p4">P4</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p5.html" data-page="p5">P5</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p6.html" data-page="p6">P6</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="./p7.html" data-page="p7">P7</a></li>
+                    <li class="nav-item"><a class="nav-link" href="./p8.html" data-page="p8">P8</a></li>
+                </ul>
+                <button id="themeToggle" class="btn btn-sm ms-3 theme-toggle" type="button" aria-label="Toggle theme"><span class="theme-toggle-label">Dark</span></button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Print cover page -->
+    <div class="print-only print-cover" aria-hidden="true">
+        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
+        <div class="cover-university">Shoolini University</div>
+        <div class="cover-dept">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
+        <div class="cover-rule"></div>
+        <div class="cover-subject">Digital Image Processing</div>
+        <div class="cover-code">Course Code: CSU2543</div>
+        <div class="cover-practical">Practical 7: 2D Correlation &amp; Convolution</div>
+        <table class="cover-table">
+            <tr><td>Submitted by:</td><td>Divya Mohan</td></tr>
+            <tr><td>Programme:</td><td>B.Tech CSE (Cybersecurity)</td></tr>
+            <tr><td>Semester:</td><td>8th</td></tr>
+            <tr><td>Faculty Guide:</td><td>Ishani Sharma</td></tr>
+            <tr><td>Reference Text:</td><td>Gonzalez &amp; Woods, <em>Digital Image Processing</em>, 3rd Ed.</td></tr>
+        </table>
+        <div class="cover-rule-sm"></div>
+        <div class="cover-session">Academic Session 2025&ndash;2026</div>
+    </div>
+    <div class="print-only print-header" aria-hidden="true">
+        <div class="ph-line">Shoolini University &middot; CSU2543 &middot; Digital Image Processing &middot; Divya Mohan</div>
+    </div>
+
+    <main id="main-content">
+        <div class="container" style="max-width: 960px;">
+
+            <h1 style="margin: 2rem 0 0.5rem; font-size: clamp(1.6rem,1rem+2.5vw,2.5rem); font-weight: 800; letter-spacing: -0.04em;">Practical 7: 2D Correlation &amp; Convolution</h1>
+            <p style="color: var(--text-muted); margin-bottom: 0.5rem;">
+                <a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_7.ipynb" target="_blank" rel="noopener">
+                    <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open Practical 7 in Colab" style="vertical-align: middle;">
+                </a>
+                <span style="font-size: 0.82rem; margin-left: 0.4rem;">Open the Python notebook version</span>
+            </p>
+
+            <section id="aim" class="section-card">
+                <h3>Aim</h3>
+                <p>To implement and analyze the two fundamental linear spatial operations of digital image processing &mdash; correlation and convolution &mdash; from first principles, demonstrate the impulse-response interpretation that distinguishes them, and apply standard kernels to a real image.</p>
+                <div class="theory-box">
+                    <strong>Theory:</strong> For an image \(f\) and kernel \(w\) of size \(m\times n\):
+                    <ul style="margin: 0.5rem 0 0.25rem; padding-left: 1.25rem;">
+                        <li><strong>Correlation:</strong> \( (w \star f)(x,y) = \sum w(s,t)\,f(x+s,y+t) \)</li>
+                        <li><strong>Convolution:</strong> \( (w * f)(x,y) = \sum w(s,t)\,f(x-s,y-t) \)</li>
+                        <li><strong>Identity:</strong> \( w * f \;=\; \mathrm{rot}_{180}(w) \star f \)</li>
+                    </ul>
+                    A unit impulse reveals correlation as \(\mathrm{rot}_{180}(w)\) and convolution as \(w\) itself.
+                </div>
+                <div class="formula-box">$$ (w * f)(x,y) \;=\; \mathrm{rot}_{180}(w) \;\star\; f $$</div>
+            </section>
+
+            <section id="part1" class="section-card">
+                <h3>Part 1: Impulse Response Demonstration</h3>
+                <p>The classic Gonzalez &amp; Woods example: a 3&times;3 unit impulse operated upon by the asymmetric ramp kernel <code>w = [[1,2,3],[4,5,6],[7,8,9]]</code>. Correlation and convolution must produce visibly different outputs.</p>
+                <button class="btn-run" id="btnImpulse">Run Impulse Demo</button>
+                <div id="part1Result"></div>
+            </section>
+
+            <section id="part2" class="section-card">
+                <h3>Part 2: Custom Matrices</h3>
+                <p>Provide your own \(f\) and \(w\) matrices. Each row on its own line; numbers separated by spaces. Kernel must have odd dimensions.</p>
+                <div style="display:flex;gap:1rem;flex-wrap:wrap;margin-bottom:0.75rem">
+                    <div style="flex:1;min-width:240px">
+                        <label class="picker-label" for="fMatrix">Image f</label>
+                        <textarea id="fMatrix" rows="6" style="width:100%;font-family:monospace;font-size:0.95rem">0 0 0 0 0
+0 0 0 0 0
+0 0 1 0 0
+0 0 0 0 0
+0 0 0 0 0</textarea>
+                    </div>
+                    <div style="flex:1;min-width:240px">
+                        <label class="picker-label" for="wMatrix">Kernel w (odd dimensions)</label>
+                        <textarea id="wMatrix" rows="6" style="width:100%;font-family:monospace;font-size:0.95rem">1 2 3
+4 5 6
+7 8 9</textarea>
+                    </div>
+                </div>
+                <button class="btn-run" id="btnCustom">Run on custom matrices</button>
+                <div id="part2Result"></div>
+            </section>
+
+            <section id="part3" class="section-card">
+                <h3>Part 3: Standard Kernels on a Real Image</h3>
+                <p>Apply box (3&times;3 averaging), Laplacian (4-neighbour), and Sobel-X (vertical edges) to a real grayscale image via convolution.</p>
+                <div class="picker-bar" id="mainPicker"></div>
+                <button class="btn-run" id="btnFilter" disabled>Apply Standard Kernels</button>
+                <div id="part3Result"></div>
+            </section>
+
+            <section id="part4" class="section-card">
+                <h3>Part 4: Verification &mdash; corr &ne; conv for an Asymmetric Kernel</h3>
+                <p>With the asymmetric Sobel-X kernel, correlation and convolution outputs differ. The difference image confirms the kernel lacks 180&deg; symmetry.</p>
+                <button class="btn-run" id="btnVerify" disabled>Run Verification</button>
+                <div id="part4Result"></div>
+            </section>
+
+            <div class="analysis-box">
+                <h4>Analysis Questions</h4>
+                <ol>
+                    <li>Why does correlation produce a flipped copy of \(w\) when \(f\) is a unit impulse, while convolution produces \(w\) itself?</li>
+                    <li>For which kernels are correlation and convolution numerically identical? Give two examples and one counter-example.</li>
+                    <li>What is the role of zero padding, and what alternatives (replicate, reflect, wrap) might you prefer in different contexts?</li>
+                    <li>What is the computational cost of a direct \(m\times n\) convolution on an \(M\times N\) image, and how is it reduced via separability and FFT?</li>
+                </ol>
+            </div>
+
+        </div>
+    </main>
+
+    <footer class="site-footer" aria-label="Site footer">
+        <div class="container">
+            <p>CSU2543 Digital Image Processing &middot; Shoolini University &middot; Divya Mohan &middot; Ishani Sharma</p>
+        </div>
+    </footer>
+
+    <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./js/core.js"></script>
+    <script src="./js/theme.js"></script>
+    <script src="./js/nav.js"></script>
+    <script src="./js/interactive.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+    <script src="./js/dip.js"></script>
+    <script src="./js/plot.js"></script>
+    <script src="./js/picker.js"></script>
+    <script>
+    (function() {
+        'use strict';
+
+        var picker;
+
+        function showError(container, msg) {
+            container.textContent = '';
+            var p = document.createElement('p');
+            p.style.color = 'var(--error)';
+            p.textContent = 'Error: ' + msg;
+            container.appendChild(p);
+        }
+
+        // Render a small numeric matrix into a grid of cells
+        function renderMatrix(parent, mat, label) {
+            var wrap = DIP.createEl('div', 'matrix-panel');
+            wrap.style.display = 'inline-block';
+            wrap.style.margin = '0.5rem 0.75rem 0.5rem 0';
+            wrap.style.verticalAlign = 'top';
+            if (label) {
+                var lbl = DIP.createEl('div', 'panel-label', label);
+                lbl.style.fontWeight = '600';
+                lbl.style.marginBottom = '0.3rem';
+                wrap.appendChild(lbl);
+            }
+            var table = document.createElement('table');
+            table.style.borderCollapse = 'collapse';
+            table.style.fontFamily = 'monospace';
+            for (var i = 0; i < mat.length; i++) {
+                var tr = table.insertRow();
+                for (var j = 0; j < mat[i].length; j++) {
+                    var td = tr.insertCell();
+                    var v = mat[i][j];
+                    td.textContent = (Math.round(v * 1000) / 1000).toString();
+                    td.style.border = '1px solid var(--border)';
+                    td.style.padding = '4px 8px';
+                    td.style.minWidth = '24px';
+                    td.style.textAlign = 'center';
+                    td.style.background = (v !== 0) ? 'var(--accent-light, #e0f0ff)' : 'transparent';
+                }
+            }
+            wrap.appendChild(table);
+            parent.appendChild(wrap);
+        }
+
+        function parseMatrix(text) {
+            var rows = text.trim().split(/\n+/).map(function(r) {
+                return r.trim().split(/\s+/).map(Number);
+            }).filter(function(r) { return r.length > 0 && !r.some(isNaN); });
+            if (rows.length === 0) return null;
+            var w = rows[0].length;
+            for (var i = 0; i < rows.length; i++) if (rows[i].length !== w) return null;
+            return rows;
+        }
+
+        // ---- Part 1: Impulse Demo ----
+        document.getElementById('btnImpulse').addEventListener('click', function() {
+            var container = document.getElementById('part1Result');
+            container.textContent = '';
+
+            var f = [[0,0,0],[0,1,0],[0,0,0]];
+            var w = [[1,2,3],[4,5,6],[7,8,9]];
+            var corr = DIP.correlate2dArray(f, w);
+            var conv = DIP.convolve2dArray(f, w);
+
+            renderMatrix(container, f,                'Image f (impulse)');
+            renderMatrix(container, w,                'Kernel w');
+            renderMatrix(container, DIP.rot180(w),    'rot180(w)');
+            container.appendChild(document.createElement('br'));
+            renderMatrix(container, corr.padded,      'Padded f (5x5)');
+            renderMatrix(container, corr.out,         'Correlation w * f');
+            renderMatrix(container, conv.out,         'Convolution w (*) f');
+
+            var note = document.createElement('p');
+            note.style.fontSize = '0.9rem';
+            note.style.color = 'var(--text-muted)';
+            note.style.marginTop = '0.75rem';
+            note.textContent = 'At the impulse, correlation places rot180(w); convolution places w itself.';
+            container.appendChild(note);
+        });
+
+        // ---- Part 2: Custom Matrices ----
+        document.getElementById('btnCustom').addEventListener('click', function() {
+            var f = parseMatrix(document.getElementById('fMatrix').value);
+            var w = parseMatrix(document.getElementById('wMatrix').value);
+            var container = document.getElementById('part2Result');
+            container.textContent = '';
+
+            if (!f) return showError(container, 'Invalid f matrix (rows must be equal length)');
+            if (!w) return showError(container, 'Invalid w matrix');
+            if (w.length % 2 === 0 || w[0].length % 2 === 0) {
+                return showError(container, 'Kernel w must have odd dimensions');
+            }
+
+            var corr = DIP.correlate2dArray(f, w);
+            var conv = DIP.convolve2dArray(f, w);
+
+            renderMatrix(container, f,            'Image f');
+            renderMatrix(container, w,            'Kernel w');
+            container.appendChild(document.createElement('br'));
+            renderMatrix(container, corr.out,     'Correlation');
+            renderMatrix(container, conv.out,     'Convolution');
+        });
+
+        // ---- Part 3: Filter on real image ----
+        DIP.createPicker('mainPicker', {
+            label: 'Image',
+            defaultImage: 'cameraman',
+            onReady: function() {
+                document.getElementById('btnFilter').disabled = false;
+                document.getElementById('btnVerify').disabled = false;
+            }
+        }).then(function(p) { picker = p; });
+
+        function applyAndDraw(canvas, gray, width, height, kernel, kw, kh, normalize) {
+            var raw = DIP.convolveImage(gray, width, height, kernel, kw, kh);
+            var disp = normalize ? DIP.normalizeUint8(raw) : DIP.clamp01_255(raw);
+            DIP.draw.gray(canvas, disp, width, height);
+        }
+
+        document.getElementById('btnFilter').addEventListener('click', function() {
+            var sel = picker.getSelection();
+            var container = document.getElementById('part3Result');
+            DIP.setLoading(container, true);
+
+            DIP.loadImage(sel.url).then(function(img) {
+                var panels = DIP.figure(container, 'Standard Kernels via Convolution', 4, [
+                    { type: 'image', title: 'Original' },
+                    { type: 'image', title: 'Box 3x3 (smoothing)' },
+                    { type: 'image', title: 'Laplacian (edges)' },
+                    { type: 'image', title: 'Sobel-X (vertical edges)' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+
+                var box = new Float32Array([1/9,1/9,1/9, 1/9,1/9,1/9, 1/9,1/9,1/9]);
+                var lap = new Float32Array([0,-1,0, -1,4,-1, 0,-1,0]);
+                var sob = new Float32Array([-1,0,1, -2,0,2, -1,0,1]);
+
+                applyAndDraw(panels[1].canvas, img.gray, img.width, img.height, box, 3, 3, false);
+                applyAndDraw(panels[2].canvas, img.gray, img.width, img.height, lap, 3, 3, true);
+                applyAndDraw(panels[3].canvas, img.gray, img.width, img.height, sob, 3, 3, true);
+
+                DIP.setLoading(container, false);
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                showError(container, err.message);
+            });
+        });
+
+        // ---- Part 4: Verify corr != conv for asymmetric kernel ----
+        document.getElementById('btnVerify').addEventListener('click', function() {
+            var sel = picker.getSelection();
+            var container = document.getElementById('part4Result');
+            DIP.setLoading(container, true);
+
+            DIP.loadImage(sel.url).then(function(img) {
+                var sob = new Float32Array([-1,0,1, -2,0,2, -1,0,1]);
+
+                var corr = DIP.correlateImage(img.gray, img.width, img.height, sob, 3, 3);
+                var conv = DIP.convolveImage(img.gray, img.width, img.height, sob, 3, 3);
+
+                var diff = new Float32Array(corr.length);
+                var maxDiff = 0, sumDiff = 0;
+                for (var i = 0; i < corr.length; i++) {
+                    diff[i] = Math.abs(corr[i] - conv[i]);
+                    if (diff[i] > maxDiff) maxDiff = diff[i];
+                    sumDiff += diff[i];
+                }
+
+                var panels = DIP.figure(container, 'Verification: Asymmetric Kernel', 4, [
+                    { type: 'image', title: 'Original' },
+                    { type: 'image', title: 'Correlation' },
+                    { type: 'image', title: 'Convolution' },
+                    { type: 'image', title: '|corr - conv|' }
+                ]);
+
+                DIP.draw.gray(panels[0].canvas, img.gray, img.width, img.height);
+                DIP.draw.gray(panels[1].canvas, DIP.normalizeUint8(corr), img.width, img.height);
+                DIP.draw.gray(panels[2].canvas, DIP.normalizeUint8(conv), img.width, img.height);
+                DIP.draw.gray(panels[3].canvas, DIP.normalizeUint8(diff), img.width, img.height);
+
+                var note = document.createElement('p');
+                note.style.fontSize = '0.9rem';
+                note.style.color = 'var(--text-muted)';
+                note.textContent = 'max |corr - conv| = ' + maxDiff.toFixed(3) +
+                                   '   |   mean |corr - conv| = ' + (sumDiff / corr.length).toFixed(3);
+                container.appendChild(note);
+
+                DIP.setLoading(container, false);
+            }).catch(function(err) {
+                DIP.setLoading(container, false);
+                showError(container, err.message);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

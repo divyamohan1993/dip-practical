@@ -406,3 +406,141 @@ def p6_transfer_analysis():
     if result is None:
         return jsonify({"error": "Failed to compute transfer analysis"}), 400
     return jsonify(result)
+
+
+# -----------------------------------------------------------------------
+# Practical 7 — Correlation & Convolution (/api/p7/...)
+# -----------------------------------------------------------------------
+
+def _p7():
+    from app.processors import p07_convolution
+    return p07_convolution
+
+
+@api_bp.route('/p7/impulse')
+def p7_impulse():
+    """Show the canonical 3x3 impulse demo: corr puts rot180(w), conv puts w."""
+    result = _p7().compute_impulse_demo()
+    if result is None:
+        return jsonify({"error": "Failed to compute impulse demo"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p7/custom', methods=['POST'])
+def p7_custom():
+    """Run correlation and convolution on user-supplied f and w matrices."""
+    data = request.get_json() or {}
+    f_matrix = data.get('f')
+    w_matrix = data.get('w')
+    if not f_matrix or not w_matrix:
+        return jsonify({"error": "Provide 'f' and 'w' as 2D arrays"}), 400
+    result = _p7().compute_custom_kernel(f_matrix, w_matrix)
+    if result is None:
+        return jsonify({"error": "Invalid matrices: w must have odd dimensions"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p7/image-filter', methods=['POST'])
+def p7_image_filter():
+    """Apply box, Laplacian, Sobel-X kernels to an image via convolution."""
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+    chapter = data.get('chapter', 'CH02')
+    result = _p7().compute_image_filtering(data['filename'], chapter=chapter)
+    if result is None:
+        return jsonify({"error": "Failed to filter image"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p7/verify', methods=['POST'])
+def p7_verify():
+    """Verify conv != corr for an asymmetric kernel."""
+    data = request.get_json()
+    if not data or 'filename' not in data:
+        return jsonify({"error": "Provide 'filename'"}), 400
+    chapter = data.get('chapter', 'CH02')
+    result = _p7().compute_verify_cv2(data['filename'], chapter=chapter)
+    if result is None:
+        return jsonify({"error": "Failed to verify"}), 400
+    return jsonify(result)
+
+
+# -----------------------------------------------------------------------
+# Practical 8 — Spatial Filtering (/api/p8/...)
+# -----------------------------------------------------------------------
+
+def _p8():
+    from app.processors import p08_filtering
+    return p08_filtering
+
+
+@api_bp.route('/p8/box', methods=['POST'])
+def p8_box():
+    """Box filter at multiple kernel sizes."""
+    data = request.get_json() or {}
+    filename = data.get('filename') or None
+    chapter = data.get('chapter', 'CH03')
+    sizes = data.get('kernel_sizes', None)
+    if sizes:
+        sizes = tuple(int(k) for k in sizes if int(k) > 0 and int(k) % 2 == 1)
+    else:
+        sizes = (3, 5, 9, 15, 35)
+    result = _p8().compute_box_series(filename, chapter=chapter, kernel_sizes=sizes)
+    if result is None:
+        return jsonify({"error": "Failed to apply box filter"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p8/median', methods=['POST'])
+def p8_median():
+    """Median filter at multiple kernel sizes on a noisy image."""
+    data = request.get_json() or {}
+    filename = data.get('filename') or None
+    chapter = data.get('chapter', 'CH03')
+    sizes = data.get('kernel_sizes', None)
+    if sizes:
+        sizes = tuple(int(k) for k in sizes if int(k) > 0 and int(k) % 2 == 1)
+    else:
+        sizes = (3, 5, 7, 9)
+    result = _p8().compute_median_series(filename, chapter=chapter, kernel_sizes=sizes)
+    if result is None:
+        return jsonify({"error": "Failed to apply median filter"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p8/box-vs-median', methods=['POST'])
+def p8_box_vs_median():
+    """Box vs Median comparison on the same image."""
+    data = request.get_json() or {}
+    filename = data.get('filename') or None
+    chapter = data.get('chapter', 'CH03')
+    k = int(data.get('k', 3))
+    result = _p8().compute_box_vs_median(filename, chapter=chapter, k=k)
+    if result is None:
+        return jsonify({"error": "Failed to compute comparison"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p8/laplacian', methods=['POST'])
+def p8_laplacian():
+    """Laplacian sharpening with 4 and 8 neighbour kernels."""
+    data = request.get_json() or {}
+    filename = data.get('filename') or None
+    chapter = data.get('chapter', 'CH03')
+    result = _p8().compute_laplacian(filename, chapter=chapter)
+    if result is None:
+        return jsonify({"error": "Failed to apply Laplacian"}), 400
+    return jsonify(result)
+
+
+@api_bp.route('/p8/sobel', methods=['POST'])
+def p8_sobel():
+    """Sobel edge detection: Gx, Gy, magnitude, direction, threshold."""
+    data = request.get_json() or {}
+    filename = data.get('filename') or None
+    chapter = data.get('chapter', 'CH03')
+    result = _p8().compute_sobel(filename, chapter=chapter)
+    if result is None:
+        return jsonify({"error": "Failed to apply Sobel"}), 400
+    return jsonify(result)

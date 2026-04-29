@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block title %}Practical 7: 2D Correlation & Convolution{% endblock %}
+{% block print_title %}<div class="cover-practical-name">Practical 7: 2D Correlation &amp; Convolution</div>{% endblock %}
+
+{% block content %}
+<h2>Practical 7: 2D Correlation &amp; Convolution</h2>
+<p class="no-print" style="margin-bottom:1rem"><a href="https://colab.research.google.com/github/divyamohan1993/dip-practical/blob/main/Practical_7.ipynb" target="_blank" rel="noopener"><img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab" style="height:20px;vertical-align:middle"></a> <span style="font-size:0.8rem;color:var(--text-muted)">Run this practical in Google Colab</span></p>
+
+<span class="print-only dip-section-marker dip-section-aim">1. Aim</span>
+<div class="section-card">
+    <h3>Aim</h3>
+    <p>To implement and analyze the two fundamental linear spatial operations of digital image processing &mdash; correlation and convolution &mdash; from first principles, demonstrate the impulse-response interpretation that distinguishes them, and apply standard kernels to a real image.</p>
+    <span class="print-only dip-section-marker dip-section-theory">2. Description / Theory</span>
+
+    <div class="theory-box">
+        <strong>Theory:</strong> For an image \(f\) and kernel \(w\) of size \(m \times n\) (with \(m=2a+1, n=2b+1\)):
+        <ul style="margin-top:0.5rem;margin-bottom:0">
+            <li><strong>Correlation:</strong> \( (w \star f)(x,y) = \sum_{s=-a}^{a}\sum_{t=-b}^{b} w(s,t)\,f(x+s,y+t) \)</li>
+            <li><strong>Convolution:</strong> \( (w * f)(x,y) = \sum_{s=-a}^{a}\sum_{t=-b}^{b} w(s,t)\,f(x-s,y-t) \)</li>
+            <li><strong>Identity:</strong> \( w * f \;=\; \text{rot}_{180}(w) \star f \)</li>
+        </ul>
+        At a unit impulse the correlation places \(\text{rot}_{180}(w)\) and the convolution places \(w\). The two operations coincide only when the kernel is symmetric under 180&deg; rotation.
+    </div>
+    <div class="formula-box">$$ (w * f)(x,y) \;=\; \text{rot}_{180}(w) \;\star\; f $$</div>
+</div>
+
+<span class="print-only dip-section-marker dip-section-code">3. Code</span>
+<pre class="print-only literal-code"><code>
+
+# ----------------------------------------------------------------------
+
+# Install dependencies (uncomment for Google Colab)
+# !pip install opencv-python-headless matplotlib numpy
+
+import cv2
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+
+# === AUTO-DOWNLOAD DATASET (works in Google Colab and locally) ===
+import os, urllib.request, zipfile
+
+CHAPTER = &quot;CH02&quot;  # Chapter 2: Digital Image Fundamentals
+DATASET_PATH = f&quot;datasets/{CHAPTER}/&quot;
+DOWNLOAD_BASE = &quot;https://www.imageprocessingplace.com/downloads_V3/dip3e_downloads/dip3e_book_images&quot;
+
+if not os.path.exists(DATASET_PATH) or not any(f.endswith(&#x27;.tif&#x27;) for f in os.listdir(DATASET_PATH)):
+    zip_name = f&quot;DIP3E_{CHAPTER}_Original_Images.zip&quot;
+    url = f&quot;{DOWNLOAD_BASE}/{zip_name}&quot;
+    print(f&quot;Downloading {CHAPTER} dataset from imageprocessingplace.com...&quot;)
+    urllib.request.urlretrieve(url, &quot;chapter.zip&quot;)
+    os.makedirs(DATASET_PATH, exist_ok=True)
+    with zipfile.ZipFile(&quot;chapter.zip&quot;, &quot;r&quot;) as z:
+        for f in z.namelist():
+            if f.lower().endswith(&quot;.tif&quot;):
+                fname = os.path.basename(f)
+                if fname:
+                    with z.open(f) as src, open(os.path.join(DATASET_PATH, fname), &quot;wb&quot;) as dst:
+                        dst.write(src.read())
+    os.remove(&quot;chapter.zip&quot;)
+    print(f&quot;Downloaded {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+else:
+    print(f&quot;Dataset ready: {len([f for f in os.listdir(DATASET_PATH) if f.endswith(&#x27;.tif&#x27;)])} images&quot;)
+
+def correlate2d(f, w, mode=&#x27;same&#x27;):
+    &quot;&quot;&quot;Direct 2D correlation: (w * f)(x,y) = sum_{s,t} w(s,t) f(x+s, y+t).
+
+    mode = &#x27;same&#x27; returns an array of the same size as f.
+    mode = &#x27;full&#x27; returns the full sliding extent (M+m-1, N+n-1).
+    &quot;&quot;&quot;
+    f = np.asarray(f, dtype=np.float64)
+    w = np.asarray(w, dtype=np.float64)
+    fh, fw = f.shape
+    wh, ww = w.shape
+    a, b = wh // 2, ww // 2
+    padded = np.pad(f, ((a, a), (b, b)), mode=&#x27;constant&#x27;, constant_values=0)
+    if mode == &#x27;same&#x27;:
+        out = np.zeros((fh, fw), dtype=np.float64)
+        for x in range(fh):
+            for y in range(fw):
+                out[x, y] = np.sum(w * padded[x:x+wh, y:y+ww])
+        return out, padded
+    elif mode == &#x27;full&#x27;:
+        big = np.pad(f, ((wh-1, wh-1), (ww-1, ww-1)), mode=&#x27;constant&#x27;, constant_values=0)
+        H, W = fh + wh - 1, fw + ww - 1
+        out = np.zeros((H, W), dtype=np.float64)
+        for x in range(H):
+            for y in range(W):
+                out[x, y] = np.sum(w * big[x:x+wh, y:y+ww])
+        return out, padded
+    else:
+        raise ValueError(&quot;mode must be &#x27;same&#x27; or &#x27;full&#x27;&quot;)
+
+def convolve2d(f, w, mode=&#x27;same&#x27;):
+    &quot;&quot;&quot;Direct 2D convolution = correlation with w rotated 180 degrees.&quot;&quot;&quot;
+    w_rot = np.rot90(w, 2)
+    return correlate2d(f, w_rot, mode=mode)
+
+print(&#x27;correlate2d and convolve2d defined.&#x27;)
+
+f = np.array([
+    [0, 0, 0],
+    [0, 1, 0],
+    [0, 0, 0],
+])
+
+w = np.array([
+    [1, 2, 3],
+    [4, 5, 6],
+    [7, 8, 9],
+])
+
+corr_same, padded_f = correlate2d(f, w, mode=&#x27;same&#x27;)
+conv_same, _        = convolve2d(f, w, mode=&#x27;same&#x27;)
+corr_full, _        = correlate2d(f, w, mode=&#x27;full&#x27;)
+conv_full, _        = convolve2d(f, w, mode=&#x27;full&#x27;)
+
+print(&#x27;--- Inputs ---&#x27;)
+print(&#x27;Image f =\n&#x27;, f)
+print(&#x27;Kernel w =\n&#x27;, w)
+print(&#x27;Rotated kernel rot180(w) =\n&#x27;, np.rot90(w, 2))
+print(&#x27;Zero-padded f =\n&#x27;, padded_f.astype(int))
+
+print(&#x27;\n--- Correlation (w * f) ---&#x27;)
+print(&#x27;same :\n&#x27;, corr_same.astype(int))
+print(&#x27;full :\n&#x27;, corr_full.astype(int))
+
+print(&#x27;\n--- Convolution (w (*) f) ---&#x27;)
+print(&#x27;same :\n&#x27;, conv_same.astype(int))
+print(&#x27;full :\n&#x27;, conv_full.astype(int))
+
+print(&#x27;\nObservation: at the impulse, correlation reproduces rot180(w);&#x27;)
+print(&#x27;             convolution reproduces w itself.&#x27;)
+
+fig, axes = plt.subplots(2, 3, figsize=(13, 8))
+
+panels_top = [
+    (&#x27;Image f (impulse)&#x27;, f),
+    (&#x27;Kernel w&#x27;, w),
+    (&#x27;rot180(w)&#x27;, np.rot90(w, 2)),
+]
+panels_bot = [
+    (&#x27;Padded f&#x27;, padded_f.astype(int)),
+    (&#x27;Correlation (same)&#x27;, corr_same.astype(int)),
+    (&#x27;Convolution (same)&#x27;, conv_same.astype(int)),
+]
+
+for ax, (title, mat) in zip(axes[0], panels_top):
+    im = ax.imshow(mat, cmap=&#x27;viridis&#x27;)
+    ax.set_title(title)
+    for (i, j), v in np.ndenumerate(mat):
+        ax.text(j, i, str(int(v)), ha=&#x27;center&#x27;, va=&#x27;center&#x27;, color=&#x27;white&#x27;, fontsize=11, fontweight=&#x27;bold&#x27;)
+    ax.set_xticks([]); ax.set_yticks([])
+
+for ax, (title, mat) in zip(axes[1], panels_bot):
+    im = ax.imshow(mat, cmap=&#x27;viridis&#x27;)
+    ax.set_title(title)
+    for (i, j), v in np.ndenumerate(mat):
+        ax.text(j, i, str(int(v)), ha=&#x27;center&#x27;, va=&#x27;center&#x27;, color=&#x27;white&#x27;, fontsize=10, fontweight=&#x27;bold&#x27;)
+    ax.set_xticks([]); ax.set_yticks([])
+
+plt.suptitle(&#x27;Impulse Response: Correlation vs Convolution&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+selected_image = &quot;Fig0222(b)(cameraman).tif&quot;
+img = cv2.imread(os.path.join(DATASET_PATH, selected_image), cv2.IMREAD_GRAYSCALE)
+
+print(f&quot;Image:  {selected_image}&quot;)
+print(f&quot;Shape:  {img.shape}&quot;)
+print(f&quot;Range:  [{img.min()}, {img.max()}]&quot;)
+
+# Standard kernels
+box = np.ones((3, 3), dtype=np.float64) / 9.0
+lap = np.array([[ 0, -1,  0],
+                [-1,  4, -1],
+                [ 0, -1,  0]], dtype=np.float64)
+sobel_x = np.array([[-1, 0, 1],
+                    [-2, 0, 2],
+                    [-1, 0, 1]], dtype=np.float64)
+
+out_box, _ = convolve2d(img.astype(np.float64), box,     mode=&#x27;same&#x27;)
+out_lap, _ = convolve2d(img.astype(np.float64), lap,     mode=&#x27;same&#x27;)
+out_sob, _ = convolve2d(img.astype(np.float64), sobel_x, mode=&#x27;same&#x27;)
+
+def to_uint8(a):
+    a = a - a.min()
+    a = 255.0 * a / max(a.max(), 1e-9)
+    return a.astype(np.uint8)
+
+fig, axes = plt.subplots(1, 4, figsize=(18, 5))
+axes[0].imshow(img, cmap=&#x27;gray&#x27;, vmin=0, vmax=255); axes[0].set_title(&#x27;Original&#x27;); axes[0].axis(&#x27;off&#x27;)
+axes[1].imshow(np.clip(out_box, 0, 255).astype(np.uint8), cmap=&#x27;gray&#x27;, vmin=0, vmax=255)
+axes[1].set_title(&#x27;Box 3x3 (smoothing)&#x27;); axes[1].axis(&#x27;off&#x27;)
+axes[2].imshow(to_uint8(out_lap), cmap=&#x27;gray&#x27;); axes[2].set_title(&#x27;Laplacian (edges, normalised)&#x27;); axes[2].axis(&#x27;off&#x27;)
+axes[3].imshow(to_uint8(out_sob), cmap=&#x27;gray&#x27;); axes[3].set_title(&#x27;Sobel-X (vertical edges, normalised)&#x27;); axes[3].axis(&#x27;off&#x27;)
+plt.suptitle(&#x27;Manual convolve2d: Three Standard Kernels on Cameraman&#x27;, fontsize=14, fontweight=&#x27;bold&#x27;)
+plt.tight_layout()
+plt.show()
+
+kernel = sobel_x  # asymmetric, so corr != conv
+
+manual_conv, _ = convolve2d(img.astype(np.float64), kernel, mode=&#x27;same&#x27;)
+cv_conv = cv2.filter2D(img.astype(np.float64), ddepth=-1,
+                       kernel=np.rot90(kernel, 2),
+                       borderType=cv2.BORDER_CONSTANT)
+manual_corr, _ = correlate2d(img.astype(np.float64), kernel, mode=&#x27;same&#x27;)
+cv_corr = cv2.filter2D(img.astype(np.float64), ddepth=-1,
+                       kernel=kernel,
+                       borderType=cv2.BORDER_CONSTANT)
+
+print(f&quot;max |manual_conv - cv_conv| = {np.max(np.abs(manual_conv - cv_conv)):.6f}&quot;)
+print(f&quot;max |manual_corr - cv_corr| = {np.max(np.abs(manual_corr - cv_corr)):.6f}&quot;)
+print(f&quot;max |conv - corr|           = {np.max(np.abs(manual_conv - manual_corr)):.6f}&quot;)
+print(&quot;\nA non-zero conv-vs-corr gap confirms the kernel is asymmetric.&quot;)</code></pre>
+<div class="section-card">
+    <h3>Part 1: Impulse Response Demonstration</h3>
+    <p>Place a unit impulse at the centre of a \(3\times3\) image and operate with a \(3\times3\) ramp kernel. The two outputs differ by a 180&deg; rotation of \(w\) at the impulse position.</p>
+    <button class="btn-run" id="btnImpulse">Run Impulse Demo</button>
+    <div id="impulseResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 2: Custom Matrices</h3>
+    <p>Provide your own \(f\) and \(w\) matrices (rows of space-separated numbers, one row per line). The kernel must have odd dimensions so it has a unique centre.</p>
+    <div class="picker-bar" style="display:flex;gap:1rem;flex-wrap:wrap">
+        <div style="flex:1;min-width:240px">
+            <label class="picker-label" for="fMatrix">Image f</label>
+            <textarea id="fMatrix" rows="5" style="width:100%;font-family:monospace;font-size:0.95rem">0 0 0 0 0
+0 0 0 0 0
+0 0 1 0 0
+0 0 0 0 0
+0 0 0 0 0</textarea>
+        </div>
+        <div style="flex:1;min-width:240px">
+            <label class="picker-label" for="wMatrix">Kernel w (odd dimensions)</label>
+            <textarea id="wMatrix" rows="5" style="width:100%;font-family:monospace;font-size:0.95rem">1 2 3
+4 5 6
+7 8 9</textarea>
+        </div>
+    </div>
+    <button class="btn-run" id="btnCustom">Run on custom matrices</button>
+    <div id="customResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 3: Standard Kernels on a Real Image</h3>
+    <p>Apply a \(3\times3\) box (averaging), a Laplacian (sharpening edge detector), and a Sobel-X (vertical edge detector) to a real grayscale image via convolution.</p>
+    <div class="picker-bar" id="mainPicker"></div>
+    <button class="btn-run" id="btnFilter" disabled>Apply Standard Kernels</button>
+    <div id="filterResult"></div>
+</div>
+
+<div class="section-card">
+    <h3>Part 4: Verification &mdash; corr &ne; conv for an Asymmetric Kernel</h3>
+    <p>OpenCV's <code>filter2D</code> performs correlation. With the asymmetric Sobel-X kernel the correlation and convolution outputs differ; the difference image confirms the kernel is not symmetric under 180&deg; rotation.</p>
+    <button class="btn-run" id="btnVerify" disabled>Run Verification</button>
+    <div id="verifyResult"></div>
+</div>
+
+<span class="print-only dip-section-marker dip-section-output">4. Output</span>
+<div class="print-only output-collection" id="printOutput" aria-label="Result figures and computed outputs"></div>
+
+<span class="print-only dip-section-marker dip-section-analysis">5. Analysis / Conclusion</span>
+<div class="analysis-box">
+    <h4>Analysis Questions</h4>
+    <ol>
+        <li>Why does correlation produce a flipped copy of \(w\) when \(f\) is a unit impulse, while convolution produces \(w\) itself?</li>
+        <li>For which kernels are correlation and convolution numerically identical? Give two examples and one counter-example.</li>
+        <li>What is the role of zero padding, and what alternatives (replicate, reflect, wrap) might you prefer in different contexts?</li>
+        <li>What is the computational cost of a direct \(m\times n\) convolution on an \(M\times N\) image, and how is it reduced via separability and FFT?</li>
+    </ol>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(async function() {
+    'use strict';
+    var API = '/api';
+
+    function showPlot(container, base64) {
+        container.textContent = '';
+        var img = document.createElement('img');
+        img.className = 'result-img';
+        img.alt = 'Result';
+        img.src = 'data:image/png;base64,' + base64;
+        container.appendChild(img);
+    }
+    function showError(container, msg) {
+        container.textContent = '';
+        var p = document.createElement('p');
+        p.style.color = 'var(--error)';
+        p.textContent = 'Error: ' + msg;
+        container.appendChild(p);
+    }
+
+    var picker = await DIP.createPicker('mainPicker', {
+        id: 'main',
+        defaultChapter: 'CH02',
+        defaultImage: 'cameraman',
+        onReady: function() {
+            document.getElementById('btnFilter').disabled = false;
+            document.getElementById('btnVerify').disabled = false;
+        }
+    });
+
+    document.getElementById('btnImpulse').addEventListener('click', async function() {
+        var container = document.getElementById('impulseResult');
+        DIP.setLoading(container, true);
+        try {
+            var resp = await DIP.apiCall(API + '/p7/impulse');
+            showPlot(container, resp.plot);
+        } catch (e) { showError(container, e.message); }
+        DIP.setLoading(container, false);
+    });
+
+    function parseMatrix(text) {
+        var rows = text.trim().split(/\n+/).map(function(r) {
+            return r.trim().split(/\s+/).map(Number);
+        }).filter(function(r) { return r.length > 0 && !r.some(isNaN); });
+        if (rows.length === 0) return null;
+        var width = rows[0].length;
+        for (var i = 0; i < rows.length; i++) {
+            if (rows[i].length !== width) return null;
+        }
+        return rows;
+    }
+
+    document.getElementById('btnCustom').addEventListener('click', async function() {
+        var f = parseMatrix(document.getElementById('fMatrix').value);
+        var w = parseMatrix(document.getElementById('wMatrix').value);
+        var container = document.getElementById('customResult');
+        if (!f) return showError(container, 'Invalid f matrix (rows must be equal length)');
+        if (!w) return showError(container, 'Invalid w matrix');
+        if (w.length % 2 === 0 || w[0].length % 2 === 0) {
+            return showError(container, 'Kernel w must have odd dimensions');
+        }
+        DIP.setLoading(container, true);
+        try {
+            var resp = await DIP.apiCall(API + '/p7/custom', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({f: f, w: w})
+            });
+            showPlot(container, resp.plot);
+        } catch (e) { showError(container, e.message); }
+        DIP.setLoading(container, false);
+    });
+
+    document.getElementById('btnFilter').addEventListener('click', async function() {
+        var sel = picker.getSelection();
+        if (!sel.filename) return DIP.showToast('Select an image first');
+        var container = document.getElementById('filterResult');
+        DIP.setLoading(container, true);
+        try {
+            var resp = await DIP.apiCall(API + '/p7/image-filter', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({filename: sel.filename, chapter: sel.chapter})
+            });
+            showPlot(container, resp.plot);
+        } catch (e) { showError(container, e.message); }
+        DIP.setLoading(container, false);
+    });
+
+    document.getElementById('btnVerify').addEventListener('click', async function() {
+        var sel = picker.getSelection();
+        if (!sel.filename) return DIP.showToast('Select an image first');
+        var container = document.getElementById('verifyResult');
+        DIP.setLoading(container, true);
+        try {
+            var resp = await DIP.apiCall(API + '/p7/verify', {
+                method: 'POST', headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({filename: sel.filename, chapter: sel.chapter})
+            });
+            showPlot(container, resp.plot);
+            var note = document.createElement('p');
+            note.style.fontSize = '0.9rem';
+            note.style.color = 'var(--text-muted)';
+            note.textContent = 'max |corr - conv| = ' + resp.max_diff.toFixed(3) +
+                               '   |   mean |corr - conv| = ' + resp.mean_diff.toFixed(3);
+            container.appendChild(note);
+        } catch (e) { showError(container, e.message); }
+        DIP.setLoading(container, false);
+    });
+
+    function loadCache(url, containerId) {
+        fetch(url).then(function(r) { return r.json(); }).then(function(data) {
+            if (data && data.plot) showPlot(document.getElementById(containerId), data.plot);
+        }).catch(function() {});
+    }
+    loadCache('/static/cache/p7_impulse.json?v=1', 'impulseResult');
+    loadCache('/static/cache/p7_filter.json?v=1', 'filterResult');
+    loadCache('/static/cache/p7_verify.json?v=1', 'verifyResult');
+})();
+</script>
+{% endblock %}

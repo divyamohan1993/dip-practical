@@ -27,12 +27,92 @@
     -->
     <style>
         .print-only { display: none; }
+        .print-watermark { display: none; }
 
         @media print {
             * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
 
-            /* === Page Setup === */
-            @page { margin: 0.75in 0.85in 0.75in 0.85in; }
+            /* === Page Setup — 1in margins all sides per practical-format spec ===
+               Page numbers are formatted as <practical>.<page> (e.g. 7.1, 7.2 …)
+               for individual practicals. The cover is unnumbered. */
+            @page {
+                margin: 1in;
+                @bottom-center {
+                    content: {% if practical_num %}"{{ practical_num }}." {% endif %}counter(page);
+                    font-family: 'Times New Roman', Times, serif;
+                    font-size: 10pt;
+                    color: #555;
+                }
+            }
+            /* No page number on the cover, and reset the page counter to 0 so
+               the first content page becomes "{{ practical_num | default('') }}.1". */
+            @page :first {
+                @bottom-center { content: ""; }
+                counter-reset: page 0;
+            }
+
+            /* === Watermark — 2"x2" centred semi-transparent logo on every page === */
+            .print-watermark {
+                display: block !important;
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 2in !important;
+                height: 2in !important;
+                z-index: 0 !important;
+                pointer-events: none !important;
+                opacity: 0.22 !important;
+                /* multiply blend hides any white background in the logo PNG so
+                   only the inked strokes float behind the page content */
+                mix-blend-mode: multiply !important;
+            }
+            .print-watermark img {
+                width: 100% !important;
+                height: 100% !important;
+                object-fit: contain !important;
+                display: block !important;
+                opacity: 1 !important;
+            }
+            /* Ensure printed content sits above the watermark */
+            #main-content, .print-cover, .print-toc, .print-practical, .print-summary {
+                position: relative;
+                z-index: 1;
+            }
+
+            /* === Practical-Format Section Banners (Aim/Theory/Code/Output/Analysis) ===
+               Each banner is a colored, labelled bar that introduces a section in the
+               printed handbook. Colors are uniform across all practicals; identical
+               palette to the Jupyter notebooks. */
+            .dip-section-marker {
+                display: block !important;
+                font-family: 'Times New Roman', Times, serif !important;
+                font-weight: bold !important;
+                font-size: 14pt !important;
+                padding: 6pt 10pt !important;
+                margin: 14pt 0 8pt 0 !important;
+                border-left: 4pt solid !important;
+                page-break-after: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            .dip-section-aim      { color: #003c8f !important; background: #e3f2fd !important; border-color: #1565c0 !important; }
+            .dip-section-theory   { color: #4a148c !important; background: #f3e5f5 !important; border-color: #6a1b9a !important; }
+            .dip-section-code     { color: #1b5e20 !important; background: #e8f5e9 !important; border-color: #2e7d32 !important; }
+            .dip-section-output   { color: #e65100 !important; background: #fff3e0 !important; border-color: #ef6c00 !important; }
+            .dip-section-analysis { color: #b71c1c !important; background: #ffebee !important; border-color: #c62828 !important; }
+
+            /* Each Part N: ... heading inside Code becomes a green sub-heading bar */
+            .dip-subsection {
+                display: block !important;
+                font-family: 'Times New Roman', Times, serif !important;
+                font-weight: 600 !important;
+                font-size: 12pt !important;
+                color: #1b5e20 !important;
+                border-bottom: 0.5pt solid #c8e6c9 !important;
+                padding: 0 0 3pt 0 !important;
+                margin: 10pt 0 5pt 0 !important;
+                page-break-after: avoid !important;
+            }
 
             body {
                 background: white !important;
@@ -53,91 +133,209 @@
 
             .print-only { display: block !important; }
 
-            /* === Cover Page — Professional === */
+            /* === Cover Page — Practical File format ===
+               Solid-white opaque background so the centred watermark element
+               does not bleed through onto the cover page. */
             .print-cover {
                 display: flex !important;
                 flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                min-height: 100vh;
-                page-break-after: always;
+                justify-content: space-between;
+                box-sizing: border-box !important;
+                width: 100% !important;
+                height: 9in !important;
+                max-height: 9in !important;
+                overflow: hidden !important;
+                page-break-after: always !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
                 text-align: center;
-                padding: 0.75in 1in;
+                padding: 0.3in 0.4in !important;
                 font-family: 'Times New Roman', Times, serif !important;
-                border: 3pt double black;
+                border: none !important;
                 margin: 0;
+                background: white !important;
+                position: relative !important;
+                z-index: 100 !important;
             }
-            .print-cover .cover-logo {
-                width: 140px;
-                height: auto;
-                margin-bottom: 18pt;
+            .print-cover .cover-top { margin-top: 12pt; }
+            .print-cover .cover-title {
+                font-family: 'Times New Roman', Times, serif !important;
+                font-size: 18pt !important;
+                font-weight: bold !important;
+                color: black !important;
+                margin: 0 0 24pt 0 !important;
+                text-align: center !important;
             }
-            .print-cover .cover-university {
-                font-size: 20pt;
+            .print-cover .cover-subtitle {
+                font-size: 16pt;
                 font-weight: bold;
-                text-transform: uppercase;
-                letter-spacing: 0.08em;
-                margin-bottom: 4pt;
+                margin-bottom: 14pt;
+                color: black;
             }
-            .print-cover .cover-dept {
-                font-size: 12pt;
-                margin-bottom: 28pt;
-                color: #222;
-                line-height: 1.6;
-            }
-            .print-cover .cover-rule {
-                width: 60%;
-                height: 2pt;
-                background: black;
-                margin: 0 auto 20pt;
-            }
-            .print-cover .cover-subject {
-                font-size: 18pt;
-                font-weight: bold;
-                margin-bottom: 4pt;
-                letter-spacing: 0.03em;
-            }
-            .print-cover .cover-code {
+            .print-cover .cover-practical-name {
                 font-size: 13pt;
                 font-weight: bold;
-                margin-bottom: 20pt;
-                color: #333;
-            }
-            .print-cover .cover-practical {
-                font-size: 15pt;
-                font-weight: bold;
                 font-style: italic;
-                margin-bottom: 32pt;
-                padding: 8pt 24pt;
-                border-top: 1pt solid #666;
-                border-bottom: 1pt solid #666;
+                margin: 6pt auto 14pt;
+                padding: 5pt 18pt;
+                color: black;
+                border-top: 0.75pt solid #888;
+                border-bottom: 0.75pt solid #888;
+                display: inline-block;
+                max-width: 5in;
             }
-            .print-cover .cover-table {
-                border-collapse: collapse;
-                font-size: 12pt;
+            .print-cover .cover-middle {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 30pt;
+                margin: 8pt 0;
+            }
+            .print-cover .cover-logo {
+                width: 130px;
+                height: auto;
                 margin: 0 auto;
-                text-align: left;
+                display: block;
             }
-            .print-cover .cover-table td {
-                padding: 4pt 12pt;
-                vertical-align: top;
-            }
-            .print-cover .cover-table td:first-child {
-                font-weight: bold;
-                text-align: right;
-                padding-right: 16pt;
-                white-space: nowrap;
-            }
-            .print-cover .cover-rule-sm {
-                width: 25%;
-                height: 0.75pt;
-                background: #888;
-                margin: 28pt auto 10pt;
-            }
-            .print-cover .cover-session {
+            .print-cover .cover-program {
                 font-size: 12pt;
+                font-weight: bold;
+                color: #1a3d6c;
+                margin: 0 auto;
+                max-width: 5in;
+            }
+            .print-cover .cover-people {
+                display: flex !important;
+                justify-content: space-between;
+                width: 100%;
+                margin: 18pt 0;
+                padding: 0 0.4in;
+                box-sizing: border-box;
+            }
+            .print-cover .cover-people-col {
+                text-align: left;
+                font-size: 11pt;
+            }
+            .print-cover .cover-people-right { text-align: left; }
+            .print-cover .cover-people-label {
                 font-style: italic;
+                font-weight: bold;
+                margin-bottom: 6pt;
+                color: black;
+            }
+            .print-cover .cover-people-name {
+                font-weight: bold;
+                font-size: 11pt;
+                color: black;
+                line-height: 1.4;
+            }
+            .print-cover .cover-people-id {
+                font-weight: bold;
+                font-size: 11pt;
+                color: black;
+            }
+            /* === QR code on the cover === */
+            .print-cover .cover-qr {
+                display: flex !important;
+                flex-direction: column;
+                align-items: center;
+                margin: 14pt auto 8pt;
+            }
+            .print-cover .cover-qr-img {
+                width: 2in !important;
+                height: 2in !important;
+                object-fit: contain !important;
+                display: block !important;
+                margin: 0 auto;
+            }
+            .print-cover .cover-qr-caption {
+                font-size: 10pt;
+                font-style: italic;
+                color: #333;
+                margin-top: 4pt;
+            }
+            .print-cover .cover-qr-url {
+                font-family: 'Courier New', monospace;
+                font-size: 9pt;
                 color: #444;
+                margin-top: 1pt;
+                word-break: break-all;
+                max-width: 4in;
+            }
+
+            .print-cover .cover-bottom { margin-bottom: 6pt; }
+            .print-cover .cover-school {
+                font-size: 13pt;
+                font-weight: bold;
+                color: black;
+                margin-bottom: 4pt;
+            }
+            .print-cover .cover-university-name {
+                font-size: 13pt;
+                font-weight: bold;
+                color: black;
+                margin-bottom: 4pt;
+            }
+            .print-cover .cover-location {
+                font-size: 12pt;
+                color: black;
+                margin-bottom: 2pt;
+            }
+            .print-cover .cover-date {
+                font-size: 12pt;
+                color: black;
+            }
+
+            /* === Universal official pages (Certificate, Acknowledgement) === */
+            .print-official {
+                page-break-after: always !important;
+                page-break-before: always !important;
+                page-break-inside: avoid !important;
+                font-family: 'Times New Roman', Times, serif !important;
+                color: black;
+                padding: 0.4in 0.4in;
+            }
+            .print-official .official-title {
+                font-size: 18pt !important;
+                font-weight: bold !important;
+                text-align: center !important;
+                text-transform: uppercase !important;
+                letter-spacing: 0.08em !important;
+                margin: 24pt 0 28pt 0 !important;
+                padding-bottom: 6pt !important;
+                border-bottom: 1pt solid black !important;
+            }
+            .print-official .official-body p {
+                font-size: 12pt !important;
+                line-height: 1.7 !important;
+                text-align: justify !important;
+                text-indent: 0.5in !important;
+                margin: 0 0 14pt 0 !important;
+            }
+            .print-official .official-signoff {
+                display: flex !important;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-top: 80pt !important;
+                gap: 0.6in;
+            }
+            .print-official .signoff-single { justify-content: flex-end !important; }
+            .print-official .signoff-block { width: 2.6in; }
+            .print-official .signoff-right { text-align: right; }
+            .print-official .signoff-line {
+                width: 100%;
+                height: 0;
+                border-top: 0.75pt solid black;
+                margin-bottom: 4pt;
+            }
+            .print-official .signoff-label {
+                font-weight: bold;
+                font-size: 11pt;
+            }
+            .print-official .signoff-sub {
+                font-size: 10pt;
+                color: #333;
+                font-style: italic;
             }
 
             /* === Table of Contents === */
@@ -155,10 +353,19 @@
             }
             .print-toc table { width: 100%; border-collapse: collapse; font-size: 12pt; }
             .print-toc td { padding: 6pt 4pt; vertical-align: top; }
-            .print-toc .toc-num { width: 12%; font-weight: bold; }
+            .print-toc .toc-num { width: 8%; font-weight: bold; }
             .print-toc .toc-title { font-weight: bold; }
-            .print-toc .toc-desc { font-size: 12pt; color: #333; padding-left: 12%; padding-top: 0; padding-bottom: 10pt; font-style: italic; }
-            .print-toc .toc-chapter { width: 20%; text-align: right; font-size: 12pt; color: #555; }
+            .print-toc .toc-page { width: 12%; text-align: right; font-weight: bold; }
+            .print-toc .toc-desc { font-size: 11pt; color: #333; padding-left: 8%; padding-top: 0; padding-bottom: 10pt; font-style: italic; }
+            .print-toc .toc-chapter { width: 22%; text-align: right; font-size: 11pt; color: #555; padding-right: 12pt; }
+            /* Auto-resolve page numbers via CSS target-counter (Chrome 119+ supports it for print). */
+            .print-toc a.toc-link {
+                color: black !important;
+                text-decoration: none !important;
+            }
+            .print-toc a.toc-link::after {
+                content: target-counter(attr(href), page);
+            }
 
             /* === Content Layout === */
             .container { max-width: 100% !important; padding: 0 !important; }
@@ -205,6 +412,57 @@
                 box-shadow: none !important;
                 padding: 0 !important;
                 margin-bottom: 6pt !important;
+            }
+
+            /* Hide all interactive Part section-cards in print mode (those that
+               carry a Run button). Their result images are mirrored under the
+               Output banner by the beforeprint handler in base.html. */
+            .section-card:has(.btn-run) { display: none !important; }
+
+            /* === Literal Code listing under the Code banner === */
+            .literal-code {
+                font-family: 'JetBrains Mono', 'Source Code Pro', Consolas, 'Courier New', monospace !important;
+                font-size: 9pt !important;
+                line-height: 1.35 !important;
+                background: #f6f8fa !important;
+                color: #111 !important;
+                border-left: 3pt solid #2e7d32 !important;
+                padding: 8pt 12pt !important;
+                margin: 6pt 0 12pt 0 !important;
+                white-space: pre-wrap !important;
+                word-wrap: break-word !important;
+                page-break-inside: auto !important;
+            }
+            .literal-code code {
+                background: transparent !important;
+                padding: 0 !important;
+                border: none !important;
+                font-size: inherit !important;
+                font-family: inherit !important;
+                color: inherit !important;
+            }
+
+            /* === Output collection (cloned result images) === */
+            .output-collection {
+                margin: 6pt 0 12pt 0 !important;
+            }
+            .output-collection img {
+                display: block !important;
+                max-width: 95% !important;
+                max-height: 8.5in !important;
+                width: auto !important;
+                height: auto !important;
+                margin: 8pt auto 12pt auto !important;
+                border: 0.5pt solid #bbb !important;
+                page-break-inside: avoid !important;
+            }
+            .output-collection .output-caption {
+                font-size: 10pt !important;
+                font-style: italic !important;
+                color: #555 !important;
+                text-align: center !important;
+                margin: 0 0 14pt 0 !important;
+                page-break-after: auto !important;
             }
             .section-card p, p {
                 font-size: 12pt !important;
@@ -296,6 +554,27 @@
             .print-practical { page-break-before: always; }
             .print-practical:first-of-type { page-break-before: auto; }
 
+            /* === Per-practical page numbering on the consolidated handbook ===
+               Each .print-practical-N block uses a named page so its footer
+               shows "N.<page>". Browsers that don't support GCPM @page-name
+               selectors fall back to the global counter without a prefix. */
+            .print-practical-1 { page: prac1; }
+            .print-practical-2 { page: prac2; }
+            .print-practical-3 { page: prac3; }
+            .print-practical-4 { page: prac4; }
+            .print-practical-5 { page: prac5; }
+            .print-practical-6 { page: prac6; }
+            .print-practical-7 { page: prac7; }
+            .print-practical-8 { page: prac8; }
+            @page prac1 { @bottom-center { content: "1." counter(page); } }
+            @page prac2 { @bottom-center { content: "2." counter(page); } }
+            @page prac3 { @bottom-center { content: "3." counter(page); } }
+            @page prac4 { @bottom-center { content: "4." counter(page); } }
+            @page prac5 { @bottom-center { content: "5." counter(page); } }
+            @page prac6 { @bottom-center { content: "6." counter(page); } }
+            @page prac7 { @bottom-center { content: "7." counter(page); } }
+            @page prac8 { @bottom-center { content: "8." counter(page); } }
+
             /* === Running header === */
             .print-header {
                 display: block !important;
@@ -333,24 +612,51 @@
     <a href="#main-content" class="skip-link">Skip to main content</a>
     {% include 'partials/_nav.html' %}
 
+    <!-- Print watermark — centred dmj.one logo on every printed page.
+         Uses position:fixed so paged-media browsers repeat it on each page. -->
+    <div class="print-watermark print-only" aria-hidden="true">
+        <img src="https://dmj.one/logo.png" alt="">
+    </div>
+
     <!-- Print cover page (hidden on screen) -->
     <div class="print-only print-cover" aria-hidden="true">
-        <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
-        <div class="cover-university">Shoolini University</div>
-        <div class="cover-dept">Faculty of Engineering &amp; Technology<br>Department of Computer Science &amp; Engineering</div>
-        <div class="cover-rule"></div>
-        <div class="cover-subject">Digital Image Processing</div>
-        <div class="cover-code">Course Code: CSU2543</div>
-        <div class="cover-practical">{% block print_title %}Practical Lab Report{% endblock %}</div>
-        <table class="cover-table">
-            <tr><td>Submitted by:</td><td>Divya Mohan</td></tr>
-            <tr><td>Programme:</td><td>B.Tech CSE (Cybersecurity)</td></tr>
-            <tr><td>Semester:</td><td>8th</td></tr>
-            <tr><td>Faculty Guide:</td><td>Ishani Sharma</td></tr>
-            <tr><td>Reference Text:</td><td>Gonzalez &amp; Woods, <em>Digital Image Processing</em>, 3rd Ed.</td></tr>
-        </table>
-        <div class="cover-rule-sm"></div>
-        <div class="cover-session">Academic Session 2025&ndash;2026</div>
+        <div class="cover-top">
+            <h1 class="cover-title">Digital Images Processing</h1>
+            <div class="cover-subtitle">Practical File</div>
+            {% block print_title %}{% endblock %}
+        </div>
+
+        <div class="cover-middle">
+            <img class="cover-logo" src="https://shooliniuniversity.com/assets/images/logo.png" alt="Shoolini University Logo">
+            <div class="cover-program">Bachelors of Technology in Computer Science and Engineering</div>
+        </div>
+
+        <div class="cover-people">
+            <div class="cover-people-col cover-people-left">
+                <div class="cover-people-label">Submitted by:</div>
+                <div class="cover-people-name">DIVYA MOHAN</div>
+                <div class="cover-people-id">GF202214698</div>
+            </div>
+            <div class="cover-people-col cover-people-right">
+                <div class="cover-people-label">Submitted to:</div>
+                <div class="cover-people-name">Ms. Ishani Sharma</div>
+            </div>
+        </div>
+
+        {% if practical_qr %}
+        <div class="cover-qr">
+            <img class="cover-qr-img" src="{{ practical_qr }}" alt="QR code linking to {{ practical_url }}">
+            <div class="cover-qr-caption">Scan to view this practical online</div>
+            <div class="cover-qr-url">{{ practical_url }}</div>
+        </div>
+        {% endif %}
+
+        <div class="cover-bottom">
+            <div class="cover-school">YOGANANDA SCHOOL OF AI, COMPUTERS AND DATA SCIENCES</div>
+            <div class="cover-university-name">SHOOLINI UNIVERSITY</div>
+            <div class="cover-location">SOLAN, H.P., INDIA</div>
+            <div class="cover-date">APRIL, 2026</div>
+        </div>
     </div>
 
     <!-- Print running header (hidden on screen, shown on print content pages) -->
@@ -376,5 +682,53 @@
     <script src="{{ url_for('static', filename='js/image-picker.js') }}"></script>
 
     {% block extra_js %}{% endblock %}
+
+    <!-- Print mirror: clone every result figure into the Output banner so the
+         printed handbook shows them all under "4. Output" instead of inline
+         under each Part section-card (which is hidden in print). Fires on
+         beforeprint and is idempotent. -->
+    <script>
+    (function() {
+        function captionFor(imgEl) {
+            // Walk up to the nearest section-card and use its <h3> as caption.
+            var card = imgEl.closest('.section-card');
+            if (!card) return '';
+            var h = card.querySelector('h3, h4');
+            return h ? h.textContent.trim() : '';
+        }
+        function mirrorOutputs() {
+            var out = document.getElementById('printOutput');
+            if (!out) return;
+            out.textContent = '';
+            var imgs = document.querySelectorAll('.result-img');
+            if (imgs.length === 0) return;
+            imgs.forEach(function(img) {
+                var clone = img.cloneNode(true);
+                clone.removeAttribute('id');
+                out.appendChild(clone);
+                var caption = captionFor(img);
+                if (caption) {
+                    var c = document.createElement('div');
+                    c.className = 'output-caption';
+                    c.textContent = caption;
+                    out.appendChild(c);
+                }
+            });
+        }
+        if (window.matchMedia) {
+            var mql = window.matchMedia('print');
+            if (mql.addEventListener) mql.addEventListener('change', function(e) { if (e.matches) mirrorOutputs(); });
+        }
+        window.addEventListener('beforeprint', mirrorOutputs);
+        // Also mirror once shortly after page load so the page-source already
+        // has the images (helps "Save as PDF" workflows that snapshot the DOM
+        // before the beforeprint event fires).
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() { setTimeout(mirrorOutputs, 1500); });
+        } else {
+            setTimeout(mirrorOutputs, 1500);
+        }
+    })();
+    </script>
 </body>
 </html>
