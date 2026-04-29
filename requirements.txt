@@ -1,7 +1,11 @@
-flask==3.1.0
-gunicorn==23.0.0
-opencv-python-headless==4.11.0.86
-matplotlib==3.10.1
-numpy==2.2.3
-Pillow==11.1.0
-qrcode==7.4.2
+# Pinned for reproducible Cloud Run + Cloudflare-Pages builds.
+# All versions resolve the four Dependabot advisories open on the default
+# branch as of 2026-04: Pillow GHSA-3f63-hfp8-52jv, Pillow GHSA-9p8g-w7c7-7w4w,
+# Flask GHSA-7g23-69pp-5g6w, Flask GHSA-4grg-w6v8-c28g.
+flask==3.1.3
+gunicorn==25.3.0
+opencv-python-headless==4.13.0.92
+matplotlib==3.10.9
+numpy==2.4.4
+Pillow==12.2.0
+qrcode==8.2

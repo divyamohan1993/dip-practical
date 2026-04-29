@@ -1,0 +1,96 @@
+# CI workflow — does not consume any user-controlled GitHub event payload,
+# only checks out source, lints, validates notebooks, smoke-imports the
+# Flask app, and builds the Docker image.
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    name: Validate Flask app and notebooks
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install runtime + lint dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyflakes nbformat
+
+      - name: Lint Python sources with pyflakes
+        run: pyflakes app/ run.py precompute.py format_practicals.py format_templates.py format_print_codeoutput.py
+
+      - name: Validate every notebook is well-formed nbformat 4.x
+        run: |
+          python - <<'PY'
+          import nbformat, glob, sys
+          ok = True
+          for path in sorted(glob.glob("Practical_*.ipynb")):
+              try:
+                  nb = nbformat.read(path, as_version=4)
+                  nbformat.validate(nb)
+                  print(f"OK  {path} ({len(nb.cells)} cells)")
+              except Exception as e:
+                  print(f"FAIL {path}: {e}")
+                  ok = False
+          sys.exit(0 if ok else 1)
+          PY
+
+      - name: Smoke-import Flask app and check /health
+        run: |
+          python - <<'PY'
+          from app import create_app
+          app = create_app()
+          rv = app.test_client().get("/health")
+          assert rv.status_code == 200, rv.status_code
+          assert b"healthy" in rv.data
+          print("Flask app boots and /health is OK.")
+          PY
+
+      - name: HTML well-formedness sanity for static pages
+        run: |
+          python - <<'PY'
+          import html.parser, glob
+          class P(html.parser.HTMLParser):
+              def error(self, m): raise RuntimeError(m)
+          for f in sorted(glob.glob("pages/*.html")):
+              with open(f) as fp:
+                  P().feed(fp.read())
+              print(f"OK  {f}")
+          PY
+
+  docker-build:
+    name: Build Docker image (Cloud Run mirror)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Build (no push)
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: false
+          tags: dip-practical:ci
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

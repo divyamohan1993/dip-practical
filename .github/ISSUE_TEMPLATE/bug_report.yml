@@ -1,0 +1,54 @@
+name: Bug report
+description: Something broken in the lab — page, notebook, print output, etc.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where is the bug?
+      options:
+        - Web app — interactive page
+        - Web app — printed PDF / Ctrl+P output
+        - Jupyter notebook (Practical_N.ipynb)
+        - Static Cloudflare-Pages build (pages/)
+        - API endpoint
+        - Documentation
+    validations:
+      required: true
+  - type: input
+    id: practical
+    attributes:
+      label: Practical / page
+      description: e.g. P7, /practical/8, or pages/p3.html
+    validations:
+      required: true
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      description: Browser + OS, or Python version for the notebook
+      placeholder: Chrome 137 on Windows 11 / Python 3.12 on macOS
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Visit https://dip.dmj.one/practical/7
+        2. Press Ctrl+P
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs actual behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots / printed PDF
+      description: Drag and drop images here. For print issues, attach the PDF.

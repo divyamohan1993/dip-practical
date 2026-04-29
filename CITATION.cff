@@ -1,0 +1,55 @@
+cff-version: 1.2.0
+title: "Digital Images Processing — Practical File (CSU2543)"
+message: >-
+  If you use this lab in teaching or research, please cite it as below.
+type: software
+authors:
+  - given-names: Divya
+    family-names: Mohan
+    affiliation: "Yogananda School of AI, Computers and Data Sciences, Shoolini University"
+    orcid: "https://orcid.org/0000-0000-0000-0000"
+identifiers:
+  - type: url
+    value: "https://github.com/divyamohan1993/dip-practical"
+    description: Source repository
+  - type: url
+    value: "https://dip.dmj.one"
+    description: Live deployment
+repository-code: "https://github.com/divyamohan1993/dip-practical"
+url: "https://dip.dmj.one"
+abstract: >-
+  An end-to-end practical handbook for the course CSU2543 — Digital Images
+  Processing — at Shoolini University. Implements the eight prescribed
+  experiments (loading and display, sampling-rate effects, intensity
+  transforms, gamma correction, histogram equalization, histogram matching,
+  2D correlation/convolution, and spatial filtering) in three independently
+  runnable forms: Jupyter notebooks, an interactive Flask web app, and a
+  fully-static client-side build. Includes a printable lab handbook with
+  cover, certificate, acknowledgement, index, per-practical QR codes,
+  watermark, and per-practical page numbering.
+keywords:
+  - digital-image-processing
+  - opencv
+  - python
+  - flask
+  - jupyter-notebook
+  - cloud-run
+  - shoolini-university
+  - csu2543
+  - gonzalez-woods
+  - educational-software
+license: MIT
+version: "1.0.0"
+date-released: "2026-04-29"
+references:
+  - type: book
+    authors:
+      - family-names: Gonzalez
+        given-names: Rafael C.
+      - family-names: Woods
+        given-names: Richard E.
+    title: "Digital Image Processing"
+    edition: "3rd"
+    year: 2008
+    publisher:
+      name: "Pearson"
